@@ -1,6 +1,6 @@
+import { Resend } from "@convex-dev/resend";
 import { v } from "convex/values";
-import { Resend } from "resend";
-import { internal } from "./_generated/api";
+import { components, internal } from "./_generated/api";
 import {
 	action,
 	internalMutation,
@@ -8,6 +8,9 @@ import {
 	mutation,
 	query,
 } from "./_generated/server";
+
+// Initialize Resend component
+export const resend: Resend = new Resend(components.resend, {});
 
 // Generate a random verification token
 function generateToken(): string {
@@ -22,6 +25,10 @@ export const sendVerificationEmail = action({
 		email: v.string(),
 		name: v.optional(v.string()),
 	},
+	returns: v.object({
+		success: v.boolean(),
+		emailId: v.string(),
+	}),
 	handler: async (ctx, args) => {
 		// Check if email is already verified
 		const existingVerification = await ctx.runQuery(
@@ -46,43 +53,41 @@ export const sendVerificationEmail = action({
 			expiresAt,
 		});
 
-		// Send verification email
-		const resend = new Resend(process.env.CONVEX_RESEND_API_KEY);
+		const siteUrl = process.env.SITE_URL || "http://localhost:5173";
+		const verificationUrl = `${siteUrl}/verify-email?token=${token}`;
 
-		const verificationUrl = `${process.env.SITE_URL || "http://localhost:5173"}/verify-email?token=${token}`;
-
-		const { error } = await resend.emails.send({
-			from: "MSN Messenger <noreply@messenger.example.com>",
+		// Send verification email using @convex-dev/resend component
+		const result = await resend.sendEmail(ctx, {
+			from: "Bootleg MSN Messenger <onboarding@resend.dev>",
 			to: args.email,
 			subject: "Verify your email address",
 			html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #0066cc;">Welcome to MSN Messenger!</h2>
-          <p>Hi ${args.name || "there"},</p>
-          <p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${verificationUrl}" 
-              style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
-              Verify Email Address
-            </a>
-          </div>
-          <p>Or copy and paste this link into your browser:</p>
-          <p style="word-break: break-all; color: #666;">${verificationUrl}</p>
-          <p>This link will expire in 24 hours.</p>
-          <p>If you didn't create an account, you can safely ignore this email.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
-          <p style="color: #666; font-size: 12px;">MSN Messenger Team</p>
-        </div>
-      `,
+				<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+					<h2 style="color: #0066cc;">Welcome to the bootleg MSN Messenger!</h2>
+					<p>Hi ${args.name || "there"},</p>
+					<p>Thank you for signing up! Please verify your email address by clicking the button below:</p>
+					<div style="text-align: center; margin: 30px 0;">
+						<a href="${verificationUrl}" 
+							style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+							Verify Email Address
+						</a>
+					</div>
+					<p>Or copy and paste this link into your browser:</p>
+					<p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+					<p>This link will expire in 24 hours.</p>
+					<p>If you didn't create an account, you can safely ignore this email.</p>
+					<hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+					<p style="color: #666; font-size: 12px;">MSN Messenger Team</p>
+				</div>
+			`,
 		});
 
-		if (error) {
-			throw new Error(
-				`Failed to send verification email: ${JSON.stringify(error)}`,
-			);
-		}
+		console.log("Verification email sent:", result);
 
-		return { success: true };
+		return {
+			success: true,
+			emailId: result,
+		};
 	},
 });
 
@@ -90,6 +95,10 @@ export const verifyEmail = mutation({
 	args: {
 		token: v.string(),
 	},
+	returns: v.object({
+		success: v.boolean(),
+		email: v.string(),
+	}),
 	handler: async (ctx, args) => {
 		const verification = await ctx.db
 			.query("emailVerifications")
@@ -124,6 +133,7 @@ export const checkEmailVerification = query({
 	args: {
 		email: v.string(),
 	},
+	returns: v.boolean(),
 	handler: async (ctx, args) => {
 		const verification = await ctx.db
 			.query("emailVerifications")
@@ -142,6 +152,7 @@ export const createVerification = internalMutation({
 		token: v.string(),
 		expiresAt: v.number(),
 	},
+	returns: v.id("emailVerifications"),
 	handler: async (ctx, args) => {
 		// Remove any existing unverified tokens for this email
 		const existingVerifications = await ctx.db
@@ -168,6 +179,17 @@ export const getVerificationByEmail = internalQuery({
 	args: {
 		email: v.string(),
 	},
+	returns: v.union(
+		v.object({
+			_id: v.id("emailVerifications"),
+			_creationTime: v.number(),
+			email: v.string(),
+			token: v.string(),
+			expiresAt: v.number(),
+			verified: v.boolean(),
+		}),
+		v.null(),
+	),
 	handler: async (ctx, args) => {
 		return await ctx.db
 			.query("emailVerifications")
