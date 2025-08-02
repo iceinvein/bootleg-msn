@@ -20,10 +20,10 @@ export function DeploymentManager() {
 	useEffect(() => {
 		// Only in development mode
 		if (import.meta.env.DEV) {
-			// Simulate a new deployment after 15 seconds for testing
+			// Simulate a new deployment after 60 seconds for testing
 			const timer = setTimeout(() => {
 				handleNewDeployment();
-			}, 15000);
+			}, 60000);
 
 			return () => clearTimeout(timer);
 		}

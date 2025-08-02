@@ -1,6 +1,7 @@
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { Toaster } from "sonner";
 import { DeploymentManager } from "./components/DeploymentManager";
+import { EmailTestComponent } from "./components/EmailTestComponent";
 import { EnhancedSignInForm } from "./components/EnhancedSignInForm";
 import { MessengerApp } from "./components/MessengerApp";
 import { ThemeProvider } from "./components/theme-provider";
@@ -23,7 +24,7 @@ function App() {
 				<Authenticated>
 					<MessengerApp />
 					<UpdateNotification />
-					<DeploymentManager />
+					{import.meta.env.DEV && <DeploymentManager />}
 				</Authenticated>
 
 				<Toaster
@@ -35,6 +36,8 @@ function App() {
 						},
 					}}
 				/>
+
+				{import.meta.env.DEV && <EmailTestComponent />}
 			</main>
 		</ThemeProvider>
 	);
