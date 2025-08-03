@@ -457,6 +457,103 @@ export const markGroupMessagesAsRead = mutation({
 	},
 });
 
+export const editGroupMessage = mutation({
+	args: {
+		messageId: v.id("groupMessages"),
+		newContent: v.string(),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new Error("Not authenticated");
+		}
+
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Only the sender can edit their message
+		if (message.senderId !== userId) {
+			throw new Error("You can only edit your own messages");
+		}
+
+		// Don't allow editing deleted messages
+		if (message.isDeleted) {
+			throw new Error("Cannot edit deleted messages");
+		}
+
+		// Don't allow editing file messages
+		if (message.messageType === "file") {
+			throw new Error("Cannot edit file messages");
+		}
+
+		// Don't allow editing system messages
+		if (message.messageType === "system") {
+			throw new Error("Cannot edit system messages");
+		}
+
+		// Check if user is still a member of the group
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", message.groupId).eq("userId", userId),
+			)
+			.unique();
+
+		if (!membership) {
+			throw new Error("You are not a member of this group");
+		}
+
+		await ctx.db.patch(args.messageId, {
+			content: args.newContent.trim(),
+			isEdited: true,
+			editedAt: Date.now(),
+		});
+	},
+});
+
+export const deleteGroupMessage = mutation({
+	args: {
+		messageId: v.id("groupMessages"),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new Error("Not authenticated");
+		}
+
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Only the sender can delete their message
+		if (message.senderId !== userId) {
+			throw new Error("You can only delete your own messages");
+		}
+
+		// Check if user is still a member of the group
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", message.groupId).eq("userId", userId),
+			)
+			.unique();
+
+		if (!membership) {
+			throw new Error("You are not a member of this group");
+		}
+
+		// Mark as deleted instead of actually deleting
+		await ctx.db.patch(args.messageId, {
+			isDeleted: true,
+			deletedAt: Date.now(),
+			content: "This message was deleted",
+		});
+	},
+});
+
 export const leaveGroup = mutation({
 	args: {
 		groupId: v.id("groups"),

@@ -6,9 +6,11 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { convertTextToEmoji, isOnlyEmoji } from "../utils/emojiUtils";
 import { AddMembersModal } from "./AddMembersModal";
 import { DragDropZone } from "./DragDropZone";
+
 import { EmojiPicker } from "./EmojiPicker";
 import { FileMessage } from "./FileMessage";
 import { FileUpload } from "./FileUpload";
+import { MessageContextMenu } from "./MessageContextMenu";
 
 interface GroupChatWindowProps {
 	groupId: Id<"groups">;
@@ -28,8 +30,20 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 	const [showMembers, setShowMembers] = useState(false);
 	const [showAddMembers, setShowAddMembers] = useState(false);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+	const [contextMenu, setContextMenu] = useState<{
+		x: number;
+		y: number;
+		messageId: Id<"groupMessages">;
+		content: string;
+		isFromMe: boolean;
+		messageType: string;
+	} | null>(null);
+	const [editingMessageId, setEditingMessageId] =
+		useState<Id<"groupMessages"> | null>(null);
+	const [editingContent, setEditingContent] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const messages = useQuery(api.groups.getGroupMessages, { groupId });
 	const groups = useQuery(api.groups.getUserGroups);
@@ -42,6 +56,8 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 	);
 	const leaveGroup = useMutation(api.groups.leaveGroup);
 	const removeGroupMember = useMutation(api.groups.removeGroupMember);
+	const editGroupMessage = useMutation(api.groups.editGroupMessage);
+	const deleteGroupMessage = useMutation(api.groups.deleteGroupMessage);
 
 	const group = groups?.find((g) => g?._id === groupId);
 	const currentUserMembership = members?.find(
@@ -160,6 +176,76 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 		}
 	};
 
+	const handleContextMenu = (
+		e: React.MouseEvent,
+		messageId: Id<"groupMessages">,
+		content: string,
+		isFromMe: boolean,
+		messageType: string,
+	) => {
+		e.preventDefault();
+		setContextMenu({
+			x: e.clientX,
+			y: e.clientY,
+			messageId,
+			content,
+			isFromMe,
+			messageType,
+		});
+	};
+
+	const handleEditMessage = async (
+		messageId: Id<"groupMessages">,
+		newContent: string,
+	) => {
+		if (!newContent.trim()) return;
+
+		try {
+			await editGroupMessage({
+				messageId,
+				newContent: newContent.trim(),
+			});
+			setEditingMessageId(null);
+			setEditingContent("");
+			toast.success("Message edited successfully");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to edit message",
+			);
+		}
+	};
+
+	const startEditing = (messageId: Id<"groupMessages">, content: string) => {
+		setEditingMessageId(messageId);
+		setEditingContent(content);
+	};
+
+	// Focus the textarea when editing starts
+	useEffect(() => {
+		if (editingMessageId && editTextareaRef.current) {
+			editTextareaRef.current.focus();
+			// Position cursor at the end of the text
+			const length = editingContent.length;
+			editTextareaRef.current.setSelectionRange(length, length);
+		}
+	}, [editingMessageId, editingContent]);
+
+	const cancelEditing = () => {
+		setEditingMessageId(null);
+		setEditingContent("");
+	};
+
+	const handleDeleteMessage = async (messageId: Id<"groupMessages">) => {
+		try {
+			await deleteGroupMessage({ messageId });
+			toast.success("Message deleted successfully");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to delete message",
+			);
+		}
+	};
+
 	// Group messages by date
 	const groupedMessages =
 		messages?.reduce(
@@ -253,57 +339,143 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 									</div>
 
 									{/* Messages for this date */}
-									{(dateMessages as typeof messages)?.map((msg) => (
-										<div key={msg._id} className="space-y-1">
-											{msg.messageType === "system" ? (
-												<div className="text-center">
-													<div className="inline-block rounded-full bg-gray-200 px-3 py-1 text-gray-600 text-sm">
-														{msg.content}
-													</div>
-												</div>
-											) : (
-												<div className="flex items-start space-x-3">
-													<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 font-semibold text-sm text-white">
-														{(msg.sender?.name ||
-															msg.sender?.email ||
-															"U")[0]?.toUpperCase()}
-													</div>
-													<div className="min-w-0 flex-1">
-														<div className="mb-1 flex items-baseline space-x-2">
-															<span className="font-medium text-gray-900 text-sm">
-																{msg.sender?.name ||
-																	msg.sender?.email ||
-																	"Anonymous User"}
-															</span>
-															<span className="text-gray-500 text-xs">
-																{formatTime(msg._creationTime)}
-															</span>
-														</div>
-														<div
-															className={`${
-																msg.messageType === "emoji"
-																	? "text-3xl"
-																	: "rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-800"
-															} break-words`}
-														>
-															{msg.messageType === "file" && msg.fileId ? (
-																<FileMessage
-																	fileId={msg.fileId}
-																	fileName={msg.fileName || msg.content}
-																	fileType={
-																		msg.fileType || "application/octet-stream"
-																	}
-																	fileSize={msg.fileSize || 0}
-																/>
-															) : (
-																msg.content
-															)}
+									{(dateMessages as typeof messages)?.map((msg) => {
+										const isFromMe = msg.senderId === currentUser?._id;
+										const canEdit =
+											isFromMe &&
+											!msg.isDeleted &&
+											msg.messageType !== "file" &&
+											msg.messageType !== "system";
+										const canDelete = isFromMe && !msg.isDeleted;
+
+										return (
+											<div key={msg._id} className="space-y-1">
+												{msg.messageType === "system" ? (
+													<div className="text-center">
+														<div className="inline-block rounded-full bg-gray-200 px-3 py-1 text-gray-600 text-sm">
+															{msg.content}
 														</div>
 													</div>
-												</div>
-											)}
-										</div>
-									))}
+												) : (
+													<div className="flex items-start space-x-3">
+														<div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 font-semibold text-sm text-white">
+															{(msg.sender?.name ||
+																msg.sender?.email ||
+																"U")[0]?.toUpperCase()}
+														</div>
+														<div className="min-w-0 flex-1">
+															<div className="mb-1 flex items-baseline space-x-2">
+																<span className="font-medium text-gray-900 text-sm">
+																	{msg.sender?.name ||
+																		msg.sender?.email ||
+																		"Anonymous User"}
+																</span>
+																<span className="text-gray-500 text-xs">
+																	{formatTime(msg._creationTime)}
+																</span>
+															</div>
+															<div
+																className={`${
+																	msg.messageType === "emoji"
+																		? "text-3xl"
+																		: msg.isDeleted
+																			? "rounded-lg bg-gray-100 px-3 py-2 text-gray-500 italic"
+																			: "rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-800"
+																} break-words ${(canEdit || canDelete) && msg.messageType !== "emoji" ? "cursor-context-menu" : ""}`}
+																{...((canEdit || canDelete) &&
+																msg.messageType !== "emoji"
+																	? {
+																			onContextMenu: (e: React.MouseEvent) =>
+																				handleContextMenu(
+																					e,
+																					msg._id,
+																					msg.content,
+																					isFromMe,
+																					msg.messageType,
+																				),
+																			role: "button",
+																			tabIndex: 0,
+																			"aria-label":
+																				"Right-click to edit or delete message",
+																		}
+																	: {})}
+															>
+																{msg.messageType === "file" && msg.fileId ? (
+																	<FileMessage
+																		fileId={msg.fileId}
+																		fileName={msg.fileName || msg.content}
+																		fileType={
+																			msg.fileType || "application/octet-stream"
+																		}
+																		fileSize={msg.fileSize || 0}
+																	/>
+																) : editingMessageId === msg._id ? (
+																	<div className="space-y-2">
+																		<textarea
+																			ref={editTextareaRef}
+																			value={editingContent}
+																			onChange={(e) =>
+																				setEditingContent(e.target.value)
+																			}
+																			className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-green-500 focus:outline-none focus:ring-1 focus:ring-green-500"
+																			rows={2}
+																			placeholder="Edit your message..."
+																			aria-label="Edit message"
+																			onKeyDown={(e) => {
+																				if (e.key === "Enter" && !e.shiftKey) {
+																					e.preventDefault();
+																					handleEditMessage(
+																						msg._id,
+																						editingContent,
+																					);
+																				} else if (e.key === "Escape") {
+																					cancelEditing();
+																				}
+																			}}
+																		/>
+																		<div className="flex justify-end space-x-2">
+																			<button
+																				type="button"
+																				onClick={cancelEditing}
+																				className="rounded px-2 py-1 text-gray-600 text-xs hover:bg-gray-100"
+																			>
+																				Cancel
+																			</button>
+																			<button
+																				type="button"
+																				onClick={() =>
+																					handleEditMessage(
+																						msg._id,
+																						editingContent,
+																					)
+																				}
+																				disabled={
+																					!editingContent.trim() ||
+																					editingContent.trim() === msg.content
+																				}
+																				className="rounded bg-green-500 px-2 py-1 text-white text-xs hover:bg-green-600 disabled:bg-gray-300"
+																			>
+																				Save
+																			</button>
+																		</div>
+																	</div>
+																) : (
+																	<>
+																		{msg.content}
+																		{msg.isEdited && !msg.isDeleted && (
+																			<span className="ml-2 text-gray-400 text-xs">
+																				(edited)
+																			</span>
+																		)}
+																	</>
+																)}
+															</div>
+														</div>
+													</div>
+												)}
+											</div>
+										);
+									})}
 								</div>
 							))}
 							<div ref={messagesEndRef} />
@@ -434,6 +606,28 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 					<AddMembersModal
 						groupId={groupId}
 						onClose={() => setShowAddMembers(false)}
+					/>
+				)}
+
+				{contextMenu && (
+					<MessageContextMenu
+						x={contextMenu.x}
+						y={contextMenu.y}
+						canEdit={
+							contextMenu.isFromMe &&
+							contextMenu.messageType !== "file" &&
+							contextMenu.messageType !== "system"
+						}
+						canDelete={contextMenu.isFromMe}
+						onEdit={() => {
+							startEditing(contextMenu.messageId, contextMenu.content);
+							setContextMenu(null);
+						}}
+						onDelete={() => {
+							handleDeleteMessage(contextMenu.messageId);
+							setContextMenu(null);
+						}}
+						onClose={() => setContextMenu(null)}
 					/>
 				)}
 			</div>

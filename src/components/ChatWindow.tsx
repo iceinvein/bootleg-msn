@@ -5,9 +5,11 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { convertTextToEmoji, isOnlyEmoji } from "../utils/emojiUtils";
 import { DragDropZone } from "./DragDropZone";
+
 import { EmojiPicker } from "./EmojiPicker";
 import { FileMessage } from "./FileMessage";
 import { FileUpload } from "./FileUpload";
+import { MessageContextMenu } from "./MessageContextMenu";
 
 interface ChatWindowProps {
 	otherUserId: Id<"users">;
@@ -25,13 +27,27 @@ const statusEmojis = {
 export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 	const [message, setMessage] = useState("");
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+	const [contextMenu, setContextMenu] = useState<{
+		x: number;
+		y: number;
+		messageId: Id<"messages">;
+		content: string;
+		isFromMe: boolean;
+		messageType: string;
+	} | null>(null);
+	const [editingMessageId, setEditingMessageId] =
+		useState<Id<"messages"> | null>(null);
+	const [editingContent, setEditingContent] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const inputRef = useRef<HTMLInputElement>(null);
+	const editTextareaRef = useRef<HTMLTextAreaElement>(null);
 
 	const messages = useQuery(api.messages.getConversation, { otherUserId });
 	const contacts = useQuery(api.contacts.getContacts);
 	const sendMessage = useMutation(api.messages.sendMessage);
 	const markMessagesAsRead = useMutation(api.messages.markMessagesAsRead);
+	const editMessage = useMutation(api.messages.editMessage);
+	const deleteMessage = useMutation(api.messages.deleteMessage);
 
 	const contact = contacts?.find((c) => c.contactUserId === otherUserId);
 	const displayName =
@@ -118,6 +134,76 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 		}
 	};
 
+	const handleContextMenu = (
+		e: React.MouseEvent,
+		messageId: Id<"messages">,
+		content: string,
+		isFromMe: boolean,
+		messageType: string,
+	) => {
+		e.preventDefault();
+		setContextMenu({
+			x: e.clientX,
+			y: e.clientY,
+			messageId,
+			content,
+			isFromMe,
+			messageType,
+		});
+	};
+
+	const handleEditMessage = async (
+		messageId: Id<"messages">,
+		newContent: string,
+	) => {
+		if (!newContent.trim()) return;
+
+		try {
+			await editMessage({
+				messageId,
+				newContent: newContent.trim(),
+			});
+			setEditingMessageId(null);
+			setEditingContent("");
+			toast.success("Message edited successfully");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to edit message",
+			);
+		}
+	};
+
+	const startEditing = (messageId: Id<"messages">, content: string) => {
+		setEditingMessageId(messageId);
+		setEditingContent(content);
+	};
+
+	// Focus the textarea when editing starts
+	useEffect(() => {
+		if (editingMessageId && editTextareaRef.current) {
+			editTextareaRef.current.focus();
+			// Position cursor at the end of the text
+			const length = editingContent.length;
+			editTextareaRef.current.setSelectionRange(length, length);
+		}
+	}, [editingMessageId, editingContent]);
+
+	const cancelEditing = () => {
+		setEditingMessageId(null);
+		setEditingContent("");
+	};
+
+	const handleDeleteMessage = async (messageId: Id<"messages">) => {
+		try {
+			await deleteMessage({ messageId });
+			toast.success("Message deleted successfully");
+		} catch (error) {
+			toast.error(
+				error instanceof Error ? error.message : "Failed to delete message",
+			);
+		}
+	};
+
 	// Group messages by date
 	const groupedMessages =
 		messages?.reduce(
@@ -193,6 +279,12 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 									(dateMessages as typeof messages)?.[index - 1]?.senderId !==
 										msg.senderId;
 								const isEmojiOnly = msg.messageType === "emoji";
+								const canEdit =
+									isFromMe &&
+									!msg.isDeleted &&
+									msg.messageType !== "file" &&
+									msg.messageType !== "system";
+								const canDelete = isFromMe && !msg.isDeleted;
 
 								return (
 									<div
@@ -219,10 +311,28 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 												className={`rounded-lg px-3 py-2 ${
 													isEmojiOnly
 														? "bg-transparent p-0"
-														: isFromMe
-															? "bg-blue-500 text-white"
-															: "border border-gray-200 bg-white text-gray-800"
-												}`}
+														: msg.isDeleted
+															? "bg-gray-100 text-gray-500 italic"
+															: isFromMe
+																? "bg-blue-500 text-white"
+																: "border border-gray-200 bg-white text-gray-800"
+												} ${(canEdit || canDelete) && !isEmojiOnly ? "cursor-context-menu" : ""}`}
+												{...((canEdit || canDelete) && !isEmojiOnly
+													? {
+															onContextMenu: (e: React.MouseEvent) =>
+																handleContextMenu(
+																	e,
+																	msg._id,
+																	msg.content,
+																	isFromMe,
+																	msg.messageType,
+																),
+															role: "button",
+															tabIndex: 0,
+															"aria-label":
+																"Right-click to edit or delete message",
+														}
+													: {})}
 											>
 												{msg.messageType === "file" && msg.fileId ? (
 													<FileMessage
@@ -233,17 +343,72 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 														}
 														fileSize={msg.fileSize || 0}
 													/>
+												) : editingMessageId === msg._id ? (
+													<div className="space-y-2">
+														<textarea
+															ref={editTextareaRef}
+															value={editingContent}
+															onChange={(e) =>
+																setEditingContent(e.target.value)
+															}
+															className="w-full rounded-md border border-gray-300 p-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+															rows={2}
+															placeholder="Edit your message..."
+															aria-label="Edit message"
+															onKeyDown={(e) => {
+																if (e.key === "Enter" && !e.shiftKey) {
+																	e.preventDefault();
+																	handleEditMessage(msg._id, editingContent);
+																} else if (e.key === "Escape") {
+																	cancelEditing();
+																}
+															}}
+														/>
+														<div className="flex justify-end space-x-2">
+															<button
+																type="button"
+																onClick={cancelEditing}
+																className="rounded px-2 py-1 text-gray-600 text-xs hover:bg-gray-100"
+															>
+																Cancel
+															</button>
+															<button
+																type="button"
+																onClick={() =>
+																	handleEditMessage(msg._id, editingContent)
+																}
+																disabled={
+																	!editingContent.trim() ||
+																	editingContent.trim() === msg.content
+																}
+																className="rounded bg-blue-500 px-2 py-1 text-white text-xs hover:bg-blue-600 disabled:bg-gray-300"
+															>
+																Save
+															</button>
+														</div>
+													</div>
 												) : (
 													<div
 														className={`break-words ${isEmojiOnly ? "text-3xl" : ""}`}
 													>
 														{msg.content}
+														{msg.isEdited && !msg.isDeleted && (
+															<span
+																className={`ml-2 text-xs ${isFromMe ? "text-blue-200" : "text-gray-400"}`}
+															>
+																(edited)
+															</span>
+														)}
 													</div>
 												)}
 												{!isEmojiOnly && (
 													<div
 														className={`mt-1 text-xs ${
-															isFromMe ? "text-blue-100" : "text-gray-500"
+															msg.isDeleted
+																? "text-gray-400"
+																: isFromMe
+																	? "text-blue-100"
+																	: "text-gray-500"
 														}`}
 													>
 														{formatTime(msg._creationTime)}
@@ -300,6 +465,28 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 						/>
 					)}
 				</div>
+
+				{contextMenu && (
+					<MessageContextMenu
+						x={contextMenu.x}
+						y={contextMenu.y}
+						canEdit={
+							contextMenu.isFromMe &&
+							contextMenu.messageType !== "file" &&
+							contextMenu.messageType !== "system"
+						}
+						canDelete={contextMenu.isFromMe}
+						onEdit={() => {
+							startEditing(contextMenu.messageId, contextMenu.content);
+							setContextMenu(null);
+						}}
+						onDelete={() => {
+							handleDeleteMessage(contextMenu.messageId);
+							setContextMenu(null);
+						}}
+						onClose={() => setContextMenu(null)}
+					/>
+				)}
 			</div>
 		</DragDropZone>
 	);

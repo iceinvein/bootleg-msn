@@ -43,6 +43,10 @@ const applicationTables = {
 		fileType: v.optional(v.string()),
 		fileSize: v.optional(v.number()),
 		isRead: v.boolean(),
+		isEdited: v.optional(v.boolean()),
+		editedAt: v.optional(v.number()),
+		isDeleted: v.optional(v.boolean()),
+		deletedAt: v.optional(v.number()),
 	})
 		.index("by_sender", ["senderId"])
 		.index("by_receiver", ["receiverId"])
@@ -99,6 +103,10 @@ const applicationTables = {
 		fileName: v.optional(v.string()),
 		fileType: v.optional(v.string()),
 		fileSize: v.optional(v.number()),
+		isEdited: v.optional(v.boolean()),
+		editedAt: v.optional(v.number()),
+		isDeleted: v.optional(v.boolean()),
+		deletedAt: v.optional(v.number()),
 	})
 		.index("by_group", ["groupId"])
 		.index("by_sender", ["senderId"]),
