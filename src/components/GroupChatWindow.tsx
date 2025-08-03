@@ -1,16 +1,15 @@
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { convertTextToEmoji, isOnlyEmoji } from "../utils/emojiUtils";
 import { AddMembersModal } from "./AddMembersModal";
 import { DragDropZone } from "./DragDropZone";
-
 import { EmojiPicker } from "./EmojiPicker";
 import { FileMessage } from "./FileMessage";
 import { FileUpload } from "./FileUpload";
-import { MessageContextMenu } from "./MessageContextMenu";
 
 interface GroupChatWindowProps {
 	groupId: Id<"groups">;
@@ -30,14 +29,9 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 	const [showMembers, setShowMembers] = useState(false);
 	const [showAddMembers, setShowAddMembers] = useState(false);
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-	const [contextMenu, setContextMenu] = useState<{
-		x: number;
-		y: number;
-		messageId: Id<"groupMessages">;
-		content: string;
-		isFromMe: boolean;
-		messageType: string;
-	} | null>(null);
+	const [openMenuId, setOpenMenuId] = useState<Id<"groupMessages"> | null>(
+		null,
+	);
 	const [editingMessageId, setEditingMessageId] =
 		useState<Id<"groupMessages"> | null>(null);
 	const [editingContent, setEditingContent] = useState("");
@@ -176,22 +170,8 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 		}
 	};
 
-	const handleContextMenu = (
-		e: React.MouseEvent,
-		messageId: Id<"groupMessages">,
-		content: string,
-		isFromMe: boolean,
-		messageType: string,
-	) => {
-		e.preventDefault();
-		setContextMenu({
-			x: e.clientX,
-			y: e.clientY,
-			messageId,
-			content,
-			isFromMe,
-			messageType,
-		});
+	const toggleMenu = (messageId: Id<"groupMessages">) => {
+		setOpenMenuId(openMenuId === messageId ? null : messageId);
 	};
 
 	const handleEditMessage = async (
@@ -229,6 +209,24 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 			editTextareaRef.current.setSelectionRange(length, length);
 		}
 	}, [editingMessageId, editingContent]);
+
+	// Close menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (openMenuId) {
+				// Check if the click is inside a dropdown menu
+				const target = event.target as Element;
+				if (!target.closest("[data-dropdown-menu]")) {
+					setOpenMenuId(null);
+				}
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [openMenuId]);
 
 	const cancelEditing = () => {
 		setEditingMessageId(null);
@@ -375,31 +373,36 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 																</span>
 															</div>
 															<div
-																className={`${
-																	msg.messageType === "emoji"
-																		? "text-3xl"
-																		: msg.isDeleted
-																			? "rounded-lg bg-gray-100 px-3 py-2 text-gray-500 italic"
-																			: "rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-800"
-																} break-words ${(canEdit || canDelete) && msg.messageType !== "emoji" ? "cursor-context-menu" : ""}`}
-																{...((canEdit || canDelete) &&
-																msg.messageType !== "emoji"
-																	? {
-																			onContextMenu: (e: React.MouseEvent) =>
-																				handleContextMenu(
-																					e,
-																					msg._id,
-																					msg.content,
-																					isFromMe,
-																					msg.messageType,
-																				),
-																			role: "button",
-																			tabIndex: 0,
-																			"aria-label":
-																				"Right-click to edit or delete message",
-																		}
-																	: {})}
+																className={cn("group relative break-words", {
+																	"text-3xl": msg.messageType === "emoji",
+																	"rounded-lg bg-gray-100 px-3 py-2 text-gray-500 italic":
+																		msg.isDeleted &&
+																		msg.messageType !== "emoji",
+																	"rounded-lg border border-gray-200 bg-white px-3 py-2 text-gray-800":
+																		!msg.isDeleted &&
+																		msg.messageType !== "emoji",
+																})}
 															>
+																{/* Three-dot menu button */}
+																{(canEdit || canDelete) &&
+																	msg.messageType !== "emoji" && (
+																		<button
+																			type="button"
+																			onClick={() => toggleMenu(msg._id)}
+																			className="absolute top-2 right-2 rounded-full p-1 opacity-0 transition-opacity hover:bg-black hover:bg-opacity-10 group-hover:opacity-100"
+																			aria-label="Message options"
+																		>
+																			<svg
+																				className="h-3 w-3 text-gray-500"
+																				fill="currentColor"
+																				viewBox="0 0 20 20"
+																			>
+																				<title>Message options</title>
+																				<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+																			</svg>
+																		</button>
+																	)}
+
 																{msg.messageType === "file" && msg.fileId ? (
 																	<FileMessage
 																		fileId={msg.fileId}
@@ -468,6 +471,39 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 																			</span>
 																		)}
 																	</>
+																)}
+
+																{/* Dropdown menu */}
+																{openMenuId === msg._id && (
+																	<div
+																		data-dropdown-menu
+																		className="absolute top-8 right-2 z-50 min-w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg"
+																	>
+																		{canEdit && (
+																			<button
+																				type="button"
+																				onClick={() => {
+																					startEditing(msg._id, msg.content);
+																					setOpenMenuId(null);
+																				}}
+																				className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+																			>
+																				✏️ Edit
+																			</button>
+																		)}
+																		{canDelete && (
+																			<button
+																				type="button"
+																				onClick={() => {
+																					handleDeleteMessage(msg._id);
+																					setOpenMenuId(null);
+																				}}
+																				className="w-full px-3 py-2 text-left text-red-600 text-sm hover:bg-red-50"
+																			>
+																				🗑️ Delete
+																			</button>
+																		)}
+																	</div>
 																)}
 															</div>
 														</div>
@@ -606,28 +642,6 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 					<AddMembersModal
 						groupId={groupId}
 						onClose={() => setShowAddMembers(false)}
-					/>
-				)}
-
-				{contextMenu && (
-					<MessageContextMenu
-						x={contextMenu.x}
-						y={contextMenu.y}
-						canEdit={
-							contextMenu.isFromMe &&
-							contextMenu.messageType !== "file" &&
-							contextMenu.messageType !== "system"
-						}
-						canDelete={contextMenu.isFromMe}
-						onEdit={() => {
-							startEditing(contextMenu.messageId, contextMenu.content);
-							setContextMenu(null);
-						}}
-						onDelete={() => {
-							handleDeleteMessage(contextMenu.messageId);
-							setContextMenu(null);
-						}}
-						onClose={() => setContextMenu(null)}
 					/>
 				)}
 			</div>

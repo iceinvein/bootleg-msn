@@ -15,6 +15,7 @@ This is an MSN Messenger-style chat application that provides real-time messagin
 ## User Experience
 
 The app mimics the classic MSN Messenger experience with:
+
 - Gradient blue/purple background theme
 - Contact list with status indicators
 - Chat windows with message history

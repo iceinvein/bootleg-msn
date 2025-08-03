@@ -1,12 +1,14 @@
 # Project Structure
 
 ## Root Directory
+
 - `src/` - Frontend React application
 - `convex/` - Backend Convex functions and schema
 - `dist/` - Build output directory
 - Configuration files at root level
 
 ## Frontend Structure (`src/`)
+
 ```
 src/
 ├── App.tsx                 # Main app component with auth routing
@@ -25,6 +27,7 @@ src/
 ```
 
 ## Backend Structure (`convex/`)
+
 ```
 convex/
 ├── schema.ts              # Database schema definition
@@ -41,18 +44,21 @@ convex/
 ```
 
 ## Component Organization
+
 - **Modals**: All modal components end with `Modal.tsx`
 - **Main Components**: Core app functionality (MessengerApp, ChatWindow, etc.)
 - **Form Components**: Authentication and input forms
 - **Utility Components**: Reusable UI elements
 
 ## File Naming Conventions
+
 - React components: PascalCase (e.g., `ChatWindow.tsx`)
 - Convex functions: camelCase (e.g., `messages.ts`)
 - Utilities: camelCase (e.g., `emojiUtils.ts`)
 - Configuration: lowercase with dots (e.g., `vite.config.ts`)
 
 ## Import Patterns
+
 - Use `@/` alias for src imports
 - Convex imports use relative paths
 - External libraries imported at top of file

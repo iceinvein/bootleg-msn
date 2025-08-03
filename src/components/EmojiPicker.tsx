@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 
 interface EmojiPickerProps {
 	onEmojiSelect: (emoji: string) => void;
@@ -765,11 +766,12 @@ export function EmojiPicker({ onEmojiSelect, onClose }: EmojiPickerProps) {
 							type="button"
 							key={category}
 							onClick={() => setActiveCategory(category)}
-							className={`whitespace-nowrap px-3 py-2 font-medium text-xs ${
+							className={cn(
+								"whitespace-nowrap px-3 py-2 font-medium text-xs",
 								activeCategory === category
 									? "border-blue-600 border-b-2 text-blue-600"
-									: "text-gray-500 hover:text-gray-700"
-							}`}
+									: "text-gray-500 hover:text-gray-700",
+							)}
 						>
 							{category.split(" ")[0]}
 						</button>

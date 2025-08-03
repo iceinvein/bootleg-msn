@@ -1,15 +1,14 @@
 import { useMutation, useQuery } from "convex/react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { convertTextToEmoji, isOnlyEmoji } from "../utils/emojiUtils";
 import { DragDropZone } from "./DragDropZone";
-
 import { EmojiPicker } from "./EmojiPicker";
 import { FileMessage } from "./FileMessage";
 import { FileUpload } from "./FileUpload";
-import { MessageContextMenu } from "./MessageContextMenu";
 
 interface ChatWindowProps {
 	otherUserId: Id<"users">;
@@ -27,14 +26,7 @@ const statusEmojis = {
 export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 	const [message, setMessage] = useState("");
 	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
-	const [contextMenu, setContextMenu] = useState<{
-		x: number;
-		y: number;
-		messageId: Id<"messages">;
-		content: string;
-		isFromMe: boolean;
-		messageType: string;
-	} | null>(null);
+	const [openMenuId, setOpenMenuId] = useState<Id<"messages"> | null>(null);
 	const [editingMessageId, setEditingMessageId] =
 		useState<Id<"messages"> | null>(null);
 	const [editingContent, setEditingContent] = useState("");
@@ -134,22 +126,8 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 		}
 	};
 
-	const handleContextMenu = (
-		e: React.MouseEvent,
-		messageId: Id<"messages">,
-		content: string,
-		isFromMe: boolean,
-		messageType: string,
-	) => {
-		e.preventDefault();
-		setContextMenu({
-			x: e.clientX,
-			y: e.clientY,
-			messageId,
-			content,
-			isFromMe,
-			messageType,
-		});
+	const toggleMenu = (messageId: Id<"messages">) => {
+		setOpenMenuId(openMenuId === messageId ? null : messageId);
 	};
 
 	const handleEditMessage = async (
@@ -187,6 +165,24 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 			editTextareaRef.current.setSelectionRange(length, length);
 		}
 	}, [editingMessageId, editingContent]);
+
+	// Close menu when clicking outside
+	useEffect(() => {
+		const handleClickOutside = (event: MouseEvent) => {
+			if (openMenuId) {
+				// Check if the click is inside a dropdown menu
+				const target = event.target as Element;
+				if (!target.closest("[data-dropdown-menu]")) {
+					setOpenMenuId(null);
+				}
+			}
+		};
+
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
+		};
+	}, [openMenuId]);
 
 	const cancelEditing = () => {
 		setEditingMessageId(null);
@@ -289,18 +285,25 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 								return (
 									<div
 										key={msg._id}
-										className={`flex ${isFromMe ? "justify-end" : "justify-start"} mb-2`}
+										className={cn(
+											"mb-2 flex",
+											isFromMe ? "justify-end" : "justify-start",
+										)}
 									>
 										<div
-											className={`flex max-w-xs items-end space-x-2 lg:max-w-md ${isFromMe ? "flex-row-reverse space-x-reverse" : ""}`}
+											className={cn(
+												"flex max-w-xs items-end space-x-2 lg:max-w-md",
+												isFromMe && "flex-row-reverse space-x-reverse",
+											)}
 										>
 											{!isFromMe && (
 												<div
-													className={`flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-semibold text-xs ${
+													className={cn(
+														"flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full font-semibold text-xs",
 														showAvatar
 															? "bg-gradient-to-br from-gray-400 to-gray-600 text-white"
-															: "invisible"
-													}`}
+															: "invisible",
+													)}
 												>
 													{showAvatar
 														? displayName[0]?.toUpperCase() || "U"
@@ -308,32 +311,41 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 												</div>
 											)}
 											<div
-												className={`rounded-lg px-3 py-2 ${
-													isEmojiOnly
-														? "bg-transparent p-0"
-														: msg.isDeleted
-															? "bg-gray-100 text-gray-500 italic"
-															: isFromMe
-																? "bg-blue-500 text-white"
-																: "border border-gray-200 bg-white text-gray-800"
-												} ${(canEdit || canDelete) && !isEmojiOnly ? "cursor-context-menu" : ""}`}
-												{...((canEdit || canDelete) && !isEmojiOnly
-													? {
-															onContextMenu: (e: React.MouseEvent) =>
-																handleContextMenu(
-																	e,
-																	msg._id,
-																	msg.content,
-																	isFromMe,
-																	msg.messageType,
-																),
-															role: "button",
-															tabIndex: 0,
-															"aria-label":
-																"Right-click to edit or delete message",
-														}
-													: {})}
+												className={cn("group relative rounded-lg px-3 py-2", {
+													"bg-transparent p-0": isEmojiOnly,
+													"bg-gray-100 text-gray-500 italic":
+														msg.isDeleted && !isEmojiOnly,
+													"bg-blue-500 text-white":
+														isFromMe && !msg.isDeleted && !isEmojiOnly,
+													"border border-gray-200 bg-white text-gray-800":
+														!isFromMe && !msg.isDeleted && !isEmojiOnly,
+												})}
 											>
+												{/* Three-dot menu button */}
+												{(canEdit || canDelete) && !isEmojiOnly && (
+													<button
+														type="button"
+														onClick={() => toggleMenu(msg._id)}
+														className={cn(
+															"absolute top-2 rounded-full p-1 opacity-0 transition-opacity hover:bg-black hover:bg-opacity-10 group-hover:opacity-100",
+															isFromMe ? "left-2" : "right-2",
+														)}
+														aria-label="Message options"
+													>
+														<svg
+															className={cn(
+																"h-3 w-3",
+																isFromMe ? "text-blue-200" : "text-gray-500",
+															)}
+															fill="currentColor"
+															viewBox="0 0 20 20"
+														>
+															<title>Message options</title>
+															<path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
+														</svg>
+													</button>
+												)}
+
 												{msg.messageType === "file" && msg.fileId ? (
 													<FileMessage
 														fileId={msg.fileId}
@@ -389,12 +401,18 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 													</div>
 												) : (
 													<div
-														className={`break-words ${isEmojiOnly ? "text-3xl" : ""}`}
+														className={cn(
+															"break-words",
+															isEmojiOnly && "text-3xl",
+														)}
 													>
 														{msg.content}
 														{msg.isEdited && !msg.isDeleted && (
 															<span
-																className={`ml-2 text-xs ${isFromMe ? "text-blue-200" : "text-gray-400"}`}
+																className={cn(
+																	"ml-2 text-xs",
+																	isFromMe ? "text-blue-200" : "text-gray-400",
+																)}
 															>
 																(edited)
 															</span>
@@ -403,15 +421,49 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 												)}
 												{!isEmojiOnly && (
 													<div
-														className={`mt-1 text-xs ${
-															msg.isDeleted
-																? "text-gray-400"
-																: isFromMe
-																	? "text-blue-100"
-																	: "text-gray-500"
-														}`}
+														className={cn("mt-1 text-xs", {
+															"text-gray-400": msg.isDeleted,
+															"text-blue-100": !msg.isDeleted && isFromMe,
+															"text-gray-500": !msg.isDeleted && !isFromMe,
+														})}
 													>
 														{formatTime(msg._creationTime)}
+													</div>
+												)}
+
+												{/* Dropdown menu */}
+												{openMenuId === msg._id && (
+													<div
+														data-dropdown-menu
+														className={cn(
+															"absolute top-8 z-50 min-w-32 rounded-md border border-gray-200 bg-white py-1 shadow-lg",
+															isFromMe ? "left-2" : "right-2",
+														)}
+													>
+														{canEdit && (
+															<button
+																type="button"
+																onClick={() => {
+																	startEditing(msg._id, msg.content);
+																	setOpenMenuId(null);
+																}}
+																className="w-full px-3 py-2 text-left text-sm hover:bg-gray-100"
+															>
+																✏️ Edit
+															</button>
+														)}
+														{canDelete && (
+															<button
+																type="button"
+																onClick={() => {
+																	handleDeleteMessage(msg._id);
+																	setOpenMenuId(null);
+																}}
+																className="w-full px-3 py-2 text-left text-red-600 text-sm hover:bg-red-50"
+															>
+																🗑️ Delete
+															</button>
+														)}
 													</div>
 												)}
 											</div>
@@ -465,28 +517,6 @@ export function ChatWindow({ otherUserId, onClose }: ChatWindowProps) {
 						/>
 					)}
 				</div>
-
-				{contextMenu && (
-					<MessageContextMenu
-						x={contextMenu.x}
-						y={contextMenu.y}
-						canEdit={
-							contextMenu.isFromMe &&
-							contextMenu.messageType !== "file" &&
-							contextMenu.messageType !== "system"
-						}
-						canDelete={contextMenu.isFromMe}
-						onEdit={() => {
-							startEditing(contextMenu.messageId, contextMenu.content);
-							setContextMenu(null);
-						}}
-						onDelete={() => {
-							handleDeleteMessage(contextMenu.messageId);
-							setContextMenu(null);
-						}}
-						onClose={() => setContextMenu(null)}
-					/>
-				)}
 			</div>
 		</DragDropZone>
 	);

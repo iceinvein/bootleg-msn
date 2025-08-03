@@ -32,3 +32,6 @@ dist-ssr
 
 # Convex deployment keys
 .env.convex
+
+# Convex generated files
+convex/_generated/

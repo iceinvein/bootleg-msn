@@ -1,6 +1,7 @@
 # Technology Stack
 
 ## Frontend
+
 - **React 19** with TypeScript
 - **Vite** as build tool and dev server
 - **Tailwind CSS** for styling with custom theme
@@ -8,12 +9,14 @@
 - **clsx** and **tailwind-merge** for conditional styling
 
 ## Backend
+
 - **Convex** as full-stack backend platform
 - **Convex Auth** for authentication
 - **Resend** for email services
 - Real-time subscriptions and mutations
 
 ## Development Tools
+
 - **TypeScript** with strict configuration
 - **ESLint** with React hooks plugin
 - **Prettier** for code formatting
@@ -22,6 +25,7 @@
 ## Build System
 
 ### Common Commands
+
 ```bash
 # Start development (frontend + backend)
 npm run dev
@@ -40,12 +44,14 @@ npm run lint
 ```
 
 ## Configuration
+
 - **Path aliases**: `@/*` maps to `./src/*`
 - **Tailwind JIT mode** with custom purge configuration
 - **PostCSS** with autoprefixer
 - **Convex deployment**: Connected to `superb-seal-735`
 
 ## Code Style
+
 - Use TypeScript strict mode
 - Prefer functional components with hooks
 - Use Tailwind utility classes over custom CSS

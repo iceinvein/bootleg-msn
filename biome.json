@@ -10,7 +10,9 @@
 	},
 	"formatter": {
 		"enabled": true,
-		"indentStyle": "tab"
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"includes": ["./src/**/*", "!./convex/_generated/**/*", "./convex/**/*"]
 	},
 	"linter": {
 		"enabled": true,
@@ -27,7 +29,7 @@
 				}
 			}
 		},
-		"includes": ["./src/**/*", "./convex/**/*"]
+		"includes": ["./src/**/*", "!./convex/_generated/**/*", "./convex/**/*"]
 	},
 	"javascript": {
 		"formatter": {

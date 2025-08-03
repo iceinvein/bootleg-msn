@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { cn } from "@/lib/utils";
 import type { YouTubeVideoInfo } from "../utils/youtubeUtils";
 
 interface YouTubeEmbedProps {
@@ -21,7 +22,10 @@ export function YouTubeEmbed({ video, className = "" }: YouTubeEmbedProps) {
 	if (hasError) {
 		return (
 			<div
-				className={`rounded-lg border border-gray-200 bg-gray-50 p-4 ${className}`}
+				className={cn(
+					"rounded-lg border border-gray-200 bg-gray-50 p-4",
+					className,
+				)}
 			>
 				<div className="flex items-center space-x-2 text-gray-500">
 					<svg
@@ -55,7 +59,10 @@ export function YouTubeEmbed({ video, className = "" }: YouTubeEmbedProps) {
 
 	return (
 		<div
-			className={`overflow-hidden rounded-lg border border-gray-200 bg-black ${className}`}
+			className={cn(
+				"overflow-hidden rounded-lg border border-gray-200 bg-black",
+				className,
+			)}
 		>
 			{!isLoaded ? (
 				<div className="relative">

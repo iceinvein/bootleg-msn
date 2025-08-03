@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -82,22 +83,24 @@ export function ContactRequestsModal({ onClose }: ContactRequestsModalProps) {
 					<button
 						type="button"
 						onClick={() => setActiveTab("received")}
-						className={`flex-1 px-4 py-3 font-medium text-sm transition-colors ${
+						className={cn(
+							"flex-1 px-4 py-3 font-medium text-sm transition-colors",
 							activeTab === "received"
 								? "border-blue-600 border-b-2 bg-blue-50 text-blue-600"
-								: "text-gray-500 hover:text-gray-700"
-						}`}
+								: "text-gray-500 hover:text-gray-700",
+						)}
 					>
 						Received ({pendingRequests?.length || 0})
 					</button>
 					<button
 						type="button"
 						onClick={() => setActiveTab("sent")}
-						className={`flex-1 px-4 py-3 font-medium text-sm transition-colors ${
+						className={cn(
+							"flex-1 px-4 py-3 font-medium text-sm transition-colors",
 							activeTab === "sent"
 								? "border-blue-600 border-b-2 bg-blue-50 text-blue-600"
-								: "text-gray-500 hover:text-gray-700"
-						}`}
+								: "text-gray-500 hover:text-gray-700",
+						)}
 					>
 						Sent ({sentRequests?.length || 0})
 					</button>

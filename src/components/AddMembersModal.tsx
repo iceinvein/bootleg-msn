@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -102,11 +103,12 @@ export function AddMembersModal({ groupId, onClose }: AddMembersModalProps) {
 									<button
 										key={contact._id}
 										type="button"
-										className={`flex w-full items-center space-x-3 rounded-lg p-3 text-left transition-colors ${
+										className={cn(
+											"flex w-full items-center space-x-3 rounded-lg border-2 p-3 text-left transition-colors",
 											isSelected
-												? "border-2 border-blue-200 bg-blue-50"
-												: "border-2 border-transparent bg-gray-50 hover:bg-gray-100"
-										}`}
+												? "border-blue-200 bg-blue-50"
+												: "border-transparent bg-gray-50 hover:bg-gray-100",
+										)}
 										onClick={() => handleContactToggle(contact.contactUserId)}
 									>
 										<div className="flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 font-semibold text-white">
@@ -123,11 +125,12 @@ export function AddMembersModal({ groupId, onClose }: AddMembersModalProps) {
 											)}
 										</div>
 										<div
-											className={`flex h-5 w-5 items-center justify-center rounded-full border-2 ${
+											className={cn(
+												"flex h-5 w-5 items-center justify-center rounded-full border-2",
 												isSelected
 													? "border-blue-500 bg-blue-500"
-													: "border-gray-300"
-											}`}
+													: "border-gray-300",
+											)}
 										>
 											{isSelected && (
 												<svg

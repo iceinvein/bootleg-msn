@@ -1,6 +1,7 @@
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -98,11 +99,11 @@ export function ContactList({
 					return (
 						<div
 							key={contact._id}
-							className={`group relative flex items-center space-x-3 px-4 py-3 transition-colors hover:bg-blue-50 ${
-								activeChatUserId === contact.user._id
-									? "border-blue-500 border-r-2 bg-blue-100"
-									: ""
-							}`}
+							className={cn(
+								"group relative flex items-center space-x-3 px-4 py-3 transition-colors hover:bg-blue-50",
+								activeChatUserId === contact.user._id &&
+									"border-blue-500 border-r-2 bg-blue-100",
+							)}
 						>
 							<button
 								type="button"
@@ -177,11 +178,11 @@ export function ContactList({
 					<button
 						key={group._id}
 						type="button"
-						className={`group relative flex w-full items-center space-x-3 px-4 py-3 text-left transition-colors hover:bg-green-50 ${
-							activeGroupId === group._id
-								? "border-green-500 border-r-2 bg-green-100"
-								: ""
-						}`}
+						className={cn(
+							"group relative flex w-full items-center space-x-3 px-4 py-3 text-left transition-colors hover:bg-green-50",
+							activeGroupId === group._id &&
+								"border-green-500 border-r-2 bg-green-100",
+						)}
 						onClick={() => onSelectGroup(group._id)}
 					>
 						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 font-semibold text-sm text-white">
