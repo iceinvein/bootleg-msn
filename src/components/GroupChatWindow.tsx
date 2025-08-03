@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from "convex/react";
+import { Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -10,6 +11,8 @@ import { DragDropZone } from "./DragDropZone";
 import { EmojiPicker } from "./EmojiPicker";
 import { FileMessage } from "./FileMessage";
 import { FileUpload } from "./FileUpload";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
 
 interface GroupChatWindowProps {
 	groupId: Id<"groups">;
@@ -28,7 +31,6 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 	const [message, setMessage] = useState("");
 	const [showMembers, setShowMembers] = useState(false);
 	const [showAddMembers, setShowAddMembers] = useState(false);
-	const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 	const [openMenuId, setOpenMenuId] = useState<Id<"groupMessages"> | null>(
 		null,
 	);
@@ -107,7 +109,6 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 		} else {
 			setMessage((prev) => prev + emoji);
 		}
-		setShowEmojiPicker(false);
 	};
 
 	const handleLeaveGroup = async () => {
@@ -518,45 +519,39 @@ export function GroupChatWindow({ groupId, onClose }: GroupChatWindowProps) {
 						</div>
 
 						{/* Message Input */}
-						<div className="relative border-gray-200 border-t p-4">
+						<div className="border-gray-200 border-t bg-white p-3 md:p-4">
 							<form
 								onSubmit={handleSendMessage}
-								className="flex items-end space-x-2"
+								className="flex items-center space-x-2"
 							>
 								<FileUpload groupId={groupId} />
-								<div className="relative flex-1">
-									<input
-										ref={inputRef}
-										type="text"
-										value={message}
-										onChange={(e) => setMessage(e.target.value)}
-										placeholder="Type a message or drag files here..."
-										className="w-full rounded-md border border-gray-300 px-3 py-2 pr-10 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-green-500"
-									/>
-									<button
+								<EmojiPicker onEmojiSelect={handleEmojiSelect}>
+									<Button
 										type="button"
-										onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-										className="-translate-y-1/2 absolute top-1/2 right-2 transform text-gray-400 text-xl hover:text-gray-600"
-										title="Add emoji"
+										variant="ghost"
+										size="sm"
+										className="h-8 w-8 flex-shrink-0 cursor-pointer md:h-10 md:w-10"
 									>
-										😊
-									</button>
-								</div>
-								<button
-									type="submit"
-									disabled={!message.trim()}
-									className="rounded-md bg-green-500 px-6 py-2 font-medium text-white transition-colors hover:bg-green-600 disabled:bg-gray-300"
-								>
-									Send
-								</button>
-							</form>
-
-							{showEmojiPicker && (
-								<EmojiPicker
-									onEmojiSelect={handleEmojiSelect}
-									onClose={() => setShowEmojiPicker(false)}
+										<Smile className="h-3 w-3 md:h-4 md:w-4" />
+									</Button>
+								</EmojiPicker>
+								<Input
+									type="text"
+									ref={inputRef}
+									value={message}
+									onChange={(e) => setMessage(e.target.value)}
+									placeholder="Type a message or drag files here..."
+									className="h-9 flex-1 rounded-full border-gray-300 text-sm focus:border-blue-500 md:h-10 md:text-base"
 								/>
-							)}
+								<Button
+									type="submit"
+									size="sm"
+									className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 md:h-10 md:w-10"
+									disabled={!message.trim()}
+								>
+									<Send className="h-3 w-3 md:h-4 md:w-4" />
+								</Button>
+							</form>
 						</div>
 					</div>
 
