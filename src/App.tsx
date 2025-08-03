@@ -1,11 +1,11 @@
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
-import { Toaster } from "sonner";
-import { DeploymentManager } from "./components/DeploymentManager";
-import { EmailTestComponent } from "./components/EmailTestComponent";
+// import { DeploymentManager } from "./components/DeploymentManager";
+// import { EmailTestComponent } from "./components/EmailTestComponent";
 import { EnhancedSignInForm } from "./components/EnhancedSignInForm";
 import { MessengerApp } from "./components/MessengerApp";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
+import { Toaster } from "./components/ui/sonner";
 
 function App() {
 	return (
@@ -24,20 +24,12 @@ function App() {
 				<Authenticated>
 					<MessengerApp />
 					<UpdateNotification />
-					{import.meta.env.DEV && <DeploymentManager />}
+					{/* {import.meta.env.DEV && <DeploymentManager />} */}
 				</Authenticated>
 
-				<Toaster
-					position="top-right"
-					toastOptions={{
-						style: {
-							background: "#363636",
-							color: "#fff",
-						},
-					}}
-				/>
+				<Toaster />
 
-				{import.meta.env.DEV && <EmailTestComponent />}
+				{/* {import.meta.env.DEV && <EmailTestComponent />} */}
 			</main>
 		</ThemeProvider>
 	);
