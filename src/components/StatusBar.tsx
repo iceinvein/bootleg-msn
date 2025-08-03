@@ -1,8 +1,36 @@
-import { useMutation } from "convex/react";
+import { useAuthActions } from "@convex-dev/auth/react";
+import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
+import { useMutation, useQuery } from "convex/react";
+import {
+	LogOutIcon,
+	Settings,
+	User,
+	UserCheck,
+	UserPlus,
+	Users,
+} from "lucide-react";
 import { useState } from "react";
 import { api } from "../../convex/_generated/api";
-import { SignOutButton } from "../SignOutButton";
-import { SetNameModal } from "./SetNameModal";
+import { AddContactDialog } from "./AddContactDialog";
+import { ContactRequestsDialog } from "./ContactRequestsDialog";
+import { CreateGroupDialog } from "./CreateGroupDialog";
+import { StatusMessage } from "./StatusMessage";
+import { ThemeToggle } from "./theme-toggle";
+import { Badge } from "./ui/badge";
+import { Button } from "./ui/button";
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "./ui/select";
 
 const statusOptions = [
 	{ value: "online", label: "Online", color: "bg-green-500", emoji: "🟢" },
@@ -24,13 +52,15 @@ interface StatusBarProps {
 export function StatusBar({ user }: StatusBarProps) {
 	const [currentStatus, setCurrentStatus] = useState<StatusValue>("online");
 	const [statusMessage, setStatusMessage] = useState("");
-	const [showStatusMenu, setShowStatusMenu] = useState(false);
-	const [showNameModal, setShowNameModal] = useState(false);
+
+	const pendingRequests = useQuery(api.contacts.getPendingRequests);
+	const sentRequests = useQuery(api.contacts.getSentRequests);
+
 	const updateStatus = useMutation(api.userStatus.updateStatus);
+	const { signOut } = useAuthActions();
 
 	const handleStatusChange = async (status: StatusValue) => {
 		setCurrentStatus(status);
-		setShowStatusMenu(false);
 		await updateStatus({ status, statusMessage });
 	};
 
@@ -44,74 +74,111 @@ export function StatusBar({ user }: StatusBarProps) {
 
 	const currentStatusOption =
 		statusOptions.find((s) => s.value === currentStatus) || statusOptions[0];
-	const displayName = user.name || user.email || "Anonymous User";
+	const displayName = user.name ?? "You";
+	const totalRequestCount =
+		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
 
 	return (
-		<div className="bg-gradient-to-r from-blue-500 to-blue-600 p-4 text-white">
-			<div className="mb-3 flex items-center justify-between">
+		<div className="bg-accent text-accent-foreground">
+			<div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
-					<div className="flex h-10 w-10 items-center justify-center rounded-full bg-white font-bold text-blue-600 text-lg">
-						{displayName[0]?.toUpperCase() || "U"}
-					</div>
+					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
+						<AvatarImage src="/placeholder.svg?height=40&width=40" />
+						<AvatarFallback className="text-xs md:text-sm">
+							<User className="h-full w-full" />
+						</AvatarFallback>
+					</Avatar>
 					<div className="min-w-0 flex-1">
-						<button
-							type="button"
-							onClick={() => setShowNameModal(true)}
-							className="block w-full truncate text-left font-semibold transition-colors hover:text-blue-100"
-							title="Click to change name"
-						>
+						<h2 className="font-semibold text-sm md:text-base">
 							{displayName}
-						</button>
-						<div className="text-blue-100 text-sm">MSN Messenger</div>
+						</h2>
+						<StatusMessage
+							initialStatus={statusMessage}
+							onSave={handleStatusMessageChange}
+						/>
 					</div>
 				</div>
-				<SignOutButton />
-			</div>
-
-			<div className="space-y-2">
-				<div className="relative">
-					<button
-						type="button"
-						onClick={() => setShowStatusMenu(!showStatusMenu)}
-						className="flex w-full items-center space-x-2 rounded-md bg-white/20 px-3 py-2 text-left transition-colors hover:bg-white/30"
-					>
-						<span className="text-lg">{currentStatusOption.emoji}</span>
-						<span className="text-sm">{currentStatusOption.label}</span>
-						<span className="ml-auto text-xs">▼</span>
-					</button>
-
-					{showStatusMenu && (
-						<div className="absolute top-full right-0 left-0 z-10 mt-1 rounded-md border bg-white shadow-lg">
-							{statusOptions.map((status) => (
-								<button
-									type="button"
-									key={status.value}
-									onClick={() => handleStatusChange(status.value)}
-									className="flex w-full items-center space-x-2 px-3 py-2 text-left text-gray-700 first:rounded-t-md last:rounded-b-md hover:bg-gray-50"
-								>
-									<span>{status.emoji}</span>
-									<span className="text-sm">{status.label}</span>
-								</button>
-							))}
-						</div>
-					)}
+				<div className="mt-2 flex flex-row justify-between gap-1">
+					<AddContactDialog>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-10 w-10 cursor-pointer"
+							title="Add contact"
+							aria-label="Add contact"
+						>
+							<UserPlus className="md:h-5! md:w-5!" />
+						</Button>
+					</AddContactDialog>
+					<ContactRequestsDialog>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="relative h-10 w-10 cursor-pointer"
+							title="Check Invites"
+							aria-label="Check Invites"
+						>
+							<UserCheck className="md:h-5! md:w-5!" />
+							{totalRequestCount > 0 && (
+								<Badge className="-top-1 -right-1 absolute h-5 w-5 bg-red-500 p-0 text-white text-xs hover:bg-red-500">
+									{totalRequestCount}
+								</Badge>
+							)}
+						</Button>
+					</ContactRequestsDialog>
+					<CreateGroupDialog>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-10 w-10 cursor-pointer"
+							title="Create Group Chat"
+							aria-label="Create Group Chat"
+						>
+							<Users className="md:h-5! md:w-5!" />
+						</Button>
+					</CreateGroupDialog>
+					<DropdownMenu>
+						<DropdownMenuTrigger asChild>
+							<Button
+								variant="ghost"
+								size="sm"
+								className="h-10 w-10 cursor-pointer"
+								title="Settings"
+								aria-label="Settings"
+							>
+								<Settings className="md:h-5! md:w-5!" />
+							</Button>
+						</DropdownMenuTrigger>
+						<DropdownMenuContent>
+							<DropdownMenuItem
+								className="cursor-pointer"
+								onClick={() => void signOut()}
+							>
+								<LogOutIcon className="mr-2 h-4 w-4" />
+								Log out
+							</DropdownMenuItem>
+						</DropdownMenuContent>
+					</DropdownMenu>
+					<ThemeToggle />
 				</div>
-
-				<input
-					type="text"
-					placeholder="What's your status message?"
-					value={statusMessage}
-					onChange={(e) => handleStatusMessageChange(e.target.value)}
-					className="w-full rounded-md bg-white/20 px-3 py-2 text-sm text-white placeholder-blue-100 transition-colors focus:bg-white/30 focus:outline-none"
-				/>
 			</div>
 
-			{showNameModal && (
-				<SetNameModal
-					currentName={user.name}
-					onClose={() => setShowNameModal(false)}
-				/>
-			)}
+			<Select
+				onValueChange={handleStatusChange}
+				value={currentStatusOption.value}
+			>
+				<SelectTrigger className="w-full cursor-pointer rounded-none">
+					<SelectValue placeholder="Status" />
+				</SelectTrigger>
+				<SelectContent>
+					{statusOptions.map((status) => (
+						<SelectItem key={status.value} value={status.value}>
+							<span className="text-lg">{status.emoji}</span>
+							<span className="text-sm">{status.label}</span>
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
 		</div>
 	);
 }

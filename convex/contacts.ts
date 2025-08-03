@@ -21,7 +21,7 @@ export const sendContactRequest = mutation({
 			.unique();
 
 		if (!contactUser) {
-			throw new Error("User not found");
+			throw new Error("User has not signed up yet");
 		}
 
 		if (contactUser._id === userId) {
