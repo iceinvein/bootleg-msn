@@ -1,281 +1,144 @@
-import { useMutation } from "convex/react";
-import { useState } from "react";
-import { toast } from "sonner";
+import { useStore } from "@nanostores/react";
+import { useQuery } from "convex/react";
+import { User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { $selectedChat } from "@/stores/contact";
 import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
+import { Avatar } from "./ui/avatar";
+import { Badge } from "./ui/badge";
+import { ScrollArea } from "./ui/scroll-area";
 
-interface Contact {
-	_id: Id<"contacts">;
-	user: {
-		_id: Id<"users">;
-		name?: string;
-		email?: string;
-	};
-	status: string;
-	statusMessage?: string;
-	unreadCount: number;
-	nickname?: string;
-}
-
-interface Group {
-	_id: Id<"groups">;
-	name: string;
-	description?: string;
-	memberCount: number;
-	unreadCount: number;
-	userRole: "admin" | "member";
-}
-
-interface ContactListProps {
-	contacts: Contact[];
-	groups: Group[];
-	activeChatUserId: Id<"users"> | null;
-	activeGroupId: Id<"groups"> | null;
-	onSelectContact: (userId: Id<"users">) => void;
-	onSelectGroup: (groupId: Id<"groups">) => void;
-}
-
-const statusEmojis = {
-	online: "🟢",
-	away: "🟡",
-	busy: "🔴",
-	invisible: "⚫",
-	offline: "⚪",
+const getStatusColor = (status: string) => {
+	switch (status) {
+		case "online":
+			return "bg-green-500";
+		case "away":
+			return "bg-yellow-500";
+		case "busy":
+			return "bg-red-500";
+		case "offline":
+			return "bg-gray-400";
+		default:
+			return "bg-gray-400";
+	}
 };
 
-export function ContactList({
-	contacts,
-	groups,
-	activeChatUserId,
-	activeGroupId,
-	onSelectContact,
-	onSelectGroup,
-}: ContactListProps) {
-	const [showDeleteConfirm, setShowDeleteConfirm] =
-		useState<Id<"contacts"> | null>(null);
-	const removeContact = useMutation(api.contacts.removeContact);
+export function ContactList() {
+	const selectedChat = useStore($selectedChat);
 
-	const onlineContacts = contacts.filter((c) => c.status === "online");
-	const awayContacts = contacts.filter((c) => c.status === "away");
-	const busyContacts = contacts.filter((c) => c.status === "busy");
-	const offlineContacts = contacts.filter((c) =>
-		["invisible", "offline"].includes(c.status),
-	);
+	const contacts = useQuery(api.contacts.getContacts);
+	const groupChats = useQuery(api.groups.getUserGroups);
 
-	const handleDeleteContact = async (contactId: Id<"contacts">) => {
-		try {
-			await removeContact({ contactId });
-			toast.success("Contact removed successfully!");
-			setShowDeleteConfirm(null);
-		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Failed to remove contact",
-			);
-		}
-	};
-
-	const ContactGroup = ({
-		title,
-		contacts,
-	}: {
-		title: string;
-		contacts: Contact[];
-	}) => {
-		if (contacts.length === 0) return null;
-
-		return (
-			<div className="mb-4">
-				<div className="bg-gray-50 px-4 py-2 font-semibold text-gray-500 text-xs uppercase tracking-wide">
-					{title} ({contacts.length})
-				</div>
-				{contacts.map((contact) => {
-					const displayName =
-						contact.nickname ||
-						contact.user.name ||
-						contact.user.email ||
-						"Anonymous User";
-
-					return (
-						<div
-							key={contact._id}
-							className={cn(
-								"group relative flex items-center space-x-3 px-4 py-3 transition-colors hover:bg-blue-50",
-								activeChatUserId === contact.user._id &&
-									"border-blue-500 border-r-2 bg-blue-100",
-							)}
-						>
+	return (
+		<ScrollArea className="flex-1">
+			<div className="p-1 md:p-2">
+				{/* Groups Section */}
+				{!!groupChats?.length && (
+					<>
+						<div className="px-2 py-1 font-semibold text-gray-500 text-xs uppercase tracking-wide dark:text-gray-400">
+							Groups ({groupChats.length})
+						</div>
+						{groupChats?.map((group) => (
 							<button
 								type="button"
-								onClick={() => onSelectContact(contact.user._id)}
-								className="flex min-w-0 flex-1 items-center space-x-3"
+								key={group?._id}
+								className={cn(
+									"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all hover:bg-gray-100 active:bg-gray-200 md:p-3 dark:active:bg-gray-600 dark:hover:bg-gray-700",
+									selectedChat?.group?._id === group?._id &&
+										"border border-blue-200 bg-blue-50 dark:bg-blue-900/20",
+								)}
+								onClick={() =>
+									$selectedChat.set({
+										contact: null,
+										group,
+									})
+								}
 							>
 								<div className="relative">
-									<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-400 to-blue-600 font-semibold text-sm text-white">
-										{displayName[0]?.toUpperCase() || "U"}
-									</div>
-									<div className="-bottom-1 -right-1 absolute text-xs">
-										{statusEmojis[contact.status as keyof typeof statusEmojis]}
+									<Avatar className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-500 md:h-12 md:w-12">
+										<Users className="h-10 w-10 md:h-12 md:w-12" />
+									</Avatar>
+								</div>
+								<div className="min-w-0 flex-1">
+									<div className="flex items-center space-x-2">
+										<p className="truncate font-medium text-gray-900 text-sm md:text-base dark:text-gray-100">
+											{group?.name}
+										</p>
 									</div>
 								</div>
-
-								<div className="min-w-0 flex-1 text-left">
-									<div className="truncate font-medium text-gray-900">
-										{displayName}
-									</div>
-									{contact.statusMessage && (
-										<div className="truncate text-gray-500 text-xs">
-											{contact.statusMessage}
-										</div>
-									)}
-								</div>
-
-								{contact.unreadCount > 0 && (
-									<div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 font-bold text-white text-xs">
-										{contact.unreadCount > 9 ? "9+" : contact.unreadCount}
-									</div>
+								{!!group?.unreadCount && (
+									<Badge
+										variant="secondary"
+										className="absolute top-2 right-2 hidden bg-red-500 text-white text-xs sm:inline-flex"
+									>
+										{group?.unreadCount}
+									</Badge>
 								)}
 							</button>
+						))}
+						<div className="my-2 border-gray-200 border-b"></div>
+					</>
+				)}
 
-							{/* Delete button - only visible on hover */}
-							<button
-								type="button"
-								onClick={() => setShowDeleteConfirm(contact._id)}
-								className="rounded p-1 text-red-500 opacity-0 transition-all duration-200 hover:text-red-700 group-hover:opacity-100"
-								title="Remove contact"
-							>
-								<svg
-									className="h-4 w-4"
-									fill="none"
-									stroke="currentColor"
-									viewBox="0 0 24 24"
-									aria-hidden="true"
+				{/* Contacts Section */}
+				<div className="px-2 py-1 font-semibold text-gray-500 text-xs uppercase tracking-wide dark:text-gray-400">
+					Contacts ({contacts?.filter((c) => c.status !== "offline").length}{" "}
+					online)
+				</div>
+				{contacts?.map((contact) => {
+					if (!contact.user || !contact.user._id) return null;
+
+					return (
+						<button
+							type="button"
+							key={contact._id}
+							className={cn(
+								"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all hover:bg-gray-100 active:bg-gray-200 md:p-3 dark:active:bg-gray-600 dark:hover:bg-gray-700",
+								selectedChat?.contact?._id === contact?._id &&
+									"border border-blue-200 bg-blue-50 dark:bg-blue-900/20",
+							)}
+							onClick={() =>
+								$selectedChat.set({
+									contact,
+									group: null,
+								})
+							}
+						>
+							<div className="relative">
+								<Avatar className="h-10 w-10 md:h-12 md:w-12">
+									<User className="h-10 w-10 md:h-12 md:w-12" />
+								</Avatar>
+								<div
+									className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white md:h-4 md:w-4 ${getStatusColor(contact.status)}`}
+								/>
+							</div>
+							<div className="min-w-0 flex-1">
+								<div className="flex items-center space-x-2">
+									<p className="truncate font-medium text-gray-900 text-sm md:text-base dark:text-gray-100">
+										{contact.nickname ??
+											contact.user?.name ??
+											contact.user?.email ??
+											"Unknown User"}
+									</p>
+								</div>
+								{contact.statusMessage && (
+									<p className="truncate text-gray-500 text-xs md:text-sm dark:text-gray-400">
+										{contact.statusMessage}
+									</p>
+								)}
+							</div>
+							{!!contact.unreadCount && (
+								<Badge
+									variant="secondary"
+									className="absolute top-2 right-2 hidden bg-red-500 text-white text-xs sm:inline-flex"
 								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										strokeWidth={2}
-										d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-									/>
-								</svg>
-							</button>
-						</div>
+									{contact.unreadCount}
+								</Badge>
+							)}
+						</button>
 					);
 				})}
 			</div>
-		);
-	};
-
-	const GroupSection = () => {
-		if (groups.length === 0) return null;
-
-		return (
-			<div className="mb-4">
-				<div className="bg-gray-50 px-4 py-2 font-semibold text-gray-500 text-xs uppercase tracking-wide">
-					Groups ({groups.length})
-				</div>
-				{groups.map((group) => (
-					<button
-						key={group._id}
-						type="button"
-						className={cn(
-							"group relative flex w-full items-center space-x-3 px-4 py-3 text-left transition-colors hover:bg-green-50",
-							activeGroupId === group._id &&
-								"border-green-500 border-r-2 bg-green-100",
-						)}
-						onClick={() => onSelectGroup(group._id)}
-					>
-						<div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-green-400 to-green-600 font-semibold text-sm text-white">
-							👥
-						</div>
-
-						<div className="min-w-0 flex-1 text-left">
-							<div className="truncate font-medium text-gray-900">
-								{group.name}
-								{group.userRole === "admin" && (
-									<span className="ml-1 rounded bg-green-100 px-1 text-green-800 text-xs">
-										Admin
-									</span>
-								)}
-							</div>
-							<div className="truncate text-gray-500 text-xs">
-								{group.memberCount} member{group.memberCount !== 1 ? "s" : ""}
-								{group.description && ` • ${group.description}`}
-							</div>
-						</div>
-
-						{group.unreadCount > 0 && (
-							<div className="flex h-5 w-5 items-center justify-center rounded-full bg-red-500 font-bold text-white text-xs">
-								{group.unreadCount > 9 ? "9+" : group.unreadCount}
-							</div>
-						)}
-					</button>
-				))}
-			</div>
-		);
-	};
-
-	return (
-		<>
-			<div className="flex-1 overflow-y-auto">
-				<GroupSection />
-				<ContactGroup title="Online" contacts={onlineContacts} />
-				<ContactGroup title="Away" contacts={awayContacts} />
-				<ContactGroup title="Busy" contacts={busyContacts} />
-				<ContactGroup title="Offline" contacts={offlineContacts} />
-
-				{contacts.length === 0 && groups.length === 0 && (
-					<div className="p-8 text-center text-gray-500">
-						<div className="mb-4 text-4xl">👥</div>
-						<p>No contacts or groups yet</p>
-						<p className="text-sm">
-							Add some friends or create a group to start chatting!
-						</p>
-					</div>
-				)}
-			</div>
-
-			{/* Delete Confirmation Modal */}
-			{showDeleteConfirm && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-					<div className="mx-4 w-full max-w-md rounded-lg bg-white p-6 shadow-xl">
-						<div className="mb-4 flex items-center justify-between">
-							<h2 className="font-semibold text-gray-900 text-xl">
-								Remove Contact
-							</h2>
-							<button
-								type="button"
-								onClick={() => setShowDeleteConfirm(null)}
-								className="font-bold text-gray-400 text-xl hover:text-gray-600"
-							>
-								×
-							</button>
-						</div>
-
-						<p className="mb-6 text-gray-600">
-							Are you sure you want to remove this contact? This action cannot
-							be undone.
-						</p>
-
-						<div className="flex space-x-3">
-							<button
-								type="button"
-								onClick={() => setShowDeleteConfirm(null)}
-								className="flex-1 rounded-md bg-gray-200 px-4 py-2 font-medium text-gray-800 transition-colors hover:bg-gray-300"
-							>
-								Cancel
-							</button>
-							<button
-								type="button"
-								onClick={() => handleDeleteContact(showDeleteConfirm)}
-								className="flex-1 rounded-md bg-red-500 px-4 py-2 font-medium text-white transition-colors hover:bg-red-600"
-							>
-								Remove Contact
-							</button>
-						</div>
-					</div>
-				</div>
-			)}
-		</>
+		</ScrollArea>
 	);
 }
