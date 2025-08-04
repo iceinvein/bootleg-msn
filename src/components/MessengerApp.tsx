@@ -20,30 +20,43 @@ export function MessengerApp() {
 		$selectedChat.set({ contact: null, group: null });
 	};
 
-	// Initialize user status when app loads
+	// Initialize user status when app loads (with error handling)
 	useEffect(() => {
 		if (user) {
-			initializeUserStatus();
+			initializeUserStatus().catch((error) => {
+				console.error("Failed to initialize user status:", error);
+			});
 		}
 	}, [user, initializeUserStatus]);
 
-	// Update last seen periodically
+	// Update last seen periodically (with error handling and longer interval)
 	useEffect(() => {
 		if (!user) return;
 
 		const interval = setInterval(() => {
-			updateLastSeen();
-		}, 30000); // Update every 30 seconds
+			updateLastSeen().catch((error) => {
+				console.error("Failed to update last seen:", error);
+			});
+		}, 60000); // Update every 60 seconds (reduced frequency)
 
 		return () => clearInterval(interval);
 	}, [user, updateLastSeen]);
 
-	// Update last seen on user activity
+	// Update last seen on user activity (with throttling and error handling)
 	useEffect(() => {
 		if (!user) return;
 
+		let lastActivityUpdate = 0;
+		const THROTTLE_DELAY = 30000; // Only update once every 30 seconds
+
 		const handleActivity = () => {
-			updateLastSeen();
+			const now = Date.now();
+			if (now - lastActivityUpdate > THROTTLE_DELAY) {
+				lastActivityUpdate = now;
+				updateLastSeen().catch((error) => {
+					console.error("Failed to update last seen on activity:", error);
+				});
+			}
 		};
 
 		window.addEventListener("click", handleActivity);
@@ -77,7 +90,7 @@ export function MessengerApp() {
 			<div className="flex flex-1 flex-col">
 				{selectedChat?.contact ? (
 					<ChatWindow
-						otherUserId={selectedChat.contact.userId}
+						otherUserId={selectedChat.contact.contactUserId}
 						onClose={handleCloseChat}
 					/>
 				) : selectedChat?.group ? (

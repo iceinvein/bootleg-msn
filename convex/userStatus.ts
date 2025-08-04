@@ -44,28 +44,33 @@ export const updateStatus = mutation({
 export const initializeUserStatus = mutation({
 	args: {},
 	handler: async (ctx) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) {
-			throw new Error("Not authenticated");
-		}
+		try {
+			const userId = await getAuthUserId(ctx);
+			if (!userId) {
+				throw new Error("Not authenticated");
+			}
 
-		const existingStatus = await ctx.db
-			.query("userStatus")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.unique();
+			const existingStatus = await ctx.db
+				.query("userStatus")
+				.withIndex("by_user", (q) => q.eq("userId", userId))
+				.unique();
 
-		if (!existingStatus) {
-			await ctx.db.insert("userStatus", {
-				userId,
-				status: "online",
-				lastSeen: Date.now(),
-			});
-		} else {
-			// Update last seen when user comes online
-			await ctx.db.patch(existingStatus._id, {
-				status: "online",
-				lastSeen: Date.now(),
-			});
+			if (!existingStatus) {
+				await ctx.db.insert("userStatus", {
+					userId,
+					status: "online",
+					lastSeen: Date.now(),
+				});
+			} else {
+				// Update last seen when user comes online
+				await ctx.db.patch(existingStatus._id, {
+					status: "online",
+					lastSeen: Date.now(),
+				});
+			}
+		} catch (error) {
+			// Log error but don't throw to prevent mutation from getting stuck
+			console.error("Error in initializeUserStatus:", error);
 		}
 	},
 });
@@ -73,20 +78,25 @@ export const initializeUserStatus = mutation({
 export const updateLastSeen = mutation({
 	args: {},
 	handler: async (ctx) => {
-		const userId = await getAuthUserId(ctx);
-		if (!userId) {
-			return;
-		}
+		try {
+			const userId = await getAuthUserId(ctx);
+			if (!userId) {
+				return; // Silently return if not authenticated
+			}
 
-		const existingStatus = await ctx.db
-			.query("userStatus")
-			.withIndex("by_user", (q) => q.eq("userId", userId))
-			.unique();
+			const existingStatus = await ctx.db
+				.query("userStatus")
+				.withIndex("by_user", (q) => q.eq("userId", userId))
+				.unique();
 
-		if (existingStatus) {
-			await ctx.db.patch(existingStatus._id, {
-				lastSeen: Date.now(),
-			});
+			if (existingStatus) {
+				await ctx.db.patch(existingStatus._id, {
+					lastSeen: Date.now(),
+				});
+			}
+		} catch (error) {
+			// Log error but don't throw to prevent mutation from getting stuck
+			console.error("Error in updateLastSeen:", error);
 		}
 	},
 });

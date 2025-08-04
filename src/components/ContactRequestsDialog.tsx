@@ -1,3 +1,4 @@
+import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { Clock, Inbox, Send, User, UserCheck, UserX } from "lucide-react";
 import type React from "react";
@@ -39,6 +40,9 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 
+	const { signOut } = useAuthActions();
+
+	const currentUser = useQuery(api.auth.loggedInUser);
 	const pendingRequests = useQuery(api.contacts.getPendingRequests);
 	const sentRequests = useQuery(api.contacts.getSentRequests);
 	const acceptContactRequest = useMutation(api.contacts.acceptContactRequest);
@@ -48,15 +52,32 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 	const handleAccept = async (contactId: Id<"contacts">) => {
 		try {
 			setIsLoading(true);
+
+			if (!currentUser) {
+				toast.error("Please sign in again");
+				await signOut();
+				return;
+			}
+
 			await acceptContactRequest({ contactId });
 			toast.success("Contact request accepted!");
 		} catch (error) {
-			toast.error(
-				error instanceof Error ? error.message : "Failed to accept request",
-			);
+			if (error instanceof Error) {
+				if (error.message.includes("Not authenticated")) {
+					toast.error("Session expired. Please sign in again.");
+					await signOut();
+				} else if (error.message.includes("unauthorized")) {
+					toast.error("You are not authorized to accept this request.");
+				} else if (error.message.includes("not pending")) {
+					toast.error("This request has already been processed.");
+				} else {
+					toast.error(error.message);
+				}
+			} else {
+				toast.error("Failed to accept request");
+			}
 		} finally {
 			setIsLoading(false);
-			setIsOpen(false);
 		}
 	};
 
@@ -71,7 +92,6 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 			);
 		} finally {
 			setIsLoading(false);
-			setIsOpen(false);
 		}
 	};
 
@@ -126,7 +146,12 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 
 					<TabsContent value="incoming" className="mt-4">
 						<ScrollArea className="h-96">
-							{pendingRequests?.length === 0 ? (
+							{!currentUser ? (
+								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
+									<p>Please sign in to view contact requests</p>
+								</div>
+							) : pendingRequests?.length === 0 ? (
 								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
 									<Inbox className="mx-auto mb-2 h-12 w-12 opacity-50" />
 									<p>No incoming requests</p>
@@ -163,7 +188,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 														size="sm"
 														onClick={() => handleAccept(request._id)}
 														className="bg-green-600 text-white hover:bg-green-700"
-														disabled={isLoading}
+														disabled={isLoading || !currentUser}
 													>
 														<UserCheck className="mr-1 h-3 w-3" />
 														Accept
@@ -173,7 +198,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 														variant="outline"
 														onClick={() => handleReject(request._id)}
 														className="border-red-300 text-red-600 hover:bg-red-50"
-														disabled={isLoading}
+														disabled={isLoading || !currentUser}
 													>
 														<UserX className="mr-1 h-3 w-3" />
 														Decline
@@ -189,7 +214,12 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 
 					<TabsContent value="outgoing" className="mt-4">
 						<ScrollArea className="h-96">
-							{sentRequests?.length === 0 ? (
+							{!currentUser ? (
+								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
+									<p>Please sign in to view sent requests</p>
+								</div>
+							) : sentRequests?.length === 0 ? (
 								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
 									<Send className="mx-auto mb-2 h-12 w-12 opacity-50" />
 									<p>No outgoing requests</p>
@@ -233,7 +263,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 													variant="outline"
 													onClick={() => handleCancel(request._id)}
 													className="mt-3 border-gray-300 text-gray-600 hover:bg-gray-50"
-													disabled={isLoading}
+													disabled={isLoading || !currentUser}
 												>
 													<UserX className="mr-1 h-3 w-3" />
 													Cancel Request
