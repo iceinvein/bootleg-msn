@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { formatTime } from "@/utils/data";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 
@@ -36,6 +37,7 @@ interface ContactRequestsProps {
 
 export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const [isLoading, setIsLoading] = useState(false);
 
 	const pendingRequests = useQuery(api.contacts.getPendingRequests);
 	const sentRequests = useQuery(api.contacts.getSentRequests);
@@ -45,59 +47,55 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 
 	const handleAccept = async (contactId: Id<"contacts">) => {
 		try {
+			setIsLoading(true);
 			await acceptContactRequest({ contactId });
 			toast.success("Contact request accepted!");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to accept request",
 			);
+		} finally {
+			setIsLoading(false);
+			setIsOpen(false);
 		}
 	};
 
 	const handleReject = async (contactId: Id<"contacts">) => {
 		try {
+			setIsLoading(true);
 			await rejectContactRequest({ contactId });
 			toast.success("Contact request rejected");
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to reject request",
 			);
+		} finally {
+			setIsLoading(false);
+			setIsOpen(false);
 		}
 	};
 
 	const handleCancel = async (contactId: Id<"contacts">) => {
 		if (confirm("Are you sure you want to cancel this contact request?")) {
 			try {
+				setIsLoading(true);
 				await cancelSentRequest({ contactId });
 				toast.success("Contact request cancelled");
 			} catch (error) {
 				toast.error(
 					error instanceof Error ? error.message : "Failed to cancel request",
 				);
+			} finally {
+				setIsLoading(false);
+				setIsOpen(false);
 			}
 		}
-	};
-
-	const formatTime = (date: Date | number) => {
-		if (typeof date === "number") {
-			date = new Date(date);
-		}
-		const now = new Date();
-		const diff = now.getTime() - date.getTime();
-		const minutes = Math.floor(diff / 60000);
-		const hours = Math.floor(diff / 3600000);
-		const days = Math.floor(diff / 86400000);
-
-		if (minutes < 1) return "Just now";
-		if (minutes < 60) return `${minutes}m ago`;
-		if (hours < 24) return `${hours}h ago`;
-		return `${days}d ago`;
 	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-[80vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
+			<DialogContent className="max-h-[80vh] border-gray-200 sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
 				<DialogHeader>
 					<DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
 						<UserCheck className="h-5 w-5 text-blue-600" />
@@ -165,6 +163,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 														size="sm"
 														onClick={() => handleAccept(request._id)}
 														className="bg-green-600 text-white hover:bg-green-700"
+														disabled={isLoading}
 													>
 														<UserCheck className="mr-1 h-3 w-3" />
 														Accept
@@ -174,6 +173,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 														variant="outline"
 														onClick={() => handleReject(request._id)}
 														className="border-red-300 text-red-600 hover:bg-red-50"
+														disabled={isLoading}
 													>
 														<UserX className="mr-1 h-3 w-3" />
 														Decline
@@ -233,6 +233,7 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 													variant="outline"
 													onClick={() => handleCancel(request._id)}
 													className="mt-3 border-gray-300 text-gray-600 hover:bg-gray-50"
+													disabled={isLoading}
 												>
 													<UserX className="mr-1 h-3 w-3" />
 													Cancel Request

@@ -85,7 +85,7 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-[90vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
+			<DialogContent className="max-h-[90vh] border-gray-200 sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
 				<DialogHeader>
 					<DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
 						<Users className="h-5 w-5 text-blue-600" />

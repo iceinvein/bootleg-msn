@@ -58,13 +58,14 @@ export function AddContactDialog({ children }: AddContactDialogProps) {
 			);
 		} finally {
 			setIsLoading(false);
+			setIsOpen(false);
 		}
 	};
 
 	return (
 		<Dialog open={isOpen} onOpenChange={setIsOpen}>
 			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="sm:max-w-md">
+			<DialogContent className="sm:max-w-md dark:border-gray-600 dark:bg-gray-800">
 				<DialogHeader>
 					<DialogTitle className="flex items-center space-x-2">
 						<UserPlus className="h-5 w-5 text-blue-600" />

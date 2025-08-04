@@ -1,5 +1,3 @@
-"use client";
-
 import { Moon, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -41,7 +39,7 @@ export function ThemeToggle() {
 			variant="ghost"
 			size="sm"
 			onClick={toggleTheme}
-			className="h-10 w-10 text-white hover:bg-white/20"
+			className="h-10 w-10 hover:bg-white/20"
 			title="Toggle theme"
 		>
 			{isDark ? <Sun className="h-5! w-5!" /> : <Moon className="h-5! w-5!" />}

@@ -79,8 +79,8 @@ export function StatusBar({ user }: StatusBarProps) {
 		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
 
 	return (
-		<div className="bg-accent text-accent-foreground">
-			<div className="bg-gradient-to-r from-blue-600 to-purple-600 p-3 text-white transition-all duration-300 ease-in-out md:p-4">
+		<div>
+			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
 					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
 						<AvatarImage src="/placeholder.svg?height=40&width=40" />

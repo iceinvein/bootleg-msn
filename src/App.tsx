@@ -10,7 +10,7 @@ import { Toaster } from "./components/ui/sonner";
 function App() {
 	return (
 		<ThemeProvider defaultTheme="dark">
-			<main className="min-h-screen bg-gradient-to-br from-blue-600 via-purple-600 to-blue-800">
+			<main className="min-h-screen">
 				<AuthLoading>
 					<div className="flex min-h-screen items-center justify-center">
 						<div className="h-12 w-12 animate-spin rounded-full border-white border-b-2"></div>
