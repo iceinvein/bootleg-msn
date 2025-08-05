@@ -5,16 +5,15 @@ import {
 	ArrowLeft,
 	Info,
 	MessageCircle,
-	MoreHorizontal,
 	Paperclip,
 	Send,
 	Smile,
 	User,
 	Users,
+	X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { $selectedChat } from "@/stores/contact";
-import { getStatusColor } from "@/utils/style";
 import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
@@ -183,7 +182,7 @@ export function Chat() {
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
 					{/* Chat Header */}
-					<div className="border-gray-200 border-b bg-white p-3 shadow-sm md:p-4 dark:border-gray-700 dark:bg-gray-800">
+					<div className="mx-4 mt-4 rounded-4xl border-gray-200 border-b bg-white p-3 shadow-sm md:p-4 dark:border-gray-700 dark:bg-gray-800">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
 								{/* Back button for mobile */}
@@ -197,18 +196,12 @@ export function Chat() {
 								</Button>
 								<div className="relative">
 									<Avatar className="h-8 w-8 md:h-10 md:w-10">
-										<User className="h-8 w-8" />
+										{selectedChat.contact ? (
+											<User className="h-8 w-8 md:h-10 md:w-10" />
+										) : (
+											<Users className="h-8 w-8 md:h-10 md:w-10" />
+										)}
 									</Avatar>
-									{selectedChat.contact && (
-										<div
-											className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white md:h-4 md:w-4 ${getStatusColor(selectedChat.contact.status)}`}
-										/>
-									)}
-									{selectedChat.group && (
-										<div className="-bottom-1 -right-1 absolute flex h-3 w-3 items-center justify-center rounded-full border-2 border-white bg-blue-500 md:h-4 md:w-4">
-											<Users className="h-2 w-2 text-white" />
-										</div>
-									)}
 								</div>
 								<div className="min-w-0 flex-1">
 									{selectedChat.group ? (
@@ -230,7 +223,7 @@ export function Chat() {
 												"Unknown User"}
 										</h3>
 									)}
-									<p className="truncate text-gray-500 text-xs md:text-sm dark:text-gray-400">
+									<p className="truncate px-1 text-gray-500 text-xs md:text-sm dark:text-gray-400">
 										{selectedChat.contact
 											? selectedChat.contact.statusMessage
 											: `${selectedChat.group?.memberCount} members`}
@@ -252,9 +245,11 @@ export function Chat() {
 								<Button
 									variant="ghost"
 									size="sm"
-									className="h-8 w-8 md:h-10 md:w-10"
+									className="h-8 w-8 md:h-10 md:w-10 [&>svg]:h-4! [&>svg]:w-4! md:[&>svg]:h-6! md:[&>svg]:w-6!"
+									title="Close chat"
+									onClick={handleCloseChat}
 								>
-									<MoreHorizontal className="h-3 w-3 md:h-4 md:w-4" />
+									<X className="h-4 w-4 md:h-6 md:w-6" />
 								</Button>
 							</div>
 						</div>
@@ -333,7 +328,8 @@ export function Chat() {
 												<span className="text-gray-500 text-xs md:text-sm">
 													{groupIsTyping.map((indicator) => (
 														<span key={indicator._id}>
-															{indicator.user?.name} is typing...
+															{indicator.user?.name ?? indicator.user?.email} is
+															typing...
 														</span>
 													))}
 												</span>
@@ -347,7 +343,7 @@ export function Chat() {
 					</ScrollArea>
 
 					{/* Message Input */}
-					<div className="border-gray-200 border-t bg-white p-3 md:p-4 dark:border-gray-700 dark:bg-gray-800">
+					<div className="mx-4 mb-4 rounded-4xl border-gray-200 border-t bg-white p-3 md:p-4 dark:border-gray-700 dark:bg-gray-800">
 						<form
 							onSubmit={handleSendMessage}
 							className="flex items-center space-x-2"

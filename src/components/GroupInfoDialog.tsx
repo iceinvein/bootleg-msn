@@ -26,6 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Group } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
+import { AddMembersDialog } from "./AddMembersModal";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 
 interface GroupInfoDialogProps {
@@ -90,7 +91,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 						{/* Group Header */}
 						<div className="flex items-center space-x-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-4 dark:from-blue-900/20 dark:to-purple-900/20">
 							<Avatar className="h-16 w-16 border-2 border-white shadow-md">
-								<Users className="h-8 w-8" />
+								<Users className="h-16 w-16" />
 							</Avatar>
 							<div className="flex-1">
 								<InlineStatusEditor
@@ -126,13 +127,15 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 
 						{/* Quick Actions */}
 						<div className="grid grid-cols-2 gap-3">
-							<Button
-								variant="outline"
-								className="flex items-center space-x-2 bg-transparent"
-							>
-								<UserPlus className="h-4 w-4" />
-								<span>Add Members</span>
-							</Button>
+							<AddMembersDialog>
+								<Button
+									variant="outline"
+									className="flex items-center space-x-2 bg-transparent"
+								>
+									<UserPlus className="h-4 w-4" />
+									<span>Add Members</span>
+								</Button>
+							</AddMembersDialog>
 							{isAdmin && (
 								<Button
 									variant="outline"
@@ -163,6 +166,15 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 					</TabsContent>
 
 					<TabsContent value="members" className="mt-4">
+						<div className="mb-4 flex flex-row-reverse">
+							<Button
+								variant="outline"
+								className="flex items-center space-x-2 bg-transparent"
+							>
+								<UserPlus className="h-4 w-4" />
+								<span>Add Members</span>
+							</Button>
+						</div>
 						<ScrollArea className="h-96">
 							<div className="space-y-2">
 								{members?.map((member) => (
