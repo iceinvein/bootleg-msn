@@ -257,7 +257,7 @@ export function Chat() {
 
 					{/* Messages */}
 					<ScrollArea className="flex-1 p-3 md:p-4">
-						<div className="space-y-3 md:space-y-4">
+						<div className="space-y-3 pt-12 md:space-y-4">
 							{(!messages || messages.length === 0) && (
 								<div className="py-8 text-center text-gray-500">
 									<MessageCircle className="mx-auto mb-2 h-8 w-8 text-gray-400 opacity-50 md:h-12 md:w-12 dark:text-gray-500" />

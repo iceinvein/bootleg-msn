@@ -27,6 +27,12 @@
 					},
 					"fix": "safe"
 				}
+			},
+			"a11y": {
+				"noStaticElementInteractions": {
+					"level": "off",
+					"options": {}
+				}
 			}
 		},
 		"includes": ["./src/**/*", "!./convex/_generated/**/*", "./convex/**/*"]
