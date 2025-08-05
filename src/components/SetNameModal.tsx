@@ -1,7 +1,7 @@
+import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
 
 interface SetNameModalProps {
 	onClose: () => void;

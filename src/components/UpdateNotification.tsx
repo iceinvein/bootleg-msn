@@ -1,7 +1,7 @@
+import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
 
 // Store the app version and timestamp when the app loads
 const APP_VERSION = "1.0.0";

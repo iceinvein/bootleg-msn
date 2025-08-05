@@ -1,6 +1,6 @@
+import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useEffect, useRef } from "react";
-import { api } from "../../convex/_generated/api";
 
 // Store the app timestamp when the hook is first used
 const APP_TIMESTAMP = Date.now();

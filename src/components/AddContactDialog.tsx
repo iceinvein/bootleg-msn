@@ -1,3 +1,4 @@
+import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { Mail, UserPlus } from "lucide-react";
 import type React from "react";
@@ -16,7 +17,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { api } from "../../convex/_generated/api";
 
 interface AddContactDialogProps {
 	children: React.ReactNode;

@@ -1,3 +1,4 @@
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useMutation, useQuery } from "convex/react";
@@ -10,7 +11,6 @@ import {
 	Users,
 } from "lucide-react";
 import { useState } from "react";
-import { api } from "../../convex/_generated/api";
 import { AddContactDialog } from "./AddContactDialog";
 import { ContactRequestsDialog } from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";

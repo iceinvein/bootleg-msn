@@ -1,6 +1,6 @@
+import { api } from "@convex/_generated/api";
 import { useMutation } from "convex/react";
 import { useCallback, useEffect } from "react";
-import { api } from "../../convex/_generated/api";
 
 // This component should only be used in development/admin contexts
 export function DeploymentManager() {

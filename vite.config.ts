@@ -40,6 +40,7 @@ window.addEventListener('message', async (message) => {
 	resolve: {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
+			"@convex": path.resolve(__dirname, "./convex"),
 		},
 	},
 }));

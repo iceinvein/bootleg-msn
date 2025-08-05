@@ -1,24 +1,14 @@
-import { useStore } from "@nanostores/react";
+import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import { MessageCircle } from "lucide-react";
 import { useEffect } from "react";
-import { $selectedChat } from "@/stores/contact";
-import { api } from "../../convex/_generated/api";
-import { ChatWindow } from "./ChatWindow";
+import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
-import { GroupChatWindow } from "./GroupChatWindow";
 import { StatusBar } from "./StatusBar";
 
 export function MessengerApp() {
-	const selectedChat = useStore($selectedChat);
-
 	const user = useQuery(api.auth.loggedInUser);
 	const initializeUserStatus = useMutation(api.userStatus.initializeUserStatus);
 	const updateLastSeen = useMutation(api.userStatus.updateLastSeen);
-
-	const handleCloseChat = () => {
-		$selectedChat.set({ contact: null, group: null });
-	};
 
 	// Initialize user status when app loads (with error handling)
 	useEffect(() => {
@@ -87,31 +77,7 @@ export function MessengerApp() {
 			</div>
 
 			{/* Main Chat Area */}
-			<div className="flex flex-1 flex-col">
-				{selectedChat?.contact ? (
-					<ChatWindow
-						otherUserId={selectedChat.contact.contactUserId}
-						onClose={handleCloseChat}
-					/>
-				) : selectedChat?.group ? (
-					<GroupChatWindow
-						groupId={selectedChat.group._id}
-						onClose={handleCloseChat}
-					/>
-				) : (
-					<div className="flex flex-1 items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
-						<div className="text-center">
-							<MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-400 md:h-16 md:w-16 dark:text-gray-500" />
-							<h3 className="mb-2 font-semibold text-base text-gray-600 md:text-lg dark:text-gray-300">
-								Select a contact or group to start chatting
-							</h3>
-							<p className="text-gray-500 text-sm md:text-base dark:text-gray-400">
-								Choose someone from your list to begin a conversation
-							</p>
-						</div>
-					</div>
-				)}
-			</div>
+			<Chat />
 		</div>
 	);
 }

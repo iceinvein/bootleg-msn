@@ -1,10 +1,10 @@
+import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { Send, Smile } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { api } from "../../convex/_generated/api";
-import type { Id } from "../../convex/_generated/dataModel";
 import { convertTextToEmoji, isOnlyEmoji } from "../utils/emojiUtils";
 import { AddMembersModal } from "./AddMembersModal";
 import { DragDropZone } from "./DragDropZone";

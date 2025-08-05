@@ -1,27 +1,13 @@
+import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useQuery } from "convex/react";
 import { User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
-import { api } from "../../convex/_generated/api";
+import { getStatusColor } from "@/utils/style";
 import { Avatar } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
-
-const getStatusColor = (status: string) => {
-	switch (status) {
-		case "online":
-			return "bg-green-500";
-		case "away":
-			return "bg-yellow-500";
-		case "busy":
-			return "bg-red-500";
-		case "offline":
-			return "bg-gray-400";
-		default:
-			return "bg-gray-400";
-	}
-};
 
 export function ContactList() {
 	const selectedChat = useStore($selectedChat);
