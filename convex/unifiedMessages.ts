@@ -18,12 +18,30 @@ export const getMessages = query({
 		let messages: Doc<"messages">[];
 
 		if (args.groupId) {
+			// Check if user is a member of the group
+			const groupId = args.groupId; // TypeScript now knows this is not undefined
+			const membership = await ctx.db
+				.query("groupMembers")
+				.withIndex("by_group_and_user", (q) =>
+					q.eq("groupId", groupId).eq("userId", userId),
+				)
+				.unique();
+
+			if (!membership) {
+				return [];
+			}
+
 			// Get group messages
-			messages = await ctx.db
+			const allMessages = await ctx.db
 				.query("messages")
-				.withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+				.withIndex("by_group", (q) => q.eq("groupId", groupId))
 				.order("asc")
 				.collect();
+
+			// Only show messages from after the user joined the group
+			messages = allMessages.filter(
+				(msg) => msg._creationTime >= membership.joinedAt,
+			);
 		} else if (args.otherUserId) {
 			// Get direct messages between two users
 			const otherUserId = args.otherUserId; // TypeScript now knows this is not undefined
@@ -145,6 +163,22 @@ export const markMessagesAsRead = mutation({
 			// Mark group messages as read
 			const groupId = args.groupId; // TypeScript now knows this is not undefined
 
+			// Check if user is a member of the group and get join time
+			const membership = await ctx.db
+				.query("groupMembers")
+				.withIndex("by_group_and_user", (q) =>
+					q.eq("groupId", groupId).eq("userId", userId),
+				)
+				.unique();
+
+			if (!membership) {
+				throw new Error("You are not a member of this group");
+			}
+
+			// Get current user's email for system message filtering
+			const currentUser = await ctx.db.get(userId);
+			const userEmail = currentUser?.email || "";
+
 			const unreadMessages = await ctx.db
 				.query("messages")
 				.withIndex("by_group", (q) => q.eq("groupId", groupId))
@@ -156,8 +190,19 @@ export const markMessagesAsRead = mutation({
 				)
 				.collect();
 
+			// Only mark messages as read that were sent after the user joined
+			// and exclude system messages about the user joining
+			const messagesToMarkAsRead = unreadMessages.filter(
+				(msg) =>
+					msg._creationTime >= membership.joinedAt &&
+					!(
+						msg.messageType === "system" &&
+						msg.content.includes(`added ${userEmail}`)
+					),
+			);
+
 			await Promise.all(
-				unreadMessages.map((message) =>
+				messagesToMarkAsRead.map((message) =>
 					ctx.db.patch(message._id, { isRead: true }),
 				),
 			);
@@ -227,5 +272,58 @@ export const deleteMessage = mutation({
 			isDeleted: true,
 			deletedAt: Date.now(),
 		});
+	},
+});
+
+// Get unread count for a group (respecting join time and excluding self-join system messages)
+export const getGroupUnreadCount = query({
+	args: {
+		groupId: v.id("groups"),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			return 0;
+		}
+
+		// Check if user is a member of the group
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", args.groupId).eq("userId", userId),
+			)
+			.unique();
+
+		if (!membership) {
+			return 0;
+		}
+
+		// Get current user's email for system message filtering
+		const currentUser = await ctx.db.get(userId);
+		const userEmail = currentUser?.email || "";
+
+		// Get all messages in the group
+		const allMessages = await ctx.db
+			.query("messages")
+			.withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+			.collect();
+
+		// Only consider messages sent after the user joined the group
+		const messagesAfterJoin = allMessages.filter(
+			(msg) => msg._creationTime >= membership.joinedAt,
+		);
+
+		// Count unread messages, excluding system messages about the user joining
+		const unreadCount = messagesAfterJoin.filter(
+			(msg) =>
+				msg.senderId !== userId &&
+				!msg.isRead &&
+				!(
+					msg.messageType === "system" &&
+					msg.content.includes(`added ${userEmail}`)
+				),
+		).length;
+
+		return unreadCount;
 	},
 });
