@@ -8,11 +8,13 @@ import { Button } from "./ui/button";
 interface EmailVerificationPageProps {
 	token: string;
 	onBackToSignIn: () => void;
+	onVerificationSuccess?: () => void;
 }
 
 export function EmailVerificationPage({
 	token,
 	onBackToSignIn,
+	onVerificationSuccess,
 }: EmailVerificationPageProps) {
 	const { signIn } = useAuthActions();
 	const verifyEmail = useMutation(api.emailVerification.verifyEmail);
@@ -60,6 +62,15 @@ export function EmailVerificationPage({
 							toast.success(
 								"Account created successfully! Welcome to MSN Messenger!",
 							);
+
+							// Call success callback after a brief delay to show success message
+							setTimeout(() => {
+								// Clear the URL and navigate to root
+								window.history.replaceState({}, document.title, "/");
+								if (onVerificationSuccess) {
+									onVerificationSuccess();
+								}
+							}, 1500);
 						} catch (signUpError) {
 							console.error("Sign up error:", signUpError);
 							toast.error(
@@ -92,7 +103,7 @@ export function EmailVerificationPage({
 		if (token) {
 			handleVerification();
 		}
-	}, [token, verifyEmail, signIn, updateUserName]);
+	}, [token, verifyEmail, signIn, updateUserName, onVerificationSuccess]);
 
 	if (isVerifying) {
 		return (
@@ -161,7 +172,18 @@ export function EmailVerificationPage({
 								</p>
 							</div>
 
-							<Button onClick={onBackToSignIn} className="w-full">
+							<Button
+								onClick={() => {
+									// Clear the URL and navigate to root
+									window.history.replaceState({}, document.title, "/");
+									if (onVerificationSuccess) {
+										onVerificationSuccess();
+									} else {
+										onBackToSignIn();
+									}
+								}}
+								className="w-full"
+							>
 								Continue to Messenger
 							</Button>
 						</div>

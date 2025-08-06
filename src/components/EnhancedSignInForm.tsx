@@ -99,6 +99,7 @@ export function EnhancedSignInForm() {
 			<EmailVerificationPage
 				token={verificationToken}
 				onBackToSignIn={() => setVerificationToken(null)}
+				onVerificationSuccess={() => setVerificationToken(null)}
 			/>
 		);
 	}
