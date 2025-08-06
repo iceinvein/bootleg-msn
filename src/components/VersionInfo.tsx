@@ -16,7 +16,7 @@ function formatTimeAgo(timestamp: number): string {
 
 export function VersionInfo() {
 	const currentVersion = useQuery(api.deployment.getCurrentVersion);
-	const packageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
+	const packageVersion = import.meta.env.PACKAGE_VERSION || "v0.0.0";
 
 	if (!currentVersion) {
 		return <div className="text-gray-500 text-xs">v{packageVersion}</div>;
@@ -35,13 +35,13 @@ export function VersionInfo() {
 // Compact version for status bar
 export function VersionBadge() {
 	const currentVersion = useQuery(api.deployment.getCurrentVersion);
-	const packageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
+	const packageVersion = import.meta.env.PACKAGE_VERSION || "v0.0.0";
 
 	const version = currentVersion?.version || packageVersion;
 
 	return (
 		<span className="rounded bg-gray-100 px-2 py-1 text-gray-600 text-xs dark:bg-gray-800 dark:text-gray-400">
-			v{version}
+			{version}
 		</span>
 	);
 }
