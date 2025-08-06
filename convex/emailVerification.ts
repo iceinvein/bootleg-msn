@@ -10,7 +10,9 @@ import {
 } from "./_generated/server";
 
 // Initialize Resend component
-export const resend: Resend = new Resend(components.resend, {});
+export const resend: Resend = new Resend(components.resend, {
+	testMode: process.env.VITE_RESEND_TEST_MODE === "true",
+});
 
 // Generate a random verification token
 function generateToken(): string {
@@ -57,8 +59,10 @@ export const sendVerificationEmail = action({
 		const verificationUrl = `${siteUrl}/verify-email?token=${token}`;
 
 		// Send verification email using @convex-dev/resend component
+		const fromEmail =
+			process.env.SEND_EMAIL_ADDRESS || "hello@mail.bootleg-msn.online";
 		const result = await resend.sendEmail(ctx, {
-			from: "Bootleg MSN Messenger <onboarding@resend.dev>",
+			from: `Bootleg MSN Messenger <${fromEmail}>`,
 			to: args.email,
 			subject: "Verify your email address",
 			html: `
@@ -142,6 +146,76 @@ export const checkEmailVerification = query({
 			.first();
 
 		return !!verification;
+	},
+});
+
+export const resendVerificationEmail = action({
+	args: {
+		email: v.string(),
+	},
+	returns: v.object({
+		success: v.boolean(),
+		emailId: v.string(),
+	}),
+	handler: async (ctx, args) => {
+		// Check if email already has a verified account
+		const existingVerification = await ctx.runQuery(
+			internal.emailVerification.getVerificationByEmail,
+			{
+				email: args.email,
+			},
+		);
+
+		if (existingVerification?.verified) {
+			throw new Error("Email is already verified");
+		}
+
+		// Generate new verification token
+		const token = generateToken();
+		const expiresAt = Date.now() + 24 * 60 * 60 * 1000; // 24 hours
+
+		// Store verification record (this will replace any existing unverified tokens)
+		await ctx.runMutation(internal.emailVerification.createVerification, {
+			email: args.email,
+			token,
+			expiresAt,
+		});
+
+		const siteUrl = process.env.SITE_URL || "http://localhost:5173";
+		const verificationUrl = `${siteUrl}/verify-email?token=${token}`;
+
+		// Send verification email
+		const fromEmail =
+			process.env.SEND_EMAIL_ADDRESS || "hello@mail.bootleg-msn.online";
+		const result = await resend.sendEmail(ctx, {
+			from: `Bootleg MSN Messenger <${fromEmail}>`,
+			to: args.email,
+			subject: "Verify your email address",
+			html: `
+				<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+					<h2 style="color: #0066cc;">Welcome to the bootleg MSN Messenger!</h2>
+					<p>Hi there,</p>
+					<p>Please verify your email address by clicking the button below:</p>
+					<div style="text-align: center; margin: 30px 0;">
+						<a href="${verificationUrl}" 
+							style="background-color: #0066cc; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">
+							Verify Email Address
+						</a>
+					</div>
+					<p>Or copy and paste this link into your browser:</p>
+					<p style="word-break: break-all; color: #666;">${verificationUrl}</p>
+					<p>This link will expire in 24 hours.</p>
+					<p>If you didn't request this verification, you can safely ignore this email.</p>
+					<hr style="margin: 30px 0; border: none; border-top: 1px solid #eee;">
+					<p style="color: #666; font-size: 12px;">MSN Messenger Team</p>
+				</div>
+			`,
+		});
+
+		return {
+			success: true,
+			emailId: result,
+		};
 	},
 });
 

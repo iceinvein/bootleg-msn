@@ -1,46 +1,89 @@
-import { api } from "@convex/_generated/api";
+import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { api } from "../../convex/_generated/api";
+import { Button } from "./ui/button";
 
 interface EmailVerificationPageProps {
 	token: string;
-	onVerified: () => void;
+	onBackToSignIn: () => void;
 }
 
 export function EmailVerificationPage({
 	token,
-	onVerified,
+	onBackToSignIn,
 }: EmailVerificationPageProps) {
-	const [isVerifying, setIsVerifying] = useState(true);
-	const [verificationResult, setVerificationResult] = useState<{
-		success: boolean;
-		email?: string;
-		error?: string;
-	} | null>(null);
-
+	const { signIn } = useAuthActions();
 	const verifyEmail = useMutation(api.emailVerification.verifyEmail);
+	const updateUserName = useMutation(api.auth.updateUserName);
+	const [isVerifying, setIsVerifying] = useState(true);
+	const [verificationStatus, setVerificationStatus] = useState<
+		"loading" | "success" | "error"
+	>("loading");
+	const [errorMessage, setErrorMessage] = useState("");
+	const [isCreatingAccount, setIsCreatingAccount] = useState(false);
 
 	useEffect(() => {
 		const handleVerification = async () => {
 			try {
 				const result = await verifyEmail({ token });
-				setVerificationResult({
-					success: true,
-					email: result.email,
-				});
-				toast.success("Email verified successfully! You can now sign in.");
-				setTimeout(() => {
-					onVerified();
-				}, 2000);
+				if (result.success) {
+					setVerificationStatus("success");
+					toast.success("Email verified successfully!");
+
+					// Try to create the account with stored data
+					const pendingSignUp = localStorage.getItem("pendingSignUp");
+					if (pendingSignUp) {
+						const userData = JSON.parse(pendingSignUp);
+						setIsCreatingAccount(true);
+
+						try {
+							await signIn("password", {
+								email: userData.email,
+								password: userData.password,
+								name: userData.name,
+								flow: "signUp",
+							});
+
+							// Update user name after account creation
+							// The signIn might not save the name, so we explicitly update it
+							try {
+								await updateUserName({ name: userData.name });
+							} catch (nameError) {
+								console.warn("Failed to update user name:", nameError);
+								// Don't fail the entire signup process for this
+							}
+
+							// Clear stored data
+							localStorage.removeItem("pendingSignUp");
+							toast.success(
+								"Account created successfully! Welcome to MSN Messenger!",
+							);
+						} catch (signUpError) {
+							console.error("Sign up error:", signUpError);
+							toast.error(
+								"Email verified, but failed to create account. Please try signing in.",
+							);
+						} finally {
+							setIsCreatingAccount(false);
+						}
+					}
+				}
 			} catch (error) {
-				setVerificationResult({
-					success: false,
-					error: error instanceof Error ? error.message : "Verification failed",
-				});
-				toast.error(
-					error instanceof Error ? error.message : "Verification failed",
-				);
+				console.error("Verification error:", error);
+				setVerificationStatus("error");
+				const errorMsg =
+					error instanceof Error ? error.message : "Verification failed";
+				setErrorMessage(errorMsg);
+
+				if (errorMsg.includes("Invalid verification token")) {
+					toast.error("Invalid or expired verification link.");
+				} else if (errorMsg.includes("already verified")) {
+					toast.error("This email is already verified. Please sign in.");
+				} else {
+					toast.error("Verification failed. Please try again.");
+				}
 			} finally {
 				setIsVerifying(false);
 			}
@@ -49,60 +92,123 @@ export function EmailVerificationPage({
 		if (token) {
 			handleVerification();
 		}
-	}, [token, verifyEmail, onVerified]);
+	}, [token, verifyEmail, signIn, updateUserName]);
 
 	if (isVerifying) {
 		return (
-			<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-				<div className="mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl">
-					<div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-blue-500 border-b-2"></div>
-					<h2 className="mb-2 font-semibold text-gray-900 text-xl">
-						Verifying Your Email
-					</h2>
-					<p className="text-gray-600">
-						Please wait while we verify your email address...
-					</p>
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+					<div className="text-center">
+						<div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-blue-500 border-b-2"></div>
+						<h1 className="mb-2 font-bold text-2xl">Verifying Your Email</h1>
+						<p className="text-gray-600 dark:text-gray-400">
+							Please wait while we verify your email address...
+						</p>
+					</div>
 				</div>
 			</div>
 		);
 	}
 
+	if (verificationStatus === "success") {
+		if (isCreatingAccount) {
+			return (
+				<div className="flex min-h-screen items-center justify-center">
+					<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+						<div className="text-center">
+							<div className="mx-auto mb-4 h-12 w-12 animate-spin rounded-full border-green-500 border-b-2"></div>
+							<h1 className="mb-2 font-bold text-2xl">Creating Your Account</h1>
+							<p className="text-gray-600 dark:text-gray-400">
+								Email verified! Setting up your MSN Messenger account...
+							</p>
+						</div>
+					</div>
+				</div>
+			);
+		}
+
+		return (
+			<div className="flex min-h-screen items-center justify-center">
+				<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+					<div className="text-center">
+						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-green-100 dark:bg-green-900">
+							<svg
+								className="h-8 w-8 text-green-600 dark:text-green-400"
+								fill="none"
+								stroke="currentColor"
+								viewBox="0 0 24 24"
+							>
+								<title>Email verification successful</title>
+								<path
+									strokeLinecap="round"
+									strokeLinejoin="round"
+									strokeWidth={2}
+									d="M5 13l4 4L19 7"
+								/>
+							</svg>
+						</div>
+						<h1 className="mb-2 font-bold text-2xl">Email Verified!</h1>
+						<p className="mb-6 text-gray-600 dark:text-gray-400">
+							Your email has been successfully verified and your account has
+							been created.
+						</p>
+
+						<div className="space-y-4">
+							<div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
+								<p className="text-green-800 text-sm dark:text-green-200">
+									🎉 Welcome to MSN Messenger! You should be automatically
+									signed in shortly.
+								</p>
+							</div>
+
+							<Button onClick={onBackToSignIn} className="w-full">
+								Continue to Messenger
+							</Button>
+						</div>
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	// Error state
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-			<div className="mx-4 w-full max-w-md rounded-lg bg-white p-8 text-center shadow-xl">
-				{verificationResult?.success ? (
-					<>
-						<div className="mb-4 text-4xl">✅</div>
-						<h2 className="mb-4 font-semibold text-green-600 text-xl">
-							Email Verified Successfully!
-						</h2>
-						<p className="mb-6 text-gray-600">
-							Your email address <strong>{verificationResult.email}</strong> has
-							been verified.
-						</p>
-						<p className="text-gray-500 text-sm">
-							Redirecting you to sign in...
-						</p>
-					</>
-				) : (
-					<>
-						<div className="mb-4 text-4xl">❌</div>
-						<h2 className="mb-4 font-semibold text-red-600 text-xl">
-							Verification Failed
-						</h2>
-						<p className="mb-6 text-gray-600">
-							{verificationResult?.error ||
-								"Unable to verify your email address."}
-						</p>
-						<button
-							type="button"
-							onClick={onVerified}
-							className="w-full rounded-md bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600"
+		<div className="flex min-h-screen items-center justify-center">
+			<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+				<div className="text-center">
+					<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-100 dark:bg-red-900">
+						<svg
+							className="h-8 w-8 text-red-600 dark:text-red-400"
+							fill="none"
+							stroke="currentColor"
+							viewBox="0 0 24 24"
 						>
+							<title>Email verification failed</title>
+							<path
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								strokeWidth={2}
+								d="M6 18L18 6M6 6l12 12"
+							/>
+						</svg>
+					</div>
+					<h1 className="mb-2 font-bold text-2xl">Verification Failed</h1>
+					<p className="mb-6 text-gray-600 dark:text-gray-400">
+						{errorMessage || "We couldn't verify your email address."}
+					</p>
+
+					<div className="space-y-4">
+						<div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
+							<p className="text-red-800 text-sm dark:text-red-200">
+								The verification link may have expired or been used already.
+							</p>
+						</div>
+
+						<Button onClick={onBackToSignIn} className="w-full">
 							Back to Sign In
-						</button>
-					</>
-				)}
+						</Button>
+					</div>
+				</div>
 			</div>
 		</div>
 	);
