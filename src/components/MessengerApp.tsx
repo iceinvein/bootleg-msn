@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
 import { StatusBar } from "./StatusBar";
+import { VersionBadge } from "./VersionInfo";
 
 export function MessengerApp() {
 	const user = useQuery(api.auth.loggedInUser);
@@ -74,6 +75,10 @@ export function MessengerApp() {
 			<div className="flex w-full flex-col md:w-90">
 				<StatusBar user={user} />
 				<ContactList />
+				{/* Version info at bottom of status bar */}
+				<div className="mt-2 flex justify-center">
+					<VersionBadge />
+				</div>
 			</div>
 
 			{/* Main Chat Area */}

@@ -1,61 +1,109 @@
 import { v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, query } from "./_generated/server";
 
-// Store the current deployment version/timestamp
-export const getDeploymentInfo = query({
-	args: {},
-	handler: async (ctx) => {
-		// Get the latest deployment info from the database
-		const deploymentInfo = await ctx.db
+export const updateDeploymentInfo = internalMutation({
+	args: {
+		version: v.string(),
+		timestamp: v.number(),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		// Insert new deployment info
+		await ctx.db.insert("deploymentInfo", {
+			version: args.version,
+			timestamp: args.timestamp,
+		});
+
+		// Keep only the last 10 deployment records to avoid clutter
+		const allDeployments = await ctx.db
 			.query("deploymentInfo")
+			.withIndex("by_timestamp")
+			.order("desc")
+			.collect();
+
+		if (allDeployments.length > 10) {
+			const deploymentsToDelete = allDeployments.slice(10);
+			for (const deployment of deploymentsToDelete) {
+				await ctx.db.delete(deployment._id);
+			}
+		}
+	},
+});
+
+export const getCurrentVersion = query({
+	args: {},
+	returns: v.union(
+		v.object({
+			version: v.string(),
+			timestamp: v.number(),
+		}),
+		v.null(),
+	),
+	handler: async (ctx) => {
+		const latestDeployment = await ctx.db
+			.query("deploymentInfo")
+			.withIndex("by_timestamp")
 			.order("desc")
 			.first();
 
-		return (
-			deploymentInfo || {
-				version: "1.0.0",
-				timestamp: Date.now(),
-				_id: "" as Id<"deploymentInfo">,
-				_creationTime: Date.now(),
-			}
-		);
+		if (!latestDeployment) {
+			return null;
+		}
+
+		return {
+			version: latestDeployment.version,
+			timestamp: latestDeployment.timestamp,
+		};
 	},
 });
 
-// Update deployment info when a new deployment happens
-export const updateDeploymentInfo = mutation({
+export const getDeploymentHistory = query({
 	args: {
-		version: v.string(),
+		limit: v.optional(v.number()),
 	},
+	returns: v.array(
+		v.object({
+			_id: v.id("deploymentInfo"),
+			version: v.string(),
+			timestamp: v.number(),
+			_creationTime: v.number(),
+		}),
+	),
 	handler: async (ctx, args) => {
-		// Insert new deployment info
-		const deploymentId = await ctx.db.insert("deploymentInfo", {
-			version: args.version,
-			timestamp: Date.now(),
-		});
+		const limit = args.limit ?? 5;
 
-		return deploymentId;
+		return await ctx.db
+			.query("deploymentInfo")
+			.withIndex("by_timestamp")
+			.order("desc")
+			.take(limit);
 	},
 });
-
-// Check if client version is outdated
 export const checkForUpdates = query({
 	args: {
 		clientVersion: v.string(),
 		clientTimestamp: v.number(),
 	},
+	returns: v.union(
+		v.object({
+			hasUpdate: v.boolean(),
+			latestVersion: v.string(),
+			latestTimestamp: v.number(),
+		}),
+		v.null(),
+	),
 	handler: async (ctx, args) => {
 		const latestDeployment = await ctx.db
 			.query("deploymentInfo")
+			.withIndex("by_timestamp")
 			.order("desc")
 			.first();
 
 		if (!latestDeployment) {
-			return { hasUpdate: false };
+			return null;
 		}
 
-		// Check if there's a newer deployment
+		// Check if there's a newer version available
 		const hasUpdate = latestDeployment.timestamp > args.clientTimestamp;
 
 		return {

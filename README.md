@@ -1,15 +1,17 @@
 # 💬 Bootleg MSN Messenger
 
-A nostalgic real-time chat application that recreates the classic MSN Messenger experience with modern web technologies. Built with React, TypeScript, Tailwind CSS, and powered by Convex for real-time backend functionality.
+A nostalgic real-time chat application that recreates the classic MSN Messenger experience with modern web technologies. Built with React 19, TypeScript, Tailwind CSS 4, and powered by Convex for real-time backend functionality.
 
 ![MSN Messenger Screenshot](https://img.shields.io/badge/Status-Active%20Development-green)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![Convex](https://img.shields.io/badge/Convex-Backend-purple)
+![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan)
 
 ## ✨ Features
 
 ### 🎯 Core Messaging
+
 - **Real-time messaging** with instant delivery and typing indicators
 - **Direct messages** between contacts with read receipts
 - **Group chat** functionality with member management
@@ -17,12 +19,14 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 - **Emoji picker** with categorized emoji selection
 
 ### 👥 Contact Management
+
 - **Contact requests** system (send, accept, reject)
 - **Contact list** with online/offline status indicators
 - **Custom nicknames** for contacts
 - **Contact removal** functionality
 
 ### 🎨 Classic MSN Experience
+
 - **Nostalgic UI** with authentic MSN Messenger design
 - **Status system** (Online, Away, Busy, Invisible, Offline)
 - **Custom status messages**
@@ -30,29 +34,37 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 - **Toast notifications** for system events
 
 ### 🔐 Authentication & Security
+
 - **Email verification** system with Resend integration
-- **Anonymous authentication** for quick access
+- **Password authentication** with secure sign-up/sign-in
+- **Anonymous authentication** for quick access (development)
 - **User profile management** with name updates
-- **Secure file uploads** with size limits
+- **Secure file uploads** with Convex storage
 
 ## 🛠️ Tech Stack
 
 ### Frontend
+
 - **React 19** with TypeScript for type-safe development
-- **Vite** for fast development and optimized builds
-- **Tailwind CSS** for utility-first styling
+- **Vite 6** for fast development and optimized builds
+- **Tailwind CSS 4** with utility-first styling and JIT mode
+- **Radix UI** components for accessible UI primitives
+- **Lucide React** for consistent iconography
 - **Sonner** for elegant toast notifications
+- **Next Themes** for dark/light theme support
 
 ### Backend
+
 - **Convex** for real-time database and serverless functions
-- **Convex Auth** for authentication management
+- **Convex Auth** with Password and Anonymous providers
 - **Resend** for email verification services
 - **File storage** with Convex's built-in storage system
 
 ### Development Tools
-- **TypeScript** with strict configuration
-- **ESLint** with React hooks plugin
-- **Prettier** for code formatting
+
+- **TypeScript 5.7** with strict configuration
+- **Biome** for linting and code formatting
+- **npm-run-all** for parallel script execution
 - **Kiro AI** steering rules for consistent development
 
 ## 🚀 Getting Started
@@ -60,8 +72,9 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 ### Prerequisites
 
 - **Node.js** (v18 or higher)
-- **npm** or **pnpm**
+- **pnpm** (recommended) or **npm**
 - **Convex account** (free at [convex.dev](https://convex.dev))
+- **Resend account** (optional, for email verification)
 
 ### 1. Clone the Repository
 
@@ -73,22 +86,26 @@ cd bootleg-msn
 ### 2. Install Dependencies
 
 ```bash
-npm install
-# or
 pnpm install
+# or
+npm install
 ```
 
 ### 3. Set Up Convex
 
 1. **Create a Convex account** at [convex.dev](https://convex.dev)
 2. **Install Convex CLI** globally:
+
    ```bash
    npm install -g convex
    ```
+
 3. **Initialize Convex** in your project:
+
    ```bash
    npx convex dev
    ```
+
 4. **Follow the prompts** to create a new Convex project
 
 ### 4. Configure Environment Variables
@@ -103,7 +120,7 @@ CONVEX_DEPLOY_KEY=your-deploy-key
 
 # Email Service (Optional - for email verification)
 CONVEX_RESEND_API_KEY=your-resend-api-key
-SITE_URL=http://localhost:5173
+CONVEX_SITE_URL=http://localhost:5173
 ```
 
 > **⚠️ Important:** Never commit `.env.local` to version control. It's already included in `.gitignore`.
@@ -120,11 +137,14 @@ For email verification functionality:
 ### 6. Start Development
 
 ```bash
+pnpm dev
+# or
 npm run dev
 ```
 
 This will start both the frontend (Vite) and backend (Convex) servers:
-- **Frontend:** http://localhost:5173
+
+- **Frontend:** <http://localhost:5173>
 - **Convex Dashboard:** Available through the CLI output
 
 ## 📁 Project Structure
@@ -134,34 +154,49 @@ bootleg-msn/
 ├── src/                    # Frontend React application
 │   ├── components/         # React components
 │   │   ├── MessengerApp.tsx    # Main app interface
-│   │   ├── ChatWindow.tsx      # Individual chat interface
-│   │   ├── ContactList.tsx     # Contact management
-│   │   └── ...
+│   │   ├── Chat.tsx           # Chat interface
+│   │   ├── ContactList.tsx    # Contact management
+│   │   ├── StatusBar.tsx      # User status bar
+│   │   ├── EnhancedSignInForm.tsx # Authentication form
+│   │   ├── EmailVerificationPage.tsx # Email verification
+│   │   ├── SignUpForm.tsx     # User registration
+│   │   └── ui/               # Reusable UI components
 │   ├── hooks/             # Custom React hooks
-│   ├── utils/             # Utility functions
+│   ├── lib/               # Utility libraries (cn function, etc.)
+│   ├── stores/            # State management
+│   ├── utils/             # Helper functions
 │   └── main.tsx           # App entry point
 ├── convex/                # Backend Convex functions
-│   ├── schema.ts          # Database schema
+│   ├── schema.ts          # Database schema definition
 │   ├── auth.ts            # Authentication functions
+│   ├── auth.config.ts     # Auth provider configuration
+│   ├── emailVerification.ts # Email verification logic
 │   ├── messages.ts        # Message operations
 │   ├── contacts.ts        # Contact management
 │   ├── groups.ts          # Group chat functionality
-│   └── ...
+│   ├── userStatus.ts      # User status management
+│   ├── files.ts           # File upload/download
+│   └── _generated/        # Auto-generated Convex files
 ├── .kiro/                 # AI development steering rules
 │   └── steering/          # Development guidelines
-└── public/                # Static assets
+└── dist/                  # Build output directory
 ```
 
 ## 🎮 Usage
 
 ### First Time Setup
-1. **Open the app** at http://localhost:5173
-2. **Sign up** with your email or use anonymous authentication
-3. **Verify your email** (if using email signup)
-4. **Add contacts** by email address
-5. **Start chatting!**
+
+1. **Open the app** at <http://localhost:5173>
+2. **Sign up** with your email and password
+3. **Verify your email** through the verification link sent to your inbox
+4. **Sign in** with your verified credentials
+5. **Add contacts** by email address
+6. **Start chatting!**
+
+> **Note:** Anonymous authentication is available for development but requires email verification for full functionality.
 
 ### Key Features
+
 - **Add contacts:** Use the "Add Contact" button and enter their email
 - **Create groups:** Click "Create Group" and select contacts to add
 - **Send files:** Drag and drop files into chat windows
@@ -174,44 +209,86 @@ bootleg-msn/
 
 ```bash
 # Start development servers (frontend + backend)
-npm run dev
+pnpm dev
 
 # Start only frontend
-npm run dev:frontend
+pnpm dev:frontend
 
 # Start only backend
-npm run dev:backend
+pnpm dev:backend
 
 # Build for production
-npm run build
+pnpm build
+
+# Build for Netlify deployment
+pnpm build:netlify
 
 # Lint and type check
-npm run lint
+pnpm lint
+
+# Biome linting only
+pnpm lint:b
+
+# Biome linting with auto-fix
+pnpm lint:b:fix
 ```
 
 ### Database Schema
 
 The app uses Convex with the following main tables:
-- **users** - User profiles and authentication
-- **contacts** - Contact relationships and requests
-- **messages** - Direct messages between users
-- **groups** - Group chat information
+
+- **users** - User profiles and authentication (from Convex Auth)
+- **contacts** - Contact relationships with nicknames
+- **contactRequests** - Contact request management (pending/accepted/rejected)
+- **messages** - Direct messages between users with file support
+- **groups** - Group chat information and settings
+- **groupMembers** - Group membership with roles (admin/member)
 - **groupMessages** - Messages in group chats
-- **userStatus** - Online status and status messages
+- **groupMessageReads** - Read receipts for group messages
+- **userStatus** - Online status and custom status messages
+- **emailVerifications** - Email verification tokens and status
+- **typingIndicators** - Real-time typing indicators
+- **deploymentInfo** - Application version tracking
 
 ### AI Development Assistance
 
 This project includes Kiro steering rules for consistent AI-assisted development:
+
 - **General coding standards** and MSN Messenger guidelines
-- **Convex-specific** backend development rules
+- **Convex-specific** backend development rules with new function syntax
 - **React component** development patterns
-- **Debugging assistance** (activate with `#debugging-help`)
+- **Tailwind CSS** guidelines with cn() function usage
+- **Project structure** and file organization rules
+
+### Automatic Version Management
+
+The project includes automatic version bumping on push to main:
+
+- **Patch version** (0.0.X): Default for most commits
+- **Minor version** (0.X.0): Commits with "feat" or "[minor]" in message
+- **Major version** (X.0.0): Commits with "BREAKING CHANGE" or "[major]" in message
+
+Manual version bumping:
+
+```bash
+pnpm version:patch  # Bump patch version
+pnpm version:minor  # Bump minor version  
+pnpm version:major  # Bump major version
+```
+
+The version is automatically:
+
+- Updated in `package.json`
+- Stored in Convex database
+- Tagged in Git
+- Released on GitHub
 
 ## 🚀 Deployment
 
 ### Convex Deployment
 
 1. **Deploy to production:**
+
    ```bash
    npx convex deploy --prod
    ```
@@ -223,10 +300,17 @@ This project includes Kiro steering rules for consistent AI-assisted development
 ### Frontend Deployment
 
 The frontend can be deployed to any static hosting service:
-- **Vercel** (recommended)
-- **Netlify**
+
+- **Netlify** (configured with `netlify.toml`)
+- **Vercel** (recommended for React apps)
 - **GitHub Pages**
 - **AWS S3 + CloudFront**
+
+For Netlify deployment, use:
+
+```bash
+pnpm build:netlify
+```
 
 ## 🤝 Contributing
 
@@ -251,6 +335,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Support
 
 If you encounter any issues or have questions:
+
 1. **Check the issues** on GitHub
 2. **Review the Convex docs** at [docs.convex.dev](https://docs.convex.dev)
 3. **Create a new issue** with detailed information

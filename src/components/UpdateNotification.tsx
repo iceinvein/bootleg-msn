@@ -4,8 +4,11 @@ import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
 // Store the app version and timestamp when the app loads
-const APP_VERSION = "1.0.0";
-const APP_TIMESTAMP = Date.now();
+// Use build time timestamp if available, otherwise use current time
+const APP_VERSION = import.meta.env.PACKAGE_VERSION || "0.0.0";
+const APP_TIMESTAMP = import.meta.env.VITE_BUILD_TIMESTAMP
+	? parseInt(import.meta.env.VITE_BUILD_TIMESTAMP)
+	: Date.now();
 
 export function UpdateNotification() {
 	const [hasCheckedInitially, setHasCheckedInitially] = useState(false);

@@ -1,10 +1,15 @@
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
+import { readFileSync } from "fs";
 import path from "path";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
-export default defineConfig(({ mode }) => ({
+export default defineConfig(({ mode }) => {
+	// Read package.json to get version
+	const packageJson = JSON.parse(readFileSync("./package.json", "utf-8"));
+	
+	return {
 	plugins: [
 		react(),
 		tailwindcss(),
@@ -43,4 +48,8 @@ window.addEventListener('message', async (message) => {
 			"@convex": path.resolve(__dirname, "./convex"),
 		},
 	},
-}));
+	define: {
+		"import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
+		"import.meta.env.VITE_BUILD_TIMESTAMP": JSON.stringify(Date.now().toString()),
+	},
+};});

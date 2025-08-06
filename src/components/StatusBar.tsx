@@ -2,28 +2,17 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useMutation, useQuery } from "convex/react";
-import {
-	LogOutIcon,
-	Settings,
-	User,
-	UserCheck,
-	UserPlus,
-	Users,
-} from "lucide-react";
+import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { AddContactDialog } from "./AddContactDialog";
 import { ContactRequestsDialog } from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
+import { SettingsDialog } from "./SettingsDialog";
 import { StatusMessage } from "./StatusMessage";
 import { ThemeToggle } from "./theme-toggle";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "./ui/dropdown-menu";
+
 import {
 	Select,
 	SelectContent,
@@ -31,6 +20,7 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "./ui/select";
+import { VersionBadge } from "./VersionInfo";
 
 const statusOptions = [
 	{ value: "online", label: "Online", color: "bg-green-500", emoji: "🟢" },
@@ -57,7 +47,6 @@ export function StatusBar({ user }: StatusBarProps) {
 	const sentRequests = useQuery(api.contacts.getSentRequests);
 
 	const updateStatus = useMutation(api.userStatus.updateStatus);
-	const { signOut } = useAuthActions();
 
 	const handleStatusChange = async (status: StatusValue) => {
 		setCurrentStatus(status);
@@ -137,28 +126,17 @@ export function StatusBar({ user }: StatusBarProps) {
 							<Users className="md:h-5! md:w-5!" />
 						</Button>
 					</CreateGroupDialog>
-					<DropdownMenu>
-						<DropdownMenuTrigger asChild>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-10 w-10 cursor-pointer"
-								title="Settings"
-								aria-label="Settings"
-							>
-								<Settings className="md:h-5! md:w-5!" />
-							</Button>
-						</DropdownMenuTrigger>
-						<DropdownMenuContent>
-							<DropdownMenuItem
-								className="cursor-pointer"
-								onClick={() => void signOut()}
-							>
-								<LogOutIcon className="mr-2 h-4 w-4" />
-								Log out
-							</DropdownMenuItem>
-						</DropdownMenuContent>
-					</DropdownMenu>
+					<SettingsDialog>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-10 w-10 cursor-pointer"
+							title="Settings"
+							aria-label="Settings"
+						>
+							<Settings className="md:h-5! md:w-5!" />
+						</Button>
+					</SettingsDialog>
 					<ThemeToggle />
 				</div>
 			</div>
