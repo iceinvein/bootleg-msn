@@ -27,6 +27,8 @@ export function EnhancedSignInForm() {
 	const [needsVerification, setNeedsVerification] = useState<string | null>(
 		null,
 	);
+	const [resendCooldown, setResendCooldown] = useState(0);
+	const [canResend, setCanResend] = useState(true);
 
 	// Check for verification token in URL
 	useEffect(() => {
@@ -38,6 +40,28 @@ export function EnhancedSignInForm() {
 			window.history.replaceState({}, document.title, window.location.pathname);
 		}
 	}, []);
+
+	// Handle resend cooldown timer
+	useEffect(() => {
+		let interval: NodeJS.Timeout;
+		if (resendCooldown > 0) {
+			setCanResend(false);
+			interval = setInterval(() => {
+				setResendCooldown((prev) => {
+					if (prev <= 1) {
+						setCanResend(true);
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+		}
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [resendCooldown]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -77,12 +101,15 @@ export function EnhancedSignInForm() {
 	};
 
 	const handleResendVerification = async () => {
-		if (!needsVerification) return;
+		if (!needsVerification || !canResend) return;
 
 		setIsLoading(true);
 		try {
 			await resendVerificationEmail({ email: needsVerification });
 			toast.success("Verification email sent! Please check your inbox.");
+
+			// Start 60-second cooldown
+			setResendCooldown(60);
 		} catch (error) {
 			const errorMessage =
 				error instanceof Error
@@ -144,10 +171,14 @@ export function EnhancedSignInForm() {
 
 						<Button
 							onClick={handleResendVerification}
-							disabled={isLoading}
+							disabled={isLoading || !canResend}
 							className="w-full"
 						>
-							{isLoading ? "Sending..." : "Resend Verification Email"}
+							{isLoading
+								? "Sending..."
+								: !canResend
+									? `Resend in ${resendCooldown}s`
+									: "Resend Verification Email"}
 						</Button>
 
 						<Button

@@ -1,6 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { useAction } from "convex/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 interface EmailVerificationModalProps {
@@ -14,15 +14,44 @@ export function EmailVerificationModal({
 	onClose,
 }: EmailVerificationModalProps) {
 	const [isResending, setIsResending] = useState(false);
+	const [resendCooldown, setResendCooldown] = useState(0);
+	const [canResend, setCanResend] = useState(true);
 	const sendVerificationEmail = useAction(
 		api.emailVerification.sendVerificationEmail,
 	);
 
+	// Handle resend cooldown timer
+	useEffect(() => {
+		let interval: NodeJS.Timeout;
+		if (resendCooldown > 0) {
+			setCanResend(false);
+			interval = setInterval(() => {
+				setResendCooldown((prev) => {
+					if (prev <= 1) {
+						setCanResend(true);
+						return 0;
+					}
+					return prev - 1;
+				});
+			}, 1000);
+		}
+		return () => {
+			if (interval) {
+				clearInterval(interval);
+			}
+		};
+	}, [resendCooldown]);
+
 	const handleResendEmail = async () => {
+		if (!canResend) return;
+
 		setIsResending(true);
 		try {
 			await sendVerificationEmail({ email });
 			toast.success("Verification email sent! Please check your inbox.");
+
+			// Start 60-second cooldown
+			setResendCooldown(60);
 		} catch (error) {
 			toast.error(
 				error instanceof Error
@@ -55,10 +84,14 @@ export function EmailVerificationModal({
 						<button
 							type="button"
 							onClick={handleResendEmail}
-							disabled={isResending}
+							disabled={isResending || !canResend}
 							className="w-full rounded-md bg-blue-500 px-4 py-2 font-medium text-white transition-colors hover:bg-blue-600 disabled:bg-gray-300"
 						>
-							{isResending ? "Sending..." : "Resend Verification Email"}
+							{isResending
+								? "Sending..."
+								: !canResend
+									? `Resend in ${resendCooldown}s`
+									: "Resend Verification Email"}
 						</button>
 
 						<button
