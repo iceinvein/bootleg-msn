@@ -1,6 +1,9 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Button } from "./ui/button";
+import { Input } from "./ui/input";
+import { Label } from "./ui/label";
 
 interface SignUpFormProps {
 	onBackToSignIn: () => void;
@@ -43,94 +46,78 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 	};
 
 	return (
-		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100">
-			<div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+		<div className="flex min-h-screen items-center justify-center">
+			<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
 				<div className="mb-8 text-center">
-					<h1 className="mb-2 font-bold text-3xl text-gray-900">
-						Join MSN Messenger
-					</h1>
-					<p className="text-gray-600">Create your account to start chatting</p>
+					<h1 className="mb-2 font-bold text-3xl">Join MSN Messenger</h1>
+					<p>Create your account to start chatting</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
 					<div>
-						<label
-							htmlFor="name"
-							className="mb-2 block font-medium text-gray-700 text-sm"
-						>
+						<Label htmlFor="name" className="mb-2">
 							Full Name
-						</label>
-						<input
-							type="text"
+						</Label>
+						<Input
 							id="name"
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							placeholder="Enter your full name"
-							className="w-full rounded-md border border-gray-300 px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+							className="w-full"
 							required
 						/>
 					</div>
 
 					<div>
-						<label
-							htmlFor="email"
-							className="mb-2 block font-medium text-gray-700 text-sm"
-						>
+						<Label htmlFor="email" className="mb-2">
 							Email Address
-						</label>
-						<input
+						</Label>
+						<Input
 							type="email"
 							id="email"
 							value={email}
 							onChange={(e) => setEmail(e.target.value)}
 							placeholder="Enter your email address"
-							className="w-full rounded-md border border-gray-300 px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+							className="w-full"
 							required
 						/>
 					</div>
 
 					<div>
-						<label
-							htmlFor="password"
-							className="mb-2 block font-medium text-gray-700 text-sm"
-						>
+						<Label htmlFor="password" className="mb-2">
 							Password
-						</label>
-						<input
+						</Label>
+						<Input
 							type="password"
 							id="password"
 							value={password}
 							onChange={(e) => setPassword(e.target.value)}
 							placeholder="Create a password"
-							className="w-full rounded-md border border-gray-300 px-4 py-3 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
+							className="w-full"
 							required
 							minLength={6}
 						/>
 					</div>
 
-					<button
+					<Button
 						type="submit"
 						disabled={
 							isLoading || !email.trim() || !password.trim() || !name.trim()
 						}
-						className="w-full rounded-md bg-blue-500 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-600 disabled:bg-gray-300"
+						className="w-full"
 					>
 						{isLoading ? "Creating Account..." : "Create Account"}
-					</button>
+					</Button>
 				</form>
 
 				<div className="mt-6 text-center">
-					<button
-						type="button"
-						onClick={onBackToSignIn}
-						className="font-medium text-blue-500 text-sm hover:text-blue-600"
-					>
+					<Button variant="ghost" type="button" onClick={onBackToSignIn}>
 						Already have an account? Sign in
-					</button>
+					</Button>
 				</div>
 
 				<div className="mt-6 text-center">
-					<p className="text-gray-500 text-xs">
+					<p className="text-xs">
 						By creating an account, you can start chatting immediately!
 					</p>
 				</div>
