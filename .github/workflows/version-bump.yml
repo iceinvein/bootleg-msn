@@ -99,12 +99,13 @@ jobs:
           }
           EOF
           
-          # Update deployment info in Convex database
-          node scripts/update-deployment-info.js
+          # Update deployment info in Convex database (continue even if this fails)
+          node scripts/update-deployment-info.js || echo "Warning: Failed to update Convex deployment info"
 
       - name: Commit version bump
         run: |
-          git add package.json deployment-info.json
+          # Only commit package.json (deployment-info.json is temporary and gets cleaned up)
+          git add package.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.new-version }} [skip ci]"
           git tag ${{ steps.version.outputs.new-version }}
 
