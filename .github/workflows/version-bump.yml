@@ -1,5 +1,9 @@
 name: Version Bump
 
+permissions:
+  contents: write
+  actions: read
+
 on:
   push:
     branches: [master]
