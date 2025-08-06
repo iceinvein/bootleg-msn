@@ -8,12 +8,22 @@ on:
       - 'LICENSE'
       - '.gitignore'
       - 'docs/**'
-      - '.github/workflows/**'
+  workflow_dispatch:
+    inputs:
+      version_type:
+        description: 'Version bump type'
+        required: false
+        default: 'patch'
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
 
 jobs:
   version-bump:
     runs-on: ubuntu-latest
-    if: ${{ !contains(github.event.head_commit.message, 'skip ci') }}
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, 'skip ci') }}
     
     steps:
       - name: Checkout code
@@ -41,15 +51,20 @@ jobs:
       - name: Determine version bump type
         id: bump-type
         run: |
-          # Check commit messages for version bump indicators
-          COMMIT_MSG="${{ github.event.head_commit.message }}"
-          
-          if [[ $COMMIT_MSG == *"BREAKING CHANGE"* ]] || [[ $COMMIT_MSG == *"[major]"* ]]; then
-            echo "type=major" >> $GITHUB_OUTPUT
-          elif [[ $COMMIT_MSG == *"feat"* ]] || [[ $COMMIT_MSG == *"[minor]"* ]]; then
-            echo "type=minor" >> $GITHUB_OUTPUT
+          # Check if manually triggered
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "type=${{ github.event.inputs.version_type }}" >> $GITHUB_OUTPUT
           else
-            echo "type=patch" >> $GITHUB_OUTPUT
+            # Check commit messages for version bump indicators
+            COMMIT_MSG="${{ github.event.head_commit.message }}"
+            
+            if [[ $COMMIT_MSG == *"BREAKING CHANGE"* ]] || [[ $COMMIT_MSG == *"[major]"* ]]; then
+              echo "type=major" >> $GITHUB_OUTPUT
+            elif [[ $COMMIT_MSG == *"feat"* ]] || [[ $COMMIT_MSG == *"[minor]"* ]]; then
+              echo "type=minor" >> $GITHUB_OUTPUT
+            else
+              echo "type=patch" >> $GITHUB_OUTPUT
+            fi
           fi
 
       - name: Bump version
