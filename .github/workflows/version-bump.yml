@@ -2,12 +2,13 @@ name: Version Bump
 
 on:
   push:
-    branches: [main]
+    branches: [master]
     paths-ignore:
       - 'README.md'
       - 'LICENSE'
       - '.gitignore'
       - 'docs/**'
+      - '.github/workflows/**'
 
 jobs:
   version-bump:
@@ -94,7 +95,7 @@ jobs:
 
       - name: Push changes
         run: |
-          git push origin main
+          git push origin master
           git push origin ${{ steps.version.outputs.new-version }}
 
       - name: Create GitHub Release
