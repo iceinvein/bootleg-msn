@@ -17,6 +17,7 @@
 		"version:major": "npm version major && node scripts/update-deployment-info.js"
 	},
 	"dependencies": {
+		"@auth/core": "0.37.0",
 		"@convex-dev/auth": "^0.0.80",
 		"@convex-dev/resend": "^0.1.7",
 		"@nanostores/react": "^1.0.0",
