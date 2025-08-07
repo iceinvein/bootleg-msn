@@ -1,3 +1,5 @@
+import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { Clock, Inbox, Send, User, UserCheck, UserX } from "lucide-react";
@@ -17,8 +19,6 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { formatTime } from "@/utils/data";
 
 export interface ContactRequest {
@@ -146,67 +146,69 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 
 					<TabsContent value="incoming" className="mt-4">
 						<ScrollArea className="h-96">
-							{!currentUser ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
-									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
-									<p>Please sign in to view contact requests</p>
-								</div>
-							) : pendingRequests?.length === 0 ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
-									<Inbox className="mx-auto mb-2 h-12 w-12 opacity-50" />
-									<p>No incoming requests</p>
-								</div>
-							) : (
-								<div className="space-y-3">
-									{pendingRequests?.map((request) => (
-										<div
-											key={request._id}
-											className="flex items-start space-x-3 rounded-lg border border-blue-700 bg-blue-50 p-4 dark:border-blue-200 dark:bg-blue-900/20"
-										>
-											<Avatar className="h-12 w-12">
-												<User className="h-12 w-12" />
-											</Avatar>
-											<div className="min-w-0 flex-1">
-												<div className="mb-1 flex items-center space-x-2">
-													<h4 className="font-semibold text-gray-900 text-sm dark:text-gray-100">
+							{currentUser ? (
+								pendingRequests?.length === 0 ? (
+									<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+										<Inbox className="mx-auto mb-2 h-12 w-12 opacity-50" />
+										<p>No incoming requests</p>
+									</div>
+								) : (
+									<div className="space-y-3">
+										{pendingRequests?.map((request) => (
+											<div
+												key={request._id}
+												className="flex items-start space-x-3 rounded-lg border border-blue-700 bg-blue-50 p-4 dark:border-blue-200 dark:bg-blue-900/20"
+											>
+												<Avatar className="h-12 w-12">
+													<User className="h-12 w-12" />
+												</Avatar>
+												<div className="min-w-0 flex-1">
+													<div className="mb-1 flex items-center space-x-2">
+														<h4 className="font-semibold text-gray-900 text-sm dark:text-gray-100">
+															{request.user?.email}
+														</h4>
+														<Badge variant="secondary" className="text-xs">
+															{formatTime(request._creationTime)}
+														</Badge>
+													</div>
+													<p className="mb-1 text-gray-600 text-xs dark:text-gray-400">
 														{request.user?.email}
-													</h4>
-													<Badge variant="secondary" className="text-xs">
-														{formatTime(request._creationTime)}
-													</Badge>
-												</div>
-												<p className="mb-1 text-gray-600 text-xs dark:text-gray-400">
-													{request.user?.email}
-												</p>
-												{/* {request.message && (
+													</p>
+													{/* {request.message && (
 													<p className="mb-3 rounded border-blue-400 border-l-4 bg-white p-2 text-gray-700 text-sm dark:bg-gray-700 dark:text-gray-300">
 														"{request.message}"
 													</p>
 												)} */}
-												<div className="mt-3 flex space-x-2">
-													<Button
-														size="sm"
-														onClick={() => handleAccept(request._id)}
-														className="bg-green-600 text-white hover:bg-green-700"
-														disabled={isLoading || !currentUser}
-													>
-														<UserCheck className="mr-1 h-3 w-3" />
-														Accept
-													</Button>
-													<Button
-														size="sm"
-														variant="outline"
-														onClick={() => handleReject(request._id)}
-														className="border-red-300 text-red-600 hover:bg-red-50"
-														disabled={isLoading || !currentUser}
-													>
-														<UserX className="mr-1 h-3 w-3" />
-														Decline
-													</Button>
+													<div className="mt-3 flex space-x-2">
+														<Button
+															size="sm"
+															onClick={() => handleAccept(request._id)}
+															className="bg-green-600 text-white hover:bg-green-700"
+															disabled={isLoading || !currentUser}
+														>
+															<UserCheck className="mr-1 h-3 w-3" />
+															Accept
+														</Button>
+														<Button
+															size="sm"
+															variant="outline"
+															onClick={() => handleReject(request._id)}
+															className="border-red-300 text-red-600 hover:bg-red-50"
+															disabled={isLoading || !currentUser}
+														>
+															<UserX className="mr-1 h-3 w-3" />
+															Decline
+														</Button>
+													</div>
 												</div>
 											</div>
-										</div>
-									))}
+										))}
+									</div>
+								)
+							) : (
+								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
+									<p>Please sign in to view contact requests</p>
 								</div>
 							)}
 						</ScrollArea>
@@ -214,63 +216,65 @@ export function ContactRequestsDialog({ children }: ContactRequestsProps) {
 
 					<TabsContent value="outgoing" className="mt-4">
 						<ScrollArea className="h-96">
-							{!currentUser ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
-									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
-									<p>Please sign in to view sent requests</p>
-								</div>
-							) : sentRequests?.length === 0 ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
-									<Send className="mx-auto mb-2 h-12 w-12 opacity-50" />
-									<p>No outgoing requests</p>
-								</div>
-							) : (
-								<div className="space-y-3">
-									{sentRequests?.map((request) => (
-										<div
-											key={request._id}
-											className="flex items-start space-x-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20"
-										>
-											<Avatar className="h-12 w-12">
-												<User className="h-12 w-12" />
-											</Avatar>
-											<div className="min-w-0 flex-1">
-												<div className="mb-1 flex items-center space-x-2">
-													<h4 className="font-semibold text-gray-900 text-sm dark:text-gray-100">
-														{request.nickname ?? request.user?.email}
-													</h4>
-													<Badge
-														variant="outline"
-														className="flex items-center space-x-1 text-xs"
-													>
-														<Clock className="h-3 w-3" />
-														<span>Pending</span>
-													</Badge>
-													<Badge variant="secondary" className="text-xs">
-														{formatTime(request._creationTime)}
-													</Badge>
-												</div>
-												<p className="mb-1 text-gray-600 text-xs dark:text-gray-400">
-													{request.user?.email}
-												</p>
-												{/* {request.message && (
+							{currentUser ? (
+								sentRequests?.length === 0 ? (
+									<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+										<Send className="mx-auto mb-2 h-12 w-12 opacity-50" />
+										<p>No outgoing requests</p>
+									</div>
+								) : (
+									<div className="space-y-3">
+										{sentRequests?.map((request) => (
+											<div
+												key={request._id}
+												className="flex items-start space-x-3 rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-700 dark:bg-yellow-900/20"
+											>
+												<Avatar className="h-12 w-12">
+													<User className="h-12 w-12" />
+												</Avatar>
+												<div className="min-w-0 flex-1">
+													<div className="mb-1 flex items-center space-x-2">
+														<h4 className="font-semibold text-gray-900 text-sm dark:text-gray-100">
+															{request.nickname ?? request.user?.email}
+														</h4>
+														<Badge
+															variant="outline"
+															className="flex items-center space-x-1 text-xs"
+														>
+															<Clock className="h-3 w-3" />
+															<span>Pending</span>
+														</Badge>
+														<Badge variant="secondary" className="text-xs">
+															{formatTime(request._creationTime)}
+														</Badge>
+													</div>
+													<p className="mb-1 text-gray-600 text-xs dark:text-gray-400">
+														{request.user?.email}
+													</p>
+													{/* {request.message && (
 													<p className="mb-3 rounded border-yellow-400 border-l-4 bg-white p-2 text-gray-700 text-sm dark:bg-gray-700 dark:text-gray-300">
 														"{request.message}"
 													</p>
 												)} */}
-												<Button
-													size="sm"
-													variant="outline"
-													onClick={() => handleCancel(request._id)}
-													className="mt-3 border-gray-300 text-gray-600 hover:bg-gray-50"
-													disabled={isLoading || !currentUser}
-												>
-													<UserX className="mr-1 h-3 w-3" />
-													Cancel Request
-												</Button>
+													<Button
+														size="sm"
+														variant="outline"
+														onClick={() => handleCancel(request._id)}
+														className="mt-3 border-gray-300 text-gray-600 hover:bg-gray-50"
+														disabled={isLoading || !currentUser}
+													>
+														<UserX className="mr-1 h-3 w-3" />
+														Cancel Request
+													</Button>
+												</div>
 											</div>
-										</div>
-									))}
+										))}
+									</div>
+								)
+							) : (
+								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
+									<p>Please sign in to view sent requests</p>
 								</div>
 							)}
 						</ScrollArea>

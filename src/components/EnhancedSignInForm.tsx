@@ -178,9 +178,9 @@ export function EnhancedSignInForm() {
 						>
 							{isLoading
 								? "Sending..."
-								: !canResend
-									? `Resend in ${resendCooldown}s`
-									: "Resend Verification Email"}
+								: canResend
+									? "Resend Verification Email"
+									: `Resend in ${resendCooldown}s`}
 						</Button>
 
 						<Button

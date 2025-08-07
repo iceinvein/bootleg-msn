@@ -177,7 +177,7 @@ export function Chat() {
 
 	return (
 		<div
-			className={`flex flex-1 flex-col ${!showChat ? "hidden md:flex" : "flex"}`}
+			className={`flex flex-1 flex-col ${showChat ? "flex" : "hidden md:flex"}`}
 		>
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>

@@ -22,8 +22,8 @@ export function UpdateNotificationTest() {
 	}
 
 	return (
-		<div className="fixed bottom-4 right-4 bg-black/80 text-white p-4 rounded-lg text-xs max-w-sm z-50">
-			<h3 className="font-bold mb-2">🔍 Update Debug Info</h3>
+		<div className="fixed right-4 bottom-4 z-50 max-w-sm rounded-lg bg-black/80 p-4 text-white text-xs">
+			<h3 className="mb-2 font-bold">🔍 Update Debug Info</h3>
 			<div className="space-y-1">
 				<div className="text-yellow-300">
 					<strong>Environment Variables:</strong>
@@ -35,7 +35,7 @@ export function UpdateNotificationTest() {
 					VITE_BUILD_TIMESTAMP:{" "}
 					{import.meta.env.VITE_BUILD_TIMESTAMP || "undefined"}
 				</div>
-				<div className="border-t border-gray-600 pt-2 mt-2">
+				<div className="mt-2 border-gray-600 border-t pt-2">
 					<div>
 						<strong>Client Version:</strong> {APP_VERSION_WITH_PREFIX}
 					</div>
@@ -59,14 +59,14 @@ export function UpdateNotificationTest() {
 					</div>
 				</div>
 				{updateCheck?.hasUpdate && (
-					<div className="mt-2 p-2 bg-green-900/50 rounded">
+					<div className="mt-2 rounded bg-green-900/50 p-2">
 						<div>🎉 Update Available!</div>
 						<div>
 							{APP_VERSION_WITH_PREFIX} → {updateCheck.latestVersion}
 						</div>
 					</div>
 				)}
-				<div className="mt-2 p-2 bg-blue-900/50 rounded text-xs">
+				<div className="mt-2 rounded bg-blue-900/50 p-2 text-xs">
 					<div>
 						<strong>Comparison:</strong>
 					</div>
@@ -79,7 +79,7 @@ export function UpdateNotificationTest() {
 							: "Client"}
 					</div>
 				</div>
-				<div className="mt-2 p-2 bg-purple-900/50 rounded text-xs">
+				<div className="mt-2 rounded bg-purple-900/50 p-2 text-xs">
 					<div>
 						<strong>Dev Mode:</strong>
 					</div>

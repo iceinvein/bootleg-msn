@@ -64,7 +64,20 @@ export function YouTubeEmbed({ video, className = "" }: YouTubeEmbedProps) {
 				className,
 			)}
 		>
-			{!isLoaded ? (
+			{isLoaded ? (
+				<div
+					className="relative"
+					style={{ paddingBottom: "56.25%", height: 0 }}
+				>
+					<iframe
+						src={video.embedUrl}
+						title="YouTube video player"
+						className="absolute top-0 left-0 h-full w-full border-0"
+						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+						allowFullScreen
+					/>
+				</div>
+			) : (
 				<div className="relative">
 					<img
 						src={video.thumbnailUrl}
@@ -93,19 +106,6 @@ export function YouTubeEmbed({ video, className = "" }: YouTubeEmbedProps) {
 					<div className="absolute right-2 bottom-2 rounded bg-black bg-opacity-75 px-2 py-1 text-white text-xs">
 						YouTube
 					</div>
-				</div>
-			) : (
-				<div
-					className="relative"
-					style={{ paddingBottom: "56.25%", height: 0 }}
-				>
-					<iframe
-						src={video.embedUrl}
-						title="YouTube video player"
-						className="absolute top-0 left-0 h-full w-full border-0"
-						allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-						allowFullScreen
-					/>
 				</div>
 			)}
 		</div>

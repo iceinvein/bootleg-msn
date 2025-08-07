@@ -97,7 +97,7 @@ export function UpdateNotification() {
 						<p>
 							Update from {currentVersion} to {latestVersion}
 						</p>
-						<p className="text-xs mt-1 text-white/60">
+						<p className="mt-1 text-white/60 text-xs">
 							Get the latest features and improvements
 						</p>
 					</div>

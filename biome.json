@@ -12,7 +12,12 @@
 		"enabled": true,
 		"indentStyle": "tab",
 		"indentWidth": 2,
-		"includes": ["./src/**/*", "!./convex/_generated/**/*", "./convex/**/*"]
+		"includes": [
+			"src/**/*",
+			"convex/**/*",
+			"!src/components/ui/**/*",
+			"!convex/_generated/**/*"
+		]
 	},
 	"linter": {
 		"enabled": true,
@@ -22,8 +27,16 @@
 				"useSortedClasses": {
 					"level": "warn",
 					"options": {
-						"attributes": ["className"],
-						"functions": ["clsx", "cva", "tw", "tw.*"]
+						"attributes": [
+							"className"
+						],
+						"functions": [
+							"clsx",
+							"cva",
+							"tw",
+							"tw.*",
+							"cn"
+						]
 					},
 					"fix": "safe"
 				}
@@ -32,10 +45,73 @@
 				"noStaticElementInteractions": {
 					"level": "off",
 					"options": {}
+				},
+				"useKeyWithClickEvents": {
+					"level": "warn",
+					"options": {}
+				}
+			},
+			"style": {
+				"useConst": {
+					"level": "error",
+					"options": {}
+				},
+				"useTemplate": {
+					"level": "warn",
+					"options": {}
+				},
+				"noNegationElse": {
+					"level": "warn",
+					"options": {}
+				},
+				"useCollapsedElseIf": {
+					"level": "warn",
+					"options": {}
+				}
+			},
+			"complexity": {
+				"noUselessFragments": {
+					"level": "warn",
+					"options": {}
+				}
+			},
+			"correctness": {
+				"useExhaustiveDependencies": {
+					"level": "warn",
+					"options": {}
+				},
+				"noUnusedVariables": {
+					"level": "error",
+					"options": {}
+				},
+				"noUnusedImports": {
+					"level": "error",
+					"options": {}
+				}
+			},
+			"suspicious": {
+				"noExplicitAny": {
+					"level": "error",
+					"options": {}
+				},
+				"noArrayIndexKey": {
+					"level": "warn",
+					"options": {}
+				}
+			},
+			"performance": {
+				"noAccumulatingSpread": {
+					"level": "warn",
+					"options": {}
 				}
 			}
 		},
-		"includes": ["./src/**/*", "!./convex/_generated/**/*", "./convex/**/*"]
+		"includes": [
+			"src/**/*",
+			"convex/**/*",
+			"!convex/_generated/**/*",
+			"!src/components/ui/**/*"
+		]
 	},
 	"javascript": {
 		"formatter": {
