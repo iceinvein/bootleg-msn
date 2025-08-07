@@ -1,5 +1,4 @@
 import { api } from "@convex/_generated/api";
-import { useAuthActions } from "@convex-dev/auth/react";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useMutation, useQuery } from "convex/react";
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
@@ -20,7 +19,6 @@ import {
 	SelectTrigger,
 	SelectValue,
 } from "./ui/select";
-import { VersionBadge } from "./VersionInfo";
 
 const statusOptions = [
 	{ value: "online", label: "Online", color: "bg-green-500", emoji: "🟢" },

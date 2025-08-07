@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { LogOut } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
 import {
 	Dialog,
@@ -25,7 +25,7 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 	const user = useQuery(api.auth.loggedInUser);
 	const updateUserName = useMutation(api.auth.updateUserName);
 	const { signOut } = useAuthActions();
-	const [name, setName] = useState(user?.name || "");
+	const [name, setName] = useState("");
 	const [isUpdating, setIsUpdating] = useState(false);
 
 	const handleUpdateName = async () => {
@@ -40,6 +40,10 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 			setIsUpdating(false);
 		}
 	};
+
+	useEffect(() => {
+		setName(user?.name ?? "");
+	}, [user]);
 
 	return (
 		<Dialog>
