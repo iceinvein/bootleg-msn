@@ -5,6 +5,7 @@ import { EnhancedSignInForm } from "./components/EnhancedSignInForm";
 import { MessengerApp } from "./components/MessengerApp";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
+import { UpdateNotificationTest } from "./components/UpdateNotificationTest";
 import { Toaster } from "./components/ui/sonner";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
 				<Authenticated>
 					<MessengerApp />
 					<UpdateNotification />
+					{import.meta.env.DEV && <UpdateNotificationTest />}
 					{/* {import.meta.env.DEV && <DeploymentManager />} */}
 				</Authenticated>
 

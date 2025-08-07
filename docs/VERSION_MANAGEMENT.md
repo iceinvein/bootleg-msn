@@ -1,101 +1,64 @@
 # Version Management
 
-This document explains how automatic version bumping works in the Bootleg MSN Messenger project.
+This project uses a streamlined version management system that maintains consistency between `package.json` and the Convex deployment database.
 
 ## How It Works
 
-### Automatic Version Bumping
+### Single Source of Truth
 
-Every push to the `main` branch triggers an automatic version bump based on the commit message:
+- **package.json**: Contains the canonical version (e.g., `"0.1.0"`)
+- **Deployment Database**: Automatically stores version with `v` prefix (e.g., `"v0.1.0"`)
 
-- **Patch version** (0.0.X): Default for most commits
-- **Minor version** (0.X.0): Commits containing "feat" or "[minor]"
-- **Major version** (X.0.0): Commits containing "BREAKING CHANGE" or "[major]"
+### Automatic Synchronization
 
-### GitHub Action Workflow
+The system automatically handles the version format conversion:
 
-The `.github/workflows/version-bump.yml` workflow:
+- `package.json` version: `0.1.0` (no prefix)
+- Database version: `v0.1.0` (with prefix)
+- Git tags: `v0.1.0` (with prefix)
 
-1. Analyzes commit messages to determine bump type
-2. Updates `package.json` version
-3. Updates deployment info in Convex database
-4. Creates a Git tag
-5. Pushes changes back to main
-6. Creates a GitHub release
+## Version Bumping
 
-### Required Secrets
-
-For the workflow to work, you need these GitHub repository secrets:
-
-- `VITE_CONVEX_URL`: Your Convex deployment URL
-- `CONVEX_DEPLOY_KEY`: Your Convex deployment key
-
-### Manual Version Bumping
-
-You can also bump versions manually:
+### Manual (Local Development)
 
 ```bash
-# Bump patch version (0.0.X)
-pnpm version:patch
+# Patch version (0.1.0 → 0.1.1)
+npm run version:patch
 
-# Bump minor version (0.X.0)
-pnpm version:minor
+# Minor version (0.1.0 → 0.2.0)
+npm run version:minor
 
-# Bump major version (X.0.0)
-pnpm version:major
+# Major version (0.1.0 → 1.0.0)
+npm run version:major
 ```
 
-### Version Display
+### Automatic (GitHub Actions)
 
-The current version is displayed in the app using:
+The GitHub Actions workflow automatically bumps versions based on:
 
-- `VersionInfo` component: Shows version and deployment time
-- `VersionBadge` component: Compact version display
+1. **Manual Trigger**: Choose patch/minor/major from workflow dispatch
+2. **Commit Message Keywords**:
+   - `BREAKING CHANGE` or `[major]` → major bump
+   - `feat` or `[minor]` → minor bump
+   - Everything else → patch bump
 
-### Database Integration
+### What Happens During Version Bump
 
-Version information is stored in the `deploymentInfo` table in Convex:
+1. **Update package.json**: Version is bumped (e.g., `0.1.0` → `0.1.1`)
+2. **Update Convex Database**: Version is stored with `v` prefix (`v0.1.1`)
+3. **Create Git Tag**: Tag created with `v` prefix (`v0.1.1`)
+4. **GitHub Release**: Release created with proper versioning
 
-- `version`: The semantic version string
-- `timestamp`: Unix timestamp of deployment
-- Only the last 10 deployments are kept
+## Files Involved
 
-### Skipping Version Bumps
+- `package.json`: Source of truth for version number
+- `scripts/update-deployment-info.js`: Handles database updates
+- `.github/workflows/version-bump.yml`: Automated version management
+- `convex/deployment.ts`: Database functions for version tracking
 
-To skip automatic version bumping, include `[skip ci]` in your commit message.
+## Benefits
 
-## Example Commit Messages
-
-```bash
-# Patch version bump
-git commit -m "fix: resolve login issue"
-
-# Minor version bump  
-git commit -m "feat: add dark mode support"
-
-# Major version bump
-git commit -m "BREAKING CHANGE: redesign authentication flow"
-
-# Skip version bump
-git commit -m "docs: update README [skip ci]"
-```
-
-## Troubleshooting
-
-### Workflow Fails
-
-1. Check that required secrets are set in GitHub repository settings
-2. Ensure Convex deployment is accessible
-3. Verify the workflow has write permissions to the repository
-
-### Version Not Updating in App
-
-1. Check that the Convex function `deployment.updateDeploymentInfo` exists
-2. Verify the database schema includes the `deploymentInfo` table
-3. Ensure the app is querying `api.deployment.getCurrentVersion`
-
-### Manual Version Bump Fails
-
-1. Ensure you have the latest changes: `git pull origin main`
-2. Check that the `scripts/update-deployment-info.js` file exists
-3. Verify your `.env.local` has the correct `VITE_CONVEX_URL`
+- **No Duplication**: Only maintain version in `package.json`
+- **Consistent Format**: Automatic `v` prefix handling
+- **Automated**: Works with both manual and CI/CD workflows
+- **Backward Compatible**: Existing deployment data remains intact

@@ -82,8 +82,12 @@ jobs:
           NEW_VERSION=$(npm version ${{ steps.bump-type.outputs.type }} --no-git-tag-version)
           echo "new-version=$NEW_VERSION" >> $GITHUB_OUTPUT
           
+          # Clean the version string (remove 'v' prefix if present)
+          CLEAN_VERSION=$(echo "$NEW_VERSION" | sed 's/^v//')
+          echo "new-version-clean=$CLEAN_VERSION" >> $GITHUB_OUTPUT
+          
           # Update deployment info in a simple way
-          echo "Version bumped from $CURRENT_VERSION to $NEW_VERSION"
+          echo "Version bumped from $CURRENT_VERSION to $CLEAN_VERSION"
 
       - name: Install dependencies
         run: pnpm install
@@ -96,39 +100,52 @@ jobs:
           # Create a simple deployment info file that can be read by the app
           cat > deployment-info.json << EOF
           {
-            "version": "${{ steps.version.outputs.new-version }}",
-            "timestamp": $(date +%s),
+            "version": "${{ steps.version.outputs.new-version-clean }}",
+            "timestamp": $(($(date +%s) * 1000)),
             "commit": "${{ github.sha }}",
             "branch": "${{ github.ref_name }}"
           }
           EOF
           
-          # Update deployment info in Convex database (continue even if this fails)
+          # Ensure Convex is deployed with latest changes
+          echo "🚀 Deploying to Convex..."
+          npx convex deploy --cmd-url-env-var-name VITE_CONVEX_URL || echo "Warning: Convex deployment failed"
+          
+          # Update deployment info in Convex database
+          echo "📝 Updating deployment info in database..."
           node scripts/update-deployment-info.js || echo "Warning: Failed to update Convex deployment info"
+          
+          # Verify deployment info was updated
+          echo "✅ Verifying deployment info..."
+          npx convex run deployment:getCurrentVersion || echo "Warning: Could not verify deployment info"
 
       - name: Commit version bump
         run: |
           # Only commit package.json (deployment-info.json is temporary and gets cleaned up)
           git add package.json
-          git commit -m "chore: bump version to ${{ steps.version.outputs.new-version }} [skip ci]"
-          git tag ${{ steps.version.outputs.new-version }}
+          git commit -m "chore: bump version to ${{ steps.version.outputs.new-version-clean }} [skip ci]"
+          git tag v${{ steps.version.outputs.new-version-clean }}
 
       - name: Push changes
         run: |
           git push origin master
-          git push origin ${{ steps.version.outputs.new-version }}
+          git push origin v${{ steps.version.outputs.new-version-clean }}
+
+      - name: Get current timestamp
+        id: timestamp
+        run: echo "current=$(date -u +"%Y-%m-%dT%H:%M:%SZ")" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ steps.version.outputs.new-version }}
-          name: Release ${{ steps.version.outputs.new-version }}
+          tag_name: v${{ steps.version.outputs.new-version-clean }}
+          name: Release v${{ steps.version.outputs.new-version-clean }}
           body: |
-            ## Changes in ${{ steps.version.outputs.new-version }}
+            ## Changes in v${{ steps.version.outputs.new-version-clean }}
             
             **Commit:** ${{ github.sha }}
             **Branch:** ${{ github.ref_name }}
-            **Timestamp:** ${{ github.run_started_at }}
+            **Timestamp:** ${{ steps.timestamp.outputs.current }}
             
             ### Commit Message
             ${{ github.event.head_commit.message || 'Manual release trigger' }}
