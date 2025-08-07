@@ -55,15 +55,15 @@ export const initializeUserStatus = mutation({
 				.withIndex("by_user", (q) => q.eq("userId", userId))
 				.unique();
 
-			if (!existingStatus) {
-				await ctx.db.insert("userStatus", {
-					userId,
+			if (existingStatus) {
+				// Update last seen when user comes online
+				await ctx.db.patch(existingStatus._id, {
 					status: "online",
 					lastSeen: Date.now(),
 				});
 			} else {
-				// Update last seen when user comes online
-				await ctx.db.patch(existingStatus._id, {
+				await ctx.db.insert("userStatus", {
+					userId,
 					status: "online",
 					lastSeen: Date.now(),
 				});
