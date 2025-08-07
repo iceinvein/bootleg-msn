@@ -1,11 +1,11 @@
-import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
+import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-	providers: [Password, Anonymous],
+	providers: [Password, Google],
 });
 
 // Custom mutation to check email verification before allowing sign-in

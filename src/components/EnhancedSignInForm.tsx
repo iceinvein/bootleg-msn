@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import { EmailVerificationPage } from "./EmailVerificationPage";
+import { SignInWithGoogle } from "./SignInWithGoogle";
 import { SignUpForm } from "./SignUpForm";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
+import { Separator } from "./ui/separator";
 
 export function EnhancedSignInForm() {
 	const { signIn } = useAuthActions();
@@ -202,10 +204,10 @@ export function EnhancedSignInForm() {
 		<div className="flex min-h-screen items-center justify-center">
 			<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
 				<div className="mb-8 text-center">
-					<h1 className="mb-4 font-bold text-3xl">
+					<h1 className="mb-2 font-bold text-3xl">
 						Welcome to the <br /> bootleg <br /> MSN Messenger
 					</h1>
-					<p className="text-sm">Sign in to start chatting with friends</p>
+					<p className="text-xs">Sign in to start chatting with friends</p>
 				</div>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
@@ -257,6 +259,14 @@ export function EnhancedSignInForm() {
 						Don't have an account? Sign up
 					</Button>
 				</div>
+				<div className="relative mt-4 mb-2 flex items-center">
+					<div className="flex-grow border-accent-foreground/50 border-t" />
+					<span className="mx-4 flex-shrink text-accent-foreground/50 text-sm">
+						or
+					</span>
+					<div className="flex-grow border-accent-foreground/50 border-t" />
+				</div>
+				<SignInWithGoogle />
 			</div>
 		</div>
 	);
