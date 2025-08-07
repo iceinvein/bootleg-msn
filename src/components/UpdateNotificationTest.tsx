@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
+import { Button } from "./ui/button";
 
 const APP_VERSION = import.meta.env.PACKAGE_VERSION || "0.0.0";
 const APP_TIMESTAMP = import.meta.env.VITE_BUILD_TIMESTAMP
@@ -86,8 +87,9 @@ export function UpdateNotificationTest() {
 						Updates Enabled:{" "}
 						{localStorage.getItem("enableDevUpdates") ? "✅" : "❌"}
 					</div>
-					<button
-						className="mt-1 px-2 py-1 bg-purple-600 rounded text-xs hover:bg-purple-500"
+					<Button
+						className="mt-4"
+						variant="secondary"
 						onClick={() => {
 							if (localStorage.getItem("enableDevUpdates")) {
 								localStorage.removeItem("enableDevUpdates");
@@ -99,7 +101,7 @@ export function UpdateNotificationTest() {
 					>
 						{localStorage.getItem("enableDevUpdates") ? "Disable" : "Enable"}{" "}
 						Dev Updates
-					</button>
+					</Button>
 				</div>
 			</div>
 		</div>

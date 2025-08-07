@@ -26,7 +26,7 @@ export function VersionInfo() {
 
 	return (
 		<div className="text-gray-500 text-xs">
-			<div>v{currentVersion.version}</div>
+			<div>{currentVersion.version}</div>
 			<div className="text-xs opacity-75">Deployed {timeAgo}</div>
 		</div>
 	);
