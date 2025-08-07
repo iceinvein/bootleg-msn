@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import { EmailVerificationPage } from "./EmailVerificationPage";
+import { SignInWithGitHub } from "./SignInWithGithub";
 import { SignInWithGoogle } from "./SignInWithGoogle";
 import { SignUpForm } from "./SignUpForm";
 import { Button } from "./ui/button";
@@ -267,6 +268,7 @@ export function EnhancedSignInForm() {
 					<div className="flex-grow border-accent-foreground/50 border-t" />
 				</div>
 				<SignInWithGoogle />
+				<SignInWithGitHub />
 			</div>
 		</div>
 	);
