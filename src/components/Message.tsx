@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import {
 	Check,
@@ -11,7 +11,7 @@ import {
 	X,
 } from "lucide-react";
 import type React from "react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,7 +22,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { EmojiPicker } from "./EmojiPicker";
+import { MessageReactions } from "./MessageReactions";
+import { ReactionPicker, type ReactionType } from "./ReactionPicker";
 
 interface MessageProps {
 	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
@@ -31,9 +32,19 @@ interface MessageProps {
 export function Message({ message }: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 
+	// For now, use direct message reactions for all messages since unified messages uses single table
+	// TODO: Refactor to handle group messages properly when system is made consistent
+	const reactionSummary = useQuery(api.reactions.getMessageReactionSummary, {
+		messageId: message._id,
+	});
+
+	const addReaction = useMutation(api.reactions.addMessageReaction);
+	const removeReaction = useMutation(api.reactions.removeMessageReaction);
+
 	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
+	const [isReactionLoading, setIsReactionLoading] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const ownsMessage = message.senderId === loggedInUser?._id;
 
@@ -76,9 +87,55 @@ export function Message({ message }: MessageProps) {
 		// TODO: delete message
 	};
 
+	// Reaction handling
+	const handleReactionSelect = useCallback(
+		async (reactionType: ReactionType, customEmoji?: string) => {
+			if (!loggedInUser) return;
+
+			try {
+				setIsReactionLoading(true);
+
+				// Check if user already has this reaction
+				const existingReaction = reactionSummary?.find(
+					(r) =>
+						r.reactionType === reactionType &&
+						r.customEmoji === customEmoji &&
+						r.hasCurrentUserReacted,
+				);
+
+				if (existingReaction) {
+					// Remove existing reaction
+					await removeReaction({ messageId: message._id });
+				} else {
+					// Add new reaction
+					await addReaction({
+						messageId: message._id,
+						reactionType,
+						customEmoji,
+					});
+				}
+			} catch (error) {
+				console.error("Failed to handle reaction:", error);
+			} finally {
+				setIsReactionLoading(false);
+			}
+		},
+		[loggedInUser, reactionSummary, addReaction, removeReaction, message._id],
+	);
+
+	const handleQuickReaction = useCallback(
+		async (reactionType: ReactionType) => {
+			await handleReactionSelect(reactionType);
+		},
+		[handleReactionSelect],
+	);
+
 	return (
 		<div
-			className={`flex w-full ${ownsMessage ? "justify-end" : "justify-start"} overflow-visible`}
+			className={cn(
+				`flex w-full overflow-visible`,
+				ownsMessage ? "justify-end" : "justify-start",
+			)}
 		>
 			<div className="flex flex-col gap-1">
 				<span className="text-accent-foreground/50 text-xs">
@@ -123,11 +180,12 @@ export function Message({ message }: MessageProps) {
 							</div>
 						) : (
 							<div
-								className={`rounded-2xl px-3 py-2 md:px-4 md:py-2 ${
+								className={cn(
+									`rounded-2xl px-3 py-2 md:px-4 md:py-2`,
 									ownsMessage
 										? "bg-blue-500 text-white"
-										: "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100"
-								}`}
+										: "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100",
+								)}
 							>
 								<p className="break-words text-sm md:text-base">
 									{message.content}
@@ -138,8 +196,8 @@ export function Message({ message }: MessageProps) {
 							</div>
 						)}
 
-						{/* Message actions - only show for user messages and when hovered */}
-						{ownsMessage && !isEditing && (
+						{/* Message actions - show for all messages when hovered */}
+						{!isEditing && (
 							<div
 								className={cn(
 									"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border-transparent bg-gray-800 p-1 shadow-lg transition-opacity duration-200 dark:bg-gray-900",
@@ -148,12 +206,12 @@ export function Message({ message }: MessageProps) {
 									isDropdownOpen && "pointer-events-auto opacity-100",
 								)}
 							>
+								{/* Quick reaction buttons */}
 								<Button
 									size="sm"
 									variant="ghost"
-									onClick={() => {
-										// TODO: implement reaction
-									}}
+									onClick={() => handleQuickReaction("thumbs_up")}
+									disabled={isReactionLoading}
 									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
 								>
 									👍
@@ -161,9 +219,8 @@ export function Message({ message }: MessageProps) {
 								<Button
 									size="sm"
 									variant="ghost"
-									onClick={() => {
-										// TODO: implement reaction
-									}}
+									onClick={() => handleQuickReaction("heart")}
+									disabled={isReactionLoading}
 									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
 								>
 									❤️
@@ -171,9 +228,8 @@ export function Message({ message }: MessageProps) {
 								<Button
 									size="sm"
 									variant="ghost"
-									onClick={() => {
-										// TODO: implement reaction
-									}}
+									onClick={() => handleQuickReaction("laugh")}
+									disabled={isReactionLoading}
 									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
 								>
 									😂
@@ -181,19 +237,17 @@ export function Message({ message }: MessageProps) {
 								<Button
 									size="sm"
 									variant="ghost"
-									onClick={() => {
-										// TODO: implement reaction
-									}}
+									onClick={() => handleQuickReaction("wow")}
+									disabled={isReactionLoading}
 									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
 								>
 									😮
 								</Button>
 
-								{/* Add Reaction Button (opens EmojiPicker) */}
-								<EmojiPicker
-									onEmojiSelect={() => {
-										// TODO: implement reaction
-									}}
+								{/* More reactions button */}
+								<ReactionPicker
+									onReactionSelect={handleReactionSelect}
+									isLoading={isReactionLoading}
 								>
 									<Button
 										size="sm"
@@ -202,7 +256,7 @@ export function Message({ message }: MessageProps) {
 									>
 										<SmilePlus className="h-4 w-4" />
 									</Button>
-								</EmojiPicker>
+								</ReactionPicker>
 
 								{/* Separator only if there are edit/delete actions for user messages */}
 								{ownsMessage && <div className="mx-1 h-6 w-px bg-gray-600" />}
@@ -248,6 +302,22 @@ export function Message({ message }: MessageProps) {
 							</div>
 						)}
 					</div>
+					{/* Message reactions */}
+					{reactionSummary && reactionSummary.length > 0 && (
+						<div
+							className={cn(
+								"-bottom-5 absolute left-[calc(25%)]",
+								ownsMessage ? "flex justify-end" : "flex justify-start",
+							)}
+						>
+							<MessageReactions
+								reactions={reactionSummary}
+								onReactionClick={handleReactionSelect}
+								isLoading={isReactionLoading}
+								className={cn(ownsMessage ? "mr-8" : "ml-8")}
+							/>
+						</div>
+					)}
 				</div>
 			</div>
 		</div>

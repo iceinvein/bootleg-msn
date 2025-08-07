@@ -14,6 +14,26 @@ export const addMessageReaction = mutation({
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
 
+		// Verify the message exists and user has access to it
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Check if user has access to this message (sender or receiver)
+		if (message.senderId !== user._id && message.receiverId !== user._id) {
+			throw new Error(
+				"Access denied: You can only react to messages you're part of",
+			);
+		}
+
+		// Validate custom emoji if provided
+		if (args.reactionType === "custom" && !args.customEmoji) {
+			throw new Error(
+				"Custom emoji is required when reaction type is 'custom'",
+			);
+		}
+
 		// Check if user already reacted to this message
 		const existingReaction = await ctx.db
 			.query("messageReactions")
@@ -23,22 +43,27 @@ export const addMessageReaction = mutation({
 			.unique();
 
 		if (existingReaction) {
-			// Update existing reaction
-			await ctx.db.patch(existingReaction._id, {
-				reactionType: args.reactionType,
-				customEmoji: args.customEmoji,
-				createdAt: Date.now(),
-			});
+			// Update existing reaction if it's different
+			if (
+				existingReaction.reactionType !== args.reactionType ||
+				existingReaction.customEmoji !== args.customEmoji
+			) {
+				await ctx.db.patch(existingReaction._id, {
+					reactionType: args.reactionType,
+					customEmoji: args.customEmoji,
+					createdAt: Date.now(),
+				});
 
-			await logUserActivity(
-				ctx,
-				user._id,
-				"update_message_reaction",
-				undefined,
-				{
-					messageId: args.messageId,
-				},
-			);
+				await logUserActivity(
+					ctx,
+					user._id,
+					"update_message_reaction",
+					undefined,
+					{
+						messageId: args.messageId,
+					},
+				);
+			}
 
 			return existingReaction._id;
 		}
@@ -67,6 +92,33 @@ export const addGroupMessageReaction = mutation({
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
 
+		// Verify the message exists
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Check if user is a member of the group
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", message.groupId).eq("userId", user._id),
+			)
+			.unique();
+
+		if (!membership) {
+			throw new Error(
+				"Access denied: You must be a group member to react to messages",
+			);
+		}
+
+		// Validate custom emoji if provided
+		if (args.reactionType === "custom" && !args.customEmoji) {
+			throw new Error(
+				"Custom emoji is required when reaction type is 'custom'",
+			);
+		}
+
 		// Check if user already reacted to this message
 		const existingReaction = await ctx.db
 			.query("groupMessageReactions")
@@ -76,22 +128,27 @@ export const addGroupMessageReaction = mutation({
 			.unique();
 
 		if (existingReaction) {
-			// Update existing reaction
-			await ctx.db.patch(existingReaction._id, {
-				reactionType: args.reactionType,
-				customEmoji: args.customEmoji,
-				createdAt: Date.now(),
-			});
+			// Update existing reaction if it's different
+			if (
+				existingReaction.reactionType !== args.reactionType ||
+				existingReaction.customEmoji !== args.customEmoji
+			) {
+				await ctx.db.patch(existingReaction._id, {
+					reactionType: args.reactionType,
+					customEmoji: args.customEmoji,
+					createdAt: Date.now(),
+				});
 
-			await logUserActivity(
-				ctx,
-				user._id,
-				"update_group_message_reaction",
-				undefined,
-				{
-					messageId: args.messageId,
-				},
-			);
+				await logUserActivity(
+					ctx,
+					user._id,
+					"update_group_message_reaction",
+					undefined,
+					{
+						messageId: args.messageId,
+					},
+				);
+			}
 
 			return existingReaction._id;
 		}
@@ -126,6 +183,19 @@ export const removeMessageReaction = mutation({
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
 
+		// Verify the message exists
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Check if user has access to this message (sender or receiver)
+		if (message.senderId !== user._id && message.receiverId !== user._id) {
+			throw new Error(
+				"Access denied: You can only remove reactions from messages you're part of",
+			);
+		}
+
 		const reaction = await ctx.db
 			.query("messageReactions")
 			.withIndex("by_message_and_user", (q) =>
@@ -155,6 +225,26 @@ export const removeGroupMessageReaction = mutation({
 	returns: v.null(),
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
+
+		// Verify the message exists
+		const message = await ctx.db.get(args.messageId);
+		if (!message) {
+			throw new Error("Message not found");
+		}
+
+		// Check if user is a member of the group
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", message.groupId).eq("userId", user._id),
+			)
+			.unique();
+
+		if (!membership) {
+			throw new Error(
+				"Access denied: You must be a group member to remove reactions",
+			);
+		}
 
 		const reaction = await ctx.db
 			.query("groupMessageReactions")
@@ -266,5 +356,191 @@ export const getGroupMessageReactions = query({
 		);
 
 		return reactionsWithUsers;
+	},
+});
+
+// Get reaction summary for a direct message (grouped by reaction type with counts)
+export const getMessageReactionSummary = query({
+	args: { messageId: v.id("messages") },
+	returns: v.array(
+		v.object({
+			reactionType: reactionTypeValidator,
+			customEmoji: v.optional(v.string()),
+			count: v.number(),
+			users: v.array(
+				v.object({
+					_id: v.id("users"),
+					name: v.optional(v.string()),
+					image: v.optional(v.string()),
+				}),
+			),
+			hasCurrentUserReacted: v.boolean(),
+		}),
+	),
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+		const reactions = await ctx.db
+			.query("messageReactions")
+			.withIndex("by_message", (q) => q.eq("messageId", args.messageId))
+			.collect();
+
+		// Group reactions by type
+		const reactionGroups = new Map<string, typeof reactions>();
+		for (const reaction of reactions) {
+			const key = reaction.customEmoji || reaction.reactionType;
+			const existingGroup = reactionGroups.get(key);
+			if (existingGroup) {
+				existingGroup.push(reaction);
+			} else {
+				reactionGroups.set(key, [reaction]);
+			}
+		}
+
+		// Build summary with user details
+		const summary = await Promise.all(
+			Array.from(reactionGroups.entries()).map(
+				async ([_key, groupReactions]) => {
+					const users = await Promise.all(
+						groupReactions.map(async (reaction) => {
+							const reactionUser = await ctx.db.get(reaction.userId);
+							if (!reactionUser) {
+								throw new Error("User not found for reaction");
+							}
+							return {
+								_id: reactionUser._id,
+								name: reactionUser.name,
+								image: reactionUser.image,
+							};
+						}),
+					);
+
+					const hasCurrentUserReacted = groupReactions.some(
+						(reaction) => reaction.userId === user._id,
+					);
+
+					return {
+						reactionType: groupReactions[0].reactionType,
+						customEmoji: groupReactions[0].customEmoji,
+						count: groupReactions.length,
+						users,
+						hasCurrentUserReacted,
+					};
+				},
+			),
+		);
+
+		// Sort by count (descending) then by creation time
+		return summary.sort((a, b) => b.count - a.count);
+	},
+});
+
+// Get reaction summary for a group message (grouped by reaction type with counts)
+export const getGroupMessageReactionSummary = query({
+	args: { messageId: v.id("groupMessages") },
+	returns: v.array(
+		v.object({
+			reactionType: reactionTypeValidator,
+			customEmoji: v.optional(v.string()),
+			count: v.number(),
+			users: v.array(
+				v.object({
+					_id: v.id("users"),
+					name: v.optional(v.string()),
+					image: v.optional(v.string()),
+				}),
+			),
+			hasCurrentUserReacted: v.boolean(),
+		}),
+	),
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+		const reactions = await ctx.db
+			.query("groupMessageReactions")
+			.withIndex("by_message", (q) => q.eq("messageId", args.messageId))
+			.collect();
+
+		// Group reactions by type
+		const reactionGroups = new Map<string, typeof reactions>();
+		for (const reaction of reactions) {
+			const key = reaction.customEmoji || reaction.reactionType;
+			const existingGroup = reactionGroups.get(key);
+			if (existingGroup) {
+				existingGroup.push(reaction);
+			} else {
+				reactionGroups.set(key, [reaction]);
+			}
+		}
+
+		// Build summary with user details
+		const summary = await Promise.all(
+			Array.from(reactionGroups.entries()).map(
+				async ([_key, groupReactions]) => {
+					const users = await Promise.all(
+						groupReactions.map(async (reaction) => {
+							const reactionUser = await ctx.db.get(reaction.userId);
+							if (!reactionUser) {
+								throw new Error("User not found for reaction");
+							}
+							return {
+								_id: reactionUser._id,
+								name: reactionUser.name,
+								image: reactionUser.image,
+							};
+						}),
+					);
+
+					const hasCurrentUserReacted = groupReactions.some(
+						(reaction) => reaction.userId === user._id,
+					);
+
+					return {
+						reactionType: groupReactions[0].reactionType,
+						customEmoji: groupReactions[0].customEmoji,
+						count: groupReactions.length,
+						users,
+						hasCurrentUserReacted,
+					};
+				},
+			),
+		);
+
+		// Sort by count (descending) then by creation time
+		return summary.sort((a, b) => b.count - a.count);
+	},
+});
+
+// Check if current user has reacted to a message
+export const hasUserReactedToMessage = query({
+	args: { messageId: v.id("messages") },
+	returns: v.union(reactionTypeValidator, v.null()),
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+
+		const reaction = await ctx.db
+			.query("messageReactions")
+			.withIndex("by_message_and_user", (q) =>
+				q.eq("messageId", args.messageId).eq("userId", user._id),
+			)
+			.unique();
+
+		return reaction ? reaction.reactionType : null;
+	},
+});
+
+// Check if current user has reacted to a group message
+export const hasUserReactedToGroupMessage = query({
+	args: { messageId: v.id("groupMessages") },
+	returns: v.union(reactionTypeValidator, v.null()),
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+
+		const reaction = await ctx.db
+			.query("groupMessageReactions")
+			.withIndex("by_message_and_user", (q) =>
+				q.eq("messageId", args.messageId).eq("userId", user._id),
+			)
+			.unique();
+
+		return reaction ? reaction.reactionType : null;
 	},
 });
