@@ -1,3 +1,4 @@
+import Apple from "@auth/core/providers/apple";
 import Github from "@auth/core/providers/github";
 import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
@@ -6,7 +7,23 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
-	providers: [Password, Google, Github],
+	providers: [
+		Password,
+		Google,
+		Github,
+		Apple({
+			profile: (appleInfo) => {
+				const name = appleInfo.user
+					? `${appleInfo.user.name.firstName} ${appleInfo.user.name.lastName}`
+					: undefined;
+				return {
+					id: appleInfo.sub,
+					name: name,
+					email: appleInfo.email,
+				};
+			},
+		}),
+	],
 });
 
 // Custom mutation to check email verification before allowing sign-in

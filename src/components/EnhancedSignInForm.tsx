@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import { EmailVerificationPage } from "./EmailVerificationPage";
+import { SignInWithApple } from "./SignInWithApple";
 import { SignInWithGitHub } from "./SignInWithGithub";
 import { SignInWithGoogle } from "./SignInWithGoogle";
 import { SignUpForm } from "./SignUpForm";
@@ -268,6 +269,7 @@ export function EnhancedSignInForm() {
 				</div>
 				<SignInWithGoogle />
 				<SignInWithGitHub />
+				<SignInWithApple />
 			</div>
 		</div>
 	);
