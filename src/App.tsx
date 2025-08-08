@@ -1,4 +1,5 @@
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
+// FUTURE: ADMIN_TOOLS - Development and admin components
 // import { DeploymentManager } from "./components/DeploymentManager";
 // import { EmailTestComponent } from "./components/EmailTestComponent";
 import { EnhancedSignInForm } from "./components/EnhancedSignInForm";
@@ -26,12 +27,12 @@ function App() {
 					<MessengerApp />
 					<UpdateNotification />
 					{import.meta.env.DEV && <UpdateNotificationTest />}
-					{/* {import.meta.env.DEV && <DeploymentManager />} */}
+					{/* FUTURE: ADMIN_TOOLS - {import.meta.env.DEV && <DeploymentManager />} */}
 				</Authenticated>
 
 				<Toaster />
 
-				{/* {import.meta.env.DEV && <EmailTestComponent />} */}
+				{/* FUTURE: ADMIN_TOOLS - {import.meta.env.DEV && <EmailTestComponent />} */}
 			</main>
 		</ThemeProvider>
 	);

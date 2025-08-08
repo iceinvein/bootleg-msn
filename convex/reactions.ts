@@ -85,6 +85,7 @@ export const addMessageReaction = mutation({
 	},
 });
 
+// FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Add reaction to a group message
 export const addGroupMessageReaction = mutation({
 	args: addGroupReactionValidator,
@@ -219,6 +220,7 @@ export const removeMessageReaction = mutation({
 	},
 });
 
+// FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Remove reaction from a group message
 export const removeGroupMessageReaction = mutation({
 	args: { messageId: v.id("groupMessages") },
@@ -314,6 +316,7 @@ export const getMessageReactions = query({
 	},
 });
 
+// FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Get reactions for a group message
 export const getGroupMessageReactions = query({
 	args: { messageId: v.id("groupMessages") },
@@ -434,6 +437,7 @@ export const getMessageReactionSummary = query({
 	},
 });
 
+// FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Get reaction summary for a group message (grouped by reaction type with counts)
 export const getGroupMessageReactionSummary = query({
 	args: { messageId: v.id("groupMessages") },
@@ -527,6 +531,7 @@ export const hasUserReactedToMessage = query({
 	},
 });
 
+// FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Check if current user has reacted to a group message
 export const hasUserReactedToGroupMessage = query({
 	args: { messageId: v.id("groupMessages") },

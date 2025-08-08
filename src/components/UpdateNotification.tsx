@@ -87,29 +87,24 @@ export function UpdateNotification() {
 		}
 
 		if (updateCheck?.hasUpdate && hasCheckedInitially) {
-			const currentVersion = APP_VERSION_WITH_PREFIX;
-			const latestVersion = updateCheck.latestVersion;
-
-			toast.info("🎉 New version available!", {
+			toast.info("New version available!", {
 				duration: Infinity,
 				description: () => (
 					<div className="text-sm text-white/80">
-						<p>
-							Update from {currentVersion} to {latestVersion}
-						</p>
 						<p className="mt-1 text-white/60 text-xs">
 							Get the latest features and improvements
 						</p>
 					</div>
 				),
 				action: {
-					label: "Refresh Now",
+					label: "Update",
 					onClick: handleRefresh,
 				},
 				cancel: {
 					label: "Later",
 					onClick: handleDismiss,
 				},
+				icon: null,
 			});
 		}
 	}, [updateCheck, hasCheckedInitially, handleRefresh, handleDismiss]);

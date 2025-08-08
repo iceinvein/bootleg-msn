@@ -57,6 +57,7 @@ export const getCurrentVersion = query({
 	},
 });
 
+// FUTURE: DEPLOYMENT_ANALYTICS - Deployment history tracking for admin dashboard
 export const getDeploymentHistory = query({
 	args: {
 		limit: v.optional(v.number()),

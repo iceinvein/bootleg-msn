@@ -39,15 +39,6 @@ export function containsYouTubeUrl(text: string): boolean {
 }
 
 /**
- * Extracts YouTube URLs from text
- */
-export function extractYouTubeUrls(text: string): string[] {
-	const youtubeRegex =
-		/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)[\w-]+(?:\S+)?/gi;
-	return text.match(youtubeRegex) || [];
-}
-
-/**
  * Gets YouTube video information from URL
  */
 export function getYouTubeVideoInfo(url: string): YouTubeVideoInfo | null {
@@ -69,7 +60,9 @@ export function replaceYouTubeUrls(text: string): {
 	text: string;
 	videos: YouTubeVideoInfo[];
 } {
-	const urls = extractYouTubeUrls(text);
+	const youtubeRegex =
+		/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/)|youtu\.be\/)[\w-]+(?:\S+)?/gi;
+	const urls = text.match(youtubeRegex) || [];
 	const videos: YouTubeVideoInfo[] = [];
 	let processedText = text;
 

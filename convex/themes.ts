@@ -14,6 +14,7 @@ import {
 	updateThemeValidator,
 } from "./validators";
 
+// FUTURE: CUSTOM_THEMES - Advanced theme customization system
 // Create a new theme
 export const createTheme = mutation({
 	args: createThemeValidator,

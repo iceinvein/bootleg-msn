@@ -6,9 +6,9 @@ import { useState } from "react";
 import { AddContactDialog } from "./AddContactDialog";
 import { ContactRequestsDialog } from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
+import { ModeToggle } from "./mode-toggle";
 import { SettingsDialog } from "./SettingsDialog";
 import { StatusMessage } from "./StatusMessage";
-import { ThemeToggle } from "./theme-toggle";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 
@@ -135,7 +135,7 @@ export function StatusBar({ user }: StatusBarProps) {
 							<Settings className="md:h-5! md:w-5!" />
 						</Button>
 					</SettingsDialog>
-					<ThemeToggle />
+					<ModeToggle />
 				</div>
 			</div>
 
