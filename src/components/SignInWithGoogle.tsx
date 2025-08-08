@@ -6,7 +6,7 @@ export function SignInWithGoogle() {
 	const { signIn } = useAuthActions();
 	return (
 		<Button
-			className="mt-4 w-full"
+			className="w-full"
 			variant="outline"
 			type="button"
 			onClick={() => void signIn("google")}

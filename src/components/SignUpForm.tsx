@@ -3,6 +3,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
+import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
@@ -123,58 +124,62 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
-			<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
-				<div className="mb-8 text-center">
-					<h1 className="mb-2 font-bold text-3xl">Join MSN Messenger</h1>
-					<p>Create your account to start chatting</p>
-				</div>
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<h3 className="font-bold text-2xl">Join bootleg MSN Messenger</h3>
+					<p className="text-accent-foreground/60 text-sm">
+						Create your account to start chatting
+					</p>
+				</CardHeader>
+				<CardContent>
+					<form onSubmit={handleSubmit} className="space-y-6">
+						<div>
+							<Label htmlFor="name" className="mb-2">
+								Full Name
+							</Label>
+							<Input
+								id="name"
+								value={name}
+								onChange={(e) => setName(e.target.value)}
+								placeholder="Enter your full name"
+								className="w-full"
+								required
+							/>
+						</div>
 
-				<form onSubmit={handleSubmit} className="space-y-6">
-					<div>
-						<Label htmlFor="name" className="mb-2">
-							Full Name
-						</Label>
-						<Input
-							id="name"
-							value={name}
-							onChange={(e) => setName(e.target.value)}
-							placeholder="Enter your full name"
-							className="w-full"
-							required
-						/>
-					</div>
+						<div>
+							<Label htmlFor="email" className="mb-2">
+								Email Address
+							</Label>
+							<Input
+								type="email"
+								id="email"
+								value={email}
+								onChange={(e) => setEmail(e.target.value)}
+								placeholder="Enter your email address"
+								className="w-full"
+								required
+							/>
+						</div>
 
-					<div>
-						<Label htmlFor="email" className="mb-2">
-							Email Address
-						</Label>
-						<Input
-							type="email"
-							id="email"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							placeholder="Enter your email address"
-							className="w-full"
-							required
-						/>
-					</div>
-
-					<div>
-						<Label htmlFor="password" className="mb-2">
-							Password
-						</Label>
-						<Input
-							type="password"
-							id="password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							placeholder="Create a password"
-							className="w-full"
-							required
-							minLength={6}
-						/>
-					</div>
-
+						<div>
+							<Label htmlFor="password" className="mb-2">
+								Password
+							</Label>
+							<Input
+								type="password"
+								id="password"
+								value={password}
+								onChange={(e) => setPassword(e.target.value)}
+								placeholder="Create a password"
+								className="w-full"
+								required
+								minLength={6}
+							/>
+						</div>
+					</form>
+				</CardContent>
+				<CardFooter className="mt-2 flex-col gap-4">
 					<Button
 						type="submit"
 						disabled={
@@ -184,21 +189,19 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 					>
 						{isLoading ? "Sending Verification Email..." : "Create Account"}
 					</Button>
-				</form>
-
-				<div className="mt-6 text-center">
-					<Button variant="ghost" type="button" onClick={onBackToSignIn}>
-						Already have an account? Sign in
-					</Button>
-				</div>
-
-				<div className="mt-6 text-center">
-					<p className="text-gray-600 text-xs dark:text-gray-400">
-						By creating an account, you agree to verify your email address
-						first.
-					</p>
-				</div>
-			</div>
+					<div className="text-center">
+						<Button variant="ghost" type="button" onClick={onBackToSignIn}>
+							Already have an account? Sign in
+						</Button>
+					</div>
+					<div className="text-center">
+						<p className="text-accent-foreground/70 text-xs">
+							By creating an account, you agree to verify your email address
+							first.
+						</p>
+					</div>
+				</CardFooter>
+			</Card>
 		</div>
 	);
 }

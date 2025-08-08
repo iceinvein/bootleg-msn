@@ -9,6 +9,14 @@ import { SignInWithGitHub } from "./SignInWithGithub";
 import { SignInWithGoogle } from "./SignInWithGoogle";
 import { SignUpForm } from "./SignUpForm";
 import { Button } from "./ui/button";
+import {
+	Card,
+	CardContent,
+	CardDescription,
+	CardFooter,
+	CardHeader,
+	CardTitle,
+} from "./ui/card";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
@@ -203,74 +211,87 @@ export function EnhancedSignInForm() {
 
 	return (
 		<div className="flex min-h-screen items-center justify-center">
-			<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
-				<div className="mb-8 text-center">
-					<h1 className="mb-2 font-bold text-3xl">
-						Welcome to the <br /> bootleg <br /> MSN Messenger
-					</h1>
-					<p className="text-xs">Sign in to start chatting with friends</p>
-				</div>
-
-				<form onSubmit={handleSubmit} className="space-y-6">
-					<div>
-						<Label htmlFor="email" className="mb-2">
-							Email Address
-						</Label>
-						<Input
-							type="email"
-							id="email"
-							value={email}
-							onChange={(e) => setEmail(e.target.value)}
-							placeholder="Enter your email"
-							className="w-full"
-							required
-						/>
-					</div>
-
-					<div>
-						<Label htmlFor="password" className="mb-2">
-							Password
-						</Label>
-						<Input
-							type="password"
-							id="password"
-							value={password}
-							onChange={(e) => setPassword(e.target.value)}
-							placeholder="Enter your password"
-							className="w-full"
-							required
-						/>
-					</div>
-
+			<Card className="w-full max-w-md">
+				<CardHeader>
+					<CardTitle>
+						Bootleg <br /> MSN Messenger
+					</CardTitle>
+					<CardDescription>
+						Sign in to start chatting with friends
+					</CardDescription>
+				</CardHeader>
+				<CardContent>
+					<form>
+						<div className="flex flex-col gap-6">
+							<div className="grid gap-2">
+								<Label htmlFor="email" className="mb-2">
+									Email Address
+								</Label>
+								<Input
+									type="email"
+									id="email"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									placeholder="Enter your email"
+									className="w-full"
+									required
+								/>
+							</div>
+							<div className="grid gap-2">
+								<div className="flex items-center">
+									<Label htmlFor="password" className="mb-2">
+										Password
+									</Label>
+									{/* <a
+										href="#"
+										className="ml-auto inline-block text-sm underline-offset-4 hover:underline"
+									>
+										Forgot your password?
+									</a> */}
+								</div>
+								<Input
+									type="password"
+									id="password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									placeholder="Enter your password"
+									className="w-full"
+									required
+								/>
+							</div>
+						</div>
+					</form>
+				</CardContent>
+				<CardFooter className="mt-2 flex-col gap-4">
 					<Button
 						type="submit"
 						disabled={isLoading || !email.trim() || !password.trim()}
 						className="w-full"
+						onClick={handleSubmit}
 					>
 						{isLoading ? "Signing in..." : "Sign In"}
 					</Button>
-				</form>
-
-				<div className="mt-6 text-center">
-					<Button
-						variant="ghost"
-						type="button"
-						onClick={() => setShowSignUp(true)}
-					>
-						Don't have an account? Sign up
-					</Button>
-				</div>
-				<div className="relative mt-4 mb-2 flex items-center">
-					<div className="flex-grow border-accent-foreground/50 border-t" />
-					<span className="mx-4 flex-shrink text-accent-foreground/50 text-sm">
-						or
-					</span>
-					<div className="flex-grow border-accent-foreground/50 border-t" />
-				</div>
-				<SignInWithGoogle />
-				<SignInWithGitHub />
-				<SignInWithApple />
-			</div>
+					<div className="relative mt-2 flex items-center">
+						<div className="flex-grow border-accent-foreground/50 border-t" />
+						<span className="mx-4 flex-shrink text-accent-foreground/50 text-sm">
+							or
+						</span>
+						<div className="flex-grow border-accent-foreground/50 border-t" />
+					</div>
+					<SignInWithGoogle />
+					<SignInWithGitHub />
+					<SignInWithApple />
+					<div className="mt-2 text-center">
+						<Button
+							variant="ghost"
+							type="button"
+							onClick={() => setShowSignUp(true)}
+						>
+							Don't have an account? Sign up
+						</Button>
+					</div>
+				</CardFooter>
+			</Card>
 		</div>
 	);
 }
