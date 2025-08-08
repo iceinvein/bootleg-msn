@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
+import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
 import { StatusBar } from "./StatusBar";
@@ -70,19 +71,24 @@ export function MessengerApp() {
 	}
 
 	return (
-		<div className="flex min-h-screen">
-			{/* Sidebar */}
-			<div className="flex w-full flex-col md:w-90">
-				<StatusBar user={user} />
-				<ContactList />
-				{/* Version info at bottom of status bar */}
-				<div className="mt-2 flex justify-center">
-					<VersionBadge />
-				</div>
-			</div>
+		<div className="flex min-h-screen flex-col">
+			{/* Account linking notification */}
+			<AccountLinkingNotification />
 
-			{/* Main Chat Area */}
-			<Chat />
+			<div className="flex flex-1">
+				{/* Sidebar */}
+				<div className="flex w-full flex-col md:w-90">
+					<StatusBar user={user} />
+					<ContactList />
+					{/* Version info at bottom of status bar */}
+					<div className="mt-2 flex justify-center">
+						<VersionBadge />
+					</div>
+				</div>
+
+				{/* Main Chat Area */}
+				<Chat />
+			</div>
 		</div>
 	);
 }
