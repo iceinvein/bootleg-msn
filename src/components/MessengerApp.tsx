@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
+import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
@@ -11,6 +12,9 @@ export function MessengerApp() {
 	const user = useQuery(api.auth.loggedInUser);
 	const initializeUserStatus = useMutation(api.userStatus.initializeUserStatus);
 	const updateLastSeen = useMutation(api.userStatus.updateLastSeen);
+
+	// Initialize message notifications for toast alerts
+	useMessageNotifications();
 
 	// Initialize user status when app loads (with error handling)
 	useEffect(() => {

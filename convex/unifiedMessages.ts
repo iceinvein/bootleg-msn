@@ -327,3 +327,66 @@ export const getGroupUnreadCount = query({
 		return unreadCount;
 	},
 });
+
+// Get all messages for the current user (both direct and group messages)
+// This is used for real-time notification detection
+export const getAllUserMessages = query({
+	args: {},
+	handler: async (ctx) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			return [];
+		}
+
+		// Get all direct messages where user is sender or receiver
+		const directMessages = await ctx.db
+			.query("messages")
+			.filter((q) =>
+				q.or(
+					q.eq(q.field("senderId"), userId),
+					q.eq(q.field("receiverId"), userId),
+				),
+			)
+			.order("desc")
+			.take(100); // Limit to recent messages for performance
+
+		// Get all group messages from groups the user is a member of
+		const userGroupMemberships = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
+			.collect();
+
+		const groupIds = userGroupMemberships.map(
+			(membership) => membership.groupId,
+		);
+
+		let groupMessages: Doc<"messages">[] = [];
+		for (const groupId of groupIds) {
+			const messages = await ctx.db
+				.query("messages")
+				.withIndex("by_group", (q) => q.eq("groupId", groupId))
+				.order("desc")
+				.take(50); // Limit per group for performance
+			groupMessages = groupMessages.concat(messages);
+		}
+
+		// Combine and sort all messages by creation time
+		const allMessages = [...directMessages, ...groupMessages]
+			.sort((a, b) => b._creationTime - a._creationTime)
+			.slice(0, 200); // Final limit for performance
+
+		// Get sender details for each message
+		const messagesWithSenders = await Promise.all(
+			allMessages.map(async (message) => {
+				const sender = await ctx.db.get(message.senderId);
+				return {
+					...message,
+					sender,
+					isFromMe: message.senderId === userId,
+				};
+			}),
+		);
+
+		return messagesWithSenders;
+	},
+});
