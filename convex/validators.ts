@@ -23,6 +23,21 @@ export const addGroupReactionValidator = v.object({
 	customEmoji: v.optional(v.string()),
 });
 
+// User status validation schemas
+export const userStatusValidator = v.union(
+	v.literal("online"),
+	v.literal("away"),
+	v.literal("busy"),
+	v.literal("invisible"),
+	v.literal("offline"),
+);
+
+// Group role validation schemas
+export const groupRoleValidator = v.union(
+	v.literal("admin"),
+	v.literal("member"),
+);
+
 // Nudge validation schemas
 export const nudgeTypeValidator = v.union(
 	v.literal("nudge"),

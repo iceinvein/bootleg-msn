@@ -1,6 +1,9 @@
 import { api } from "@convex/_generated/api";
+import type { userStatusValidator } from "@convex/validators";
 import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
+import type { Infer } from "convex/values";
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { AddContactDialog } from "./AddContactDialog";
@@ -27,14 +30,14 @@ const statusOptions = [
 	{ value: "invisible", label: "Invisible", color: "bg-gray-500", emoji: "⚫" },
 ] as const;
 
-type StatusValue = (typeof statusOptions)[number]["value"];
+// End-to-end type safe status type
+type StatusValue = Infer<typeof userStatusValidator>;
+
+// End-to-end type safe user type
+type UserType = NonNullable<FunctionReturnType<typeof api.auth.loggedInUser>>;
 
 interface StatusBarProps {
-	user: {
-		_id: string;
-		name?: string;
-		email?: string;
-	};
+	user: UserType;
 }
 
 export function StatusBar({ user }: StatusBarProps) {

@@ -1,10 +1,15 @@
+import type { messageTypeValidator } from "@convex/validators";
+import type { Infer } from "convex/values";
 import { cn } from "@/lib/utils";
 import { containsYouTubeUrl, replaceYouTubeUrls } from "../utils/youtubeUtils";
 import { YouTubeEmbed } from "./YouTubeEmbed";
 
+// End-to-end type safe message type (includes "system" which is in schema but not validator)
+type MessageType = Infer<typeof messageTypeValidator> | "system";
+
 interface MessageContentProps {
 	content: string;
-	messageType: "text" | "emoji" | "file" | "system";
+	messageType: MessageType;
 	isEmojiOnly?: boolean;
 	className?: string;
 }

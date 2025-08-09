@@ -1,5 +1,7 @@
 "use client";
 
+import type { reactionTypeValidator } from "@convex/validators";
+import type { Infer } from "convex/values";
 import { Plus } from "lucide-react";
 import type React from "react";
 import { useCallback, useState } from "react";
@@ -12,14 +14,8 @@ import {
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 
-export type ReactionType =
-	| "thumbs_up"
-	| "heart"
-	| "laugh"
-	| "wow"
-	| "sad"
-	| "angry"
-	| "custom";
+// End-to-end type safe reaction type
+export type ReactionType = Infer<typeof reactionTypeValidator>;
 
 interface ReactionPickerProps {
 	onReactionSelect: (

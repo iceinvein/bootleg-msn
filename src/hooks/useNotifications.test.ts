@@ -4,29 +4,41 @@ import { useNotifications } from "./useNotifications";
 import type { NotificationPermission } from "@/lib/tauri-notifications";
 
 // Mock the tauri-notifications module
-const mockTauriNotifications = {
-	checkPermission: vi.fn(),
-	requestPermission: vi.fn(),
-	loadSettings: vi.fn(),
-	updateSettings: vi.fn(),
-	notifyNewMessage: vi.fn(),
-	notifyContactRequest: vi.fn(),
-	notifyGroupInvite: vi.fn(),
-	clearAllNotifications: vi.fn(),
-};
+vi.mock("@/lib/tauri-notifications", () => {
+	const mockTauriNotifications = {
+		checkPermission: vi.fn(),
+		requestPermission: vi.fn(),
+		loadSettings: vi.fn(),
+		saveSettings: vi.fn(),
+		notifyNewMessage: vi.fn(),
+		notifyContactRequest: vi.fn(),
+		notifyGroupInvite: vi.fn(),
+		clearAllNotifications: vi.fn(),
+	};
 
-const mockIsTauriEnvironment = vi.fn();
+	const mockIsTauriEnvironment = vi.fn();
 
-vi.mock("@/lib/tauri-notifications", () => ({
-	TauriNotificationService: {
-		getInstance: () => mockTauriNotifications,
-		isTauriEnvironment: mockIsTauriEnvironment,
-	},
-}));
+	return {
+		TauriNotificationService: {
+			getInstance: () => mockTauriNotifications,
+			isTauriEnvironment: mockIsTauriEnvironment,
+		},
+		tauriNotifications: mockTauriNotifications,
+	};
+});
 
 describe("useNotifications", () => {
-	beforeEach(() => {
+	let mockTauriNotifications: any;
+	let mockIsTauriEnvironment: any;
+
+	beforeEach(async () => {
 		vi.clearAllMocks();
+
+		// Get the mocked module
+		const { TauriNotificationService } = await import("@/lib/tauri-notifications");
+		mockTauriNotifications = TauriNotificationService.getInstance();
+		mockIsTauriEnvironment = TauriNotificationService.isTauriEnvironment;
+
 		mockIsTauriEnvironment.mockReturnValue(true);
 		mockTauriNotifications.checkPermission.mockResolvedValue("granted");
 		mockTauriNotifications.loadSettings.mockResolvedValue({
@@ -41,7 +53,7 @@ describe("useNotifications", () => {
 	});
 
 	describe("Initialization", () => {
-		it("should initialize with correct default values", () => {
+		it("should initialize with correct default values", async () => {
 			const { result } = renderHook(() => useNotifications());
 
 			expect(result.current.permission).toBe("denied");
@@ -49,6 +61,11 @@ describe("useNotifications", () => {
 			expect(result.current.isSupported).toBe(true);
 			expect(result.current.isLoading).toBe(true);
 			expect(result.current.error).toBe(null);
+
+			// Wait for async initialization to complete
+			await waitFor(() => {
+				expect(result.current.isLoading).toBe(false);
+			});
 		});
 
 		it("should initialize permission and settings when supported", async () => {
@@ -151,7 +168,7 @@ describe("useNotifications", () => {
 				quietHoursEnd: "08:00",
 			};
 
-			mockTauriNotifications.updateSettings.mockResolvedValue(undefined);
+			mockTauriNotifications.saveSettings.mockResolvedValue(undefined);
 
 			const { result } = renderHook(() => useNotifications());
 
@@ -163,7 +180,7 @@ describe("useNotifications", () => {
 				await result.current.updateSettings(newSettings);
 			});
 
-			expect(mockTauriNotifications.updateSettings).toHaveBeenCalledWith(
+			expect(mockTauriNotifications.saveSettings).toHaveBeenCalledWith(
 				newSettings,
 			);
 			expect(result.current.settings).toEqual(newSettings);
@@ -178,7 +195,7 @@ describe("useNotifications", () => {
 				quietHoursEnabled: false,
 			};
 
-			mockTauriNotifications.updateSettings.mockRejectedValue(
+			mockTauriNotifications.saveSettings.mockRejectedValue(
 				new Error("Settings update failed"),
 			);
 
