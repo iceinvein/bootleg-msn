@@ -37,3 +37,25 @@ dist-ssr
 
 # Convex generated files
 convex/_generated/
+
+# Rust/Tauri generated files
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/WixTools/
+src-tauri/gen/
+
+# Tauri build artifacts and distributables
+*.app
+*.dmg
+*.msi
+*.deb
+*.rpm
+*.AppImage
+
+# Platform-specific build artifacts
+src-tauri/*.app/
+src-tauri/*.dmg
+src-tauri/*.msi
+src-tauri/*.deb
+src-tauri/*.rpm
+src-tauri/*.AppImage

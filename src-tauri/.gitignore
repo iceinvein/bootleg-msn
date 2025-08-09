@@ -1,0 +1,26 @@
+# Rust build artifacts
+/target/
+Cargo.lock
+
+# Tauri generated files
+/gen/
+
+# WiX Toolset (Windows installer)
+/WixTools/
+
+# macOS bundle artifacts
+*.app/
+*.dmg
+
+# Windows installer artifacts
+*.msi
+*.exe
+
+# Linux package artifacts
+*.deb
+*.rpm
+*.AppImage
+
+# Development artifacts
+.DS_Store
+Thumbs.db
