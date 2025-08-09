@@ -31,9 +31,14 @@ vi.mock("@/stores/chatWindows", () => ({
 	},
 }));
 
+vi.mock("./useNotifications", () => ({
+	useNotifications: vi.fn(),
+}));
+
 // Mock Convex API
 const mockUseQuery = vi.fn();
 const mockUseStore = vi.fn();
+const mockUseNotifications = vi.fn();
 
 beforeEach(async () => {
 	vi.clearAllMocks();
@@ -41,13 +46,19 @@ beforeEach(async () => {
 	// Setup default mocks
 	const { useQuery } = await import("convex/react");
 	const { useStore } = await import("@nanostores/react");
+	const { useNotifications } = await import("./useNotifications");
 
 	vi.mocked(useQuery).mockImplementation(mockUseQuery);
 	vi.mocked(useStore).mockImplementation(mockUseStore);
+	vi.mocked(useNotifications).mockImplementation(mockUseNotifications);
 
 	// Default return values
 	mockUseStore.mockReturnValue(null);
 	mockUseQuery.mockReturnValue(null);
+	mockUseNotifications.mockReturnValue({
+		notifyNewMessage: vi.fn(),
+		isSupported: false, // Default to false for most tests
+	});
 });
 
 afterEach(() => {
@@ -91,11 +102,12 @@ describe("useMessageNotifications", () => {
 		_creationTime: Date.now(),
 		sender: {
 			_id: "user2" as any,
+			_creationTime: Date.now(),
 			name: "Alice Smith",
 			email: "alice@example.com",
 		},
 		isFromMe: false,
-	};
+	} as const;
 
 	const mockGroupMessage = {
 		_id: "msg2" as any,
@@ -107,13 +119,14 @@ describe("useMessageNotifications", () => {
 		_creationTime: Date.now(),
 		sender: {
 			_id: "user2" as any,
+			_creationTime: Date.now(),
 			name: "Alice Smith",
 			email: "alice@example.com",
 		},
 		isFromMe: false,
-	};
+	} as const;
 
-	it("should initialize without errors", () => {
+	it("should initialize without errors", async () => {
 		mockUseQuery
 			.mockReturnValueOnce(mockUser) // user
 			.mockReturnValueOnce([]) // allMessages
@@ -121,6 +134,11 @@ describe("useMessageNotifications", () => {
 			.mockReturnValueOnce(mockGroups); // groups
 
 		const { result } = renderHook(() => useMessageNotifications());
+
+		// Wait for any async effects to complete
+		await act(async () => {
+			await new Promise(resolve => setTimeout(resolve, 0));
+		});
 
 		expect(result.current).toBeDefined();
 		// The hook returns an object with these functions
@@ -400,14 +418,97 @@ describe("useMessageNotifications", () => {
 		// Simulate clicking the action button
 		const toastCall = vi.mocked(toast).mock.calls[0];
 		const toastOptions = toastCall[1];
-		
+
 		act(() => {
-			toastOptions.action.onClick();
+			if (toastOptions && typeof toastOptions === 'object' && 'action' in toastOptions) {
+				const action = toastOptions.action as any;
+				if (action && typeof action.onClick === 'function') {
+					action.onClick();
+				}
+			}
 		});
 
 		expect($selectedChat.set).toHaveBeenCalledWith({
 			contact: mockContacts[0],
 			group: null,
+		});
+	});
+
+	it("should show desktop notification when running in Tauri", async () => {
+		const mockNotifyNewMessage = vi.fn();
+		vi.mocked(chatWindowHelpers.isChatActiveAnywhere).mockReturnValue(false);
+
+		// Mock desktop notifications as supported
+		mockUseNotifications.mockReturnValue({
+			notifyNewMessage: mockNotifyNewMessage,
+			isSupported: true,
+		});
+
+		mockUseQuery
+			.mockReturnValueOnce(mockUser) // user (first render)
+			.mockReturnValueOnce([]) // allMessages (first render)
+			.mockReturnValueOnce(mockContacts) // contacts (first render)
+			.mockReturnValueOnce(mockGroups) // groups (first render)
+			.mockReturnValueOnce(mockUser) // user (second render)
+			.mockReturnValueOnce([mockDirectMessage]) // allMessages (second render)
+			.mockReturnValueOnce(mockContacts) // contacts (second render)
+			.mockReturnValueOnce(mockGroups); // groups (second render)
+
+		const { rerender } = renderHook(() => useMessageNotifications());
+
+		// First render - initialize
+		await waitFor(() => {
+			expect(toast).not.toHaveBeenCalled();
+		});
+
+		// Second render - new message
+		rerender();
+
+		await waitFor(() => {
+			expect(toast).toHaveBeenCalled();
+			expect(mockNotifyNewMessage).toHaveBeenCalledWith(
+				mockDirectMessage._id,
+				"Alice",
+				"Hello there!",
+				"contact:user2",
+				"user2",
+			);
+		});
+	});
+
+	it("should not show desktop notification when not supported", async () => {
+		const mockNotifyNewMessage = vi.fn();
+		vi.mocked(chatWindowHelpers.isChatActiveAnywhere).mockReturnValue(false);
+
+		// Mock desktop notifications as not supported
+		mockUseNotifications.mockReturnValue({
+			notifyNewMessage: mockNotifyNewMessage,
+			isSupported: false,
+		});
+
+		mockUseQuery
+			.mockReturnValueOnce(mockUser) // user (first render)
+			.mockReturnValueOnce([]) // allMessages (first render)
+			.mockReturnValueOnce(mockContacts) // contacts (first render)
+			.mockReturnValueOnce(mockGroups) // groups (first render)
+			.mockReturnValueOnce(mockUser) // user (second render)
+			.mockReturnValueOnce([mockDirectMessage]) // allMessages (second render)
+			.mockReturnValueOnce(mockContacts) // contacts (second render)
+			.mockReturnValueOnce(mockGroups); // groups (second render)
+
+		const { rerender } = renderHook(() => useMessageNotifications());
+
+		// First render - initialize
+		await waitFor(() => {
+			expect(toast).not.toHaveBeenCalled();
+		});
+
+		// Second render - new message
+		rerender();
+
+		await waitFor(() => {
+			expect(toast).toHaveBeenCalled();
+			expect(mockNotifyNewMessage).not.toHaveBeenCalled();
 		});
 	});
 });

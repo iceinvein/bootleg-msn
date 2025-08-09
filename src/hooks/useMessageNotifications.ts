@@ -1,32 +1,25 @@
 import { api } from "@convex/_generated/api";
-import type { Id } from "@convex/_generated/dataModel";
 import { useStore } from "@nanostores/react";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { chatWindowHelpers } from "@/stores/chatWindows";
 import { $selectedChat } from "@/stores/contact";
+import { useNotifications } from "./useNotifications";
 
-type MessageWithSender = {
-	_id: Id<"messages">;
-	senderId: Id<"users">;
-	receiverId?: Id<"users">;
-	groupId?: Id<"groups">;
-	content: string;
-	messageType: "text" | "emoji" | "file" | "system";
-	isRead: boolean;
-	_creationTime: number;
-	sender?: {
-		_id: Id<"users">;
-		name?: string;
-		email?: string;
-	};
-	isFromMe: boolean;
-};
+// Type for messages returned from getAllUserMessages query - end-to-end type safe
+type AllUserMessagesReturn = ReturnType<
+	typeof useQuery<typeof api.unifiedMessages.getAllUserMessages>
+>;
+type MessageFromQuery = NonNullable<AllUserMessagesReturn>[number];
 
 export function useMessageNotifications() {
 	const selectedChat = useStore($selectedChat);
 	const user = useQuery(api.auth.loggedInUser);
+
+	// Initialize desktop notifications for Tauri
+	const { notifyNewMessage, isSupported: isDesktopNotificationSupported } =
+		useNotifications();
 
 	// Track the last seen message IDs to detect new messages
 	const lastSeenMessageIds = useRef<Set<string>>(new Set());
@@ -41,7 +34,7 @@ export function useMessageNotifications() {
 
 	// Helper function to get sender display name
 	const getSenderDisplayName = useCallback(
-		(message: MessageWithSender) => {
+		(message: MessageFromQuery) => {
 			if (message.isFromMe) return "You";
 
 			if (message.groupId) {
@@ -65,9 +58,9 @@ export function useMessageNotifications() {
 
 	// Helper function to get chat display name
 	const getChatDisplayName = useCallback(
-		(message: MessageWithSender) => {
+		(message: MessageFromQuery) => {
 			if (message.groupId) {
-				const group = groups?.find((g) => g._id === message.groupId);
+				const group = groups?.find((g) => g?._id === message.groupId);
 				return group?.name || "Unknown Group";
 			} else {
 				const contact = contacts?.find(
@@ -85,7 +78,7 @@ export function useMessageNotifications() {
 	);
 
 	// Helper function to check if a chat is currently active
-	const isChatActive = useCallback((message: MessageWithSender) => {
+	const isChatActive = useCallback((message: MessageFromQuery) => {
 		if (message.groupId) {
 			return chatWindowHelpers.isChatActiveAnywhere("group", message.groupId);
 		} else {
@@ -98,9 +91,9 @@ export function useMessageNotifications() {
 
 	// Helper function to open a chat when notification is clicked
 	const openChat = useCallback(
-		(message: MessageWithSender) => {
+		(message: MessageFromQuery) => {
 			if (message.groupId) {
-				const group = groups?.find((g) => g._id === message.groupId);
+				const group = groups?.find((g) => g?._id === message.groupId);
 				if (group) {
 					$selectedChat.set({ contact: null, group });
 				}
@@ -118,7 +111,7 @@ export function useMessageNotifications() {
 
 	// Helper function to show toast notification
 	const showToastNotification = useCallback(
-		(message: MessageWithSender) => {
+		async (message: MessageFromQuery) => {
 			const senderName = getSenderDisplayName(message);
 			const chatName = getChatDisplayName(message);
 
@@ -136,6 +129,7 @@ export function useMessageNotifications() {
 			const toastContent =
 				message.messageType === "file" ? "📎 Sent a file" : truncatedContent;
 
+			// Show toast notification (always shown for web compatibility)
 			toast(toastTitle, {
 				description: toastContent,
 				action: {
@@ -143,13 +137,36 @@ export function useMessageNotifications() {
 					onClick: () => openChat(message),
 				},
 				duration: 5000,
-				onClick: () => openChat(message),
-				style: {
-					cursor: "pointer",
-				},
 			});
+
+			// Also show desktop notification when running in Tauri
+			if (isDesktopNotificationSupported) {
+				try {
+					// Generate a unique chat ID for the notification
+					const chatId = message.groupId
+						? `group:${message.groupId}`
+						: `contact:${message.senderId}`;
+
+					await notifyNewMessage(
+						message._id,
+						senderName,
+						toastContent,
+						chatId,
+						message.senderId,
+					);
+				} catch (error) {
+					console.error("Failed to show desktop notification:", error);
+					// Don't throw here to avoid disrupting the toast notification
+				}
+			}
 		},
-		[getSenderDisplayName, getChatDisplayName, openChat],
+		[
+			getSenderDisplayName,
+			getChatDisplayName,
+			openChat,
+			isDesktopNotificationSupported,
+			notifyNewMessage,
+		],
 	);
 
 	// Process messages and show notifications for new ones
@@ -158,7 +175,7 @@ export function useMessageNotifications() {
 
 		// Filter out messages from the current user and system messages
 		const relevantMessages = allMessages.filter(
-			(msg: MessageWithSender) => !msg.isFromMe && msg.messageType !== "system",
+			(msg) => !msg.isFromMe && msg.messageType !== "system",
 		);
 
 		// On first load, just record existing message IDs without showing notifications
@@ -171,13 +188,15 @@ export function useMessageNotifications() {
 
 		// Find new messages that we haven't seen before
 		const newMessages = relevantMessages.filter(
-			(msg: MessageWithSender) => !lastSeenMessageIds.current.has(msg._id),
+			(msg) => !lastSeenMessageIds.current.has(msg._id),
 		);
 
 		// Show notifications for new messages from inactive chats
 		for (const message of newMessages) {
 			if (!isChatActive(message)) {
-				showToastNotification(message);
+				showToastNotification(message).catch((error) => {
+					console.error("Failed to show notification:", error);
+				});
 			}
 		}
 
