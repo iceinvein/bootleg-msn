@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- Allow the app to send user notifications -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+    
+    <!-- Network access for Convex backend -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    
+    <!-- Allow outgoing network connections -->
+    <key>com.apple.security.network.server</key>
+    <true/>
+    
+    <!-- Allow user notifications -->
+    <key>com.apple.security.personal-information.notifications</key>
+    <true/>
+    
+    <!-- Allow file system access for app data -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+    
+    <!-- Allow temporary exception for development -->
+    <key>com.apple.security.temporary-exception.mach-lookup.global-name</key>
+    <array>
+        <string>com.apple.usernotifications.usernotificationservice</string>
+    </array>
+</dict>
+</plist>

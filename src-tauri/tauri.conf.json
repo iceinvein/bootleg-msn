@@ -1,7 +1,7 @@
 {
   "productName": "Bootleg MSN Messenger",
   "version": "0.3.1",
-  "identifier": "com.msnmessenger.app",
+  "identifier": "com.msnmessenger.bootleg",
   "build": {
     "beforeDevCommand": "pnpm dev:frontend",
     "beforeBuildCommand": "pnpm build",
@@ -53,7 +53,7 @@
       "exceptionDomain": "",
       "signingIdentity": null,
       "providerShortName": null,
-      "entitlements": null
+      "entitlements": "entitlements.plist"
     },
     "windows": {
       "certificateThumbprint": null,

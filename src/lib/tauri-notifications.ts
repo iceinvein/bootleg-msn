@@ -5,6 +5,7 @@ import { listen } from "@tauri-apps/api/event";
 declare global {
 	interface Window {
 		__TAURI__?: unknown;
+		__TAURI_INTERNALS__?: unknown;
 	}
 }
 
@@ -112,17 +113,17 @@ export class TauriNotificationService {
 	 */
 	async showNotification(data: NotificationData): Promise<void> {
 		try {
-			await invoke("show_notification", {
-				notificationData: {
-					id: data.id,
-					title: data.title,
-					body: data.body,
-					chat_id: data.chatId,
-					sender_id: data.senderId,
-					notification_type: data.notificationType,
-					timestamp: data.timestamp,
-				},
-			});
+			const notificationData = {
+				id: data.id,
+				title: data.title,
+				body: data.body,
+				chat_id: data.chatId,
+				sender_id: data.senderId,
+				notification_type: data.notificationType,
+				timestamp: data.timestamp,
+			};
+
+			await invoke("show_notification", { notificationData });
 		} catch (error) {
 			console.error("Failed to show notification:", error);
 			throw error;
@@ -280,10 +281,14 @@ export class TauriNotificationService {
 	}
 
 	/**
-	 * Check if we're running in Tauri environment
+	 * Check if we're runningin Tauri environment
 	 */
 	static isTauriEnvironment(): boolean {
-		return typeof window !== "undefined" && window.__TAURI__ !== undefined;
+		return (
+			typeof window !== "undefined" &&
+			(window.__TAURI__ !== undefined ||
+				window.__TAURI_INTERNALS__ !== undefined)
+		);
 	}
 }
 
