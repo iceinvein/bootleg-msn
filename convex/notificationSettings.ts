@@ -33,6 +33,7 @@ export const getNotificationSettings = query({
 		desktopNotifications: v.boolean(),
 		mentionNotifications: v.boolean(),
 		nudgeNotifications: v.boolean(),
+		accountLinkingNotificationShown: v.optional(v.boolean()),
 		quietHours: v.optional(
 			v.object({
 				enabled: v.boolean(),
@@ -360,5 +361,70 @@ export const getUsersInFocusMode = query({
 		);
 
 		return usersWithDetails;
+	},
+});
+
+// Mark account linking notification as shown
+export const markAccountLinkingNotificationShown = mutation({
+	args: {},
+	returns: v.null(),
+	handler: async (ctx) => {
+		const user = await getCurrentUser(ctx);
+
+		const existingSettings = await ctx.db
+			.query("userNotificationSettings")
+			.withIndex("by_user", (q) => q.eq("userId", user._id))
+			.unique();
+
+		const now = Date.now();
+
+		if (existingSettings) {
+			// Update existing settings
+			await ctx.db.patch(existingSettings._id, {
+				accountLinkingNotificationShown: true,
+				updatedAt: now,
+			});
+		} else {
+			// Create new settings with the notification marked as shown
+			await ctx.db.insert("userNotificationSettings", {
+				userId: user._id,
+				focusModeEnabled: DEFAULT_NOTIFICATION_SETTINGS.focusModeEnabled,
+				vipContacts: [],
+				notificationGrouping:
+					DEFAULT_NOTIFICATION_SETTINGS.notificationGrouping,
+				soundEnabled: DEFAULT_NOTIFICATION_SETTINGS.soundEnabled,
+				vibrationEnabled: DEFAULT_NOTIFICATION_SETTINGS.vibrationEnabled,
+				desktopNotifications:
+					DEFAULT_NOTIFICATION_SETTINGS.desktopNotifications,
+				mentionNotifications:
+					DEFAULT_NOTIFICATION_SETTINGS.mentionNotifications,
+				nudgeNotifications: DEFAULT_NOTIFICATION_SETTINGS.nudgeNotifications,
+				accountLinkingNotificationShown: true,
+				createdAt: now,
+				updatedAt: now,
+			});
+		}
+
+		await logUserActivity(
+			ctx,
+			user._id,
+			"mark_account_linking_notification_shown",
+		);
+	},
+});
+
+// Check if account linking notification has been shown
+export const hasShownAccountLinkingNotification = query({
+	args: {},
+	returns: v.boolean(),
+	handler: async (ctx) => {
+		const user = await getCurrentUser(ctx);
+
+		const settings = await ctx.db
+			.query("userNotificationSettings")
+			.withIndex("by_user", (q) => q.eq("userId", user._id))
+			.unique();
+
+		return settings?.accountLinkingNotificationShown ?? false;
 	},
 });

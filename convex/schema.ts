@@ -356,6 +356,7 @@ const applicationTables = {
 		desktopNotifications: v.boolean(),
 		mentionNotifications: v.boolean(),
 		nudgeNotifications: v.boolean(),
+		accountLinkingNotificationShown: v.optional(v.boolean()),
 		quietHours: v.optional(
 			v.object({
 				enabled: v.boolean(),
