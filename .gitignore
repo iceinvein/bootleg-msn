@@ -59,3 +59,5 @@ src-tauri/*.msi
 src-tauri/*.deb
 src-tauri/*.rpm
 src-tauri/*.AppImage
+
+convex-multiplatform-template
