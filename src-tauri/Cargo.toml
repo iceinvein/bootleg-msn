@@ -1,10 +1,10 @@
 [package]
-name = "msn-messenger"
+name = "bootleg-msn-messenger"
 version = "0.3.1"
 description = "Bootleg MSN Messenger - A modern recreation of the classic MSN Messenger"
-authors = ["MSN Messenger Team"]
+authors = ["Puzzles"]
 license = "MIT"
-repository = "https://github.com/your-org/bootleg-msn-messenger"
+repository = "https://github.com/iceinvein/bootleg-msn"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
@@ -22,6 +22,7 @@ tauri-plugin-dialog = "2.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1.0", features = ["full"] }
+chrono = { version = "0.4", features = ["serde"] }
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
 tauri-plugin-updater = "2.0"

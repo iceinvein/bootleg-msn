@@ -8,6 +8,27 @@ vi.mock("@/hooks/useTauri", () => ({
 		isTauri: false,
 		platform: "web",
 		isReady: true,
+		api: {
+			createChatWindow: vi.fn(),
+			closeChatWindow: vi.fn(),
+			updateUnreadCount: vi.fn(),
+			minimizeToTray: vi.fn(),
+			restoreFromTray: vi.fn(),
+			saveWindowState: vi.fn(),
+			loadWindowState: vi.fn(),
+			handleDeepLinks: vi.fn(),
+		},
+		events: {
+			onWindowClose: vi.fn(),
+			onWindowFocus: vi.fn(),
+			onWindowBlur: vi.fn(),
+			onDeepLink: vi.fn(),
+		},
+		windowManager: {
+			getCurrentWindowConfig: vi.fn(),
+			saveCurrentWindowState: vi.fn(),
+			restoreWindowState: vi.fn(),
+		},
 	})),
 	useWindowState: vi.fn(() => ({
 		saveState: vi.fn(),
@@ -21,9 +42,41 @@ vi.mock("@/hooks/useTauri", () => ({
 	})),
 }));
 
+// Import the mocked module to get access to the mock functions
+import { useTauri } from "@/hooks/useTauri";
+
+const mockUseTauri = vi.mocked(useTauri);
+
 describe("TauriIntegration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
+		// Reset mock to default state
+		mockUseTauri.mockReturnValue({
+			isTauri: false,
+			platform: "web",
+			isReady: true,
+			api: {
+				createChatWindow: vi.fn(),
+				closeChatWindow: vi.fn(),
+				updateUnreadCount: vi.fn(),
+				minimizeToTray: vi.fn(),
+				restoreFromTray: vi.fn(),
+				saveWindowState: vi.fn(),
+				loadWindowState: vi.fn(),
+				handleDeepLinks: vi.fn(),
+			},
+			events: {
+				onWindowClose: vi.fn(),
+				onWindowFocus: vi.fn(),
+				onWindowBlur: vi.fn(),
+				onDeepLink: vi.fn(),
+			},
+			windowManager: {
+				getCurrentWindowConfig: vi.fn(),
+				saveCurrentWindowState: vi.fn(),
+				restoreWindowState: vi.fn(),
+			},
+		});
 	});
 
 	it("should render children", () => {
@@ -58,11 +111,31 @@ describe("TauriStyles", () => {
 
 	it("should render styles when in Tauri environment", () => {
 		// Mock Tauri environment
-		const mockUseTauri = vi.mocked(require("@/hooks/useTauri").useTauri);
 		mockUseTauri.mockReturnValue({
 			isTauri: true,
 			platform: "windows",
 			isReady: true,
+			api: {
+				createChatWindow: vi.fn(),
+				closeChatWindow: vi.fn(),
+				updateUnreadCount: vi.fn(),
+				minimizeToTray: vi.fn(),
+				restoreFromTray: vi.fn(),
+				saveWindowState: vi.fn(),
+				loadWindowState: vi.fn(),
+				handleDeepLinks: vi.fn(),
+			},
+			events: {
+				onWindowClose: vi.fn(),
+				onWindowFocus: vi.fn(),
+				onWindowBlur: vi.fn(),
+				onDeepLink: vi.fn(),
+			},
+			windowManager: {
+				getCurrentWindowConfig: vi.fn(),
+				saveCurrentWindowState: vi.fn(),
+				restoreWindowState: vi.fn(),
+			},
 		});
 
 		const { container } = render(<TauriStyles />);

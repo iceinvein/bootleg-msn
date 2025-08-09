@@ -7,8 +7,9 @@ use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{TrayIconBuilder, TrayIconEvent},
     webview::WebviewWindowBuilder,
-    AppHandle, Manager, WebviewUrl, WebviewWindow,
+    AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow,
 };
+use tauri_plugin_notification::{NotificationExt, PermissionState};
 use tauri_plugin_store::StoreBuilder;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,6 +27,42 @@ struct AppState {
     chat_windows: HashMap<String, WindowConfig>,
     main_window_config: WindowConfig,
     unread_count: u32,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct NotificationData {
+    id: String,
+    title: String,
+    body: String,
+    chat_id: Option<String>,
+    sender_id: Option<String>,
+    notification_type: String, // "message", "contact_request", "group_invite"
+    timestamp: u64,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+struct NotificationSettings {
+    enabled: bool,
+    sound_enabled: bool,
+    show_preview: bool,
+    suppress_when_focused: bool,
+    quiet_hours_enabled: bool,
+    quiet_hours_start: Option<String>, // "22:00"
+    quiet_hours_end: Option<String>,   // "08:00"
+}
+
+impl Default for NotificationSettings {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            sound_enabled: true,
+            show_preview: true,
+            suppress_when_focused: true,
+            quiet_hours_enabled: false,
+            quiet_hours_start: None,
+            quiet_hours_end: None,
+        }
+    }
 }
 
 impl Default for AppState {
@@ -177,6 +214,223 @@ async fn handle_deep_links(app_handle: AppHandle, url: String) -> Result<(), Str
     Ok(())
 }
 
+// Notification management commands
+#[tauri::command]
+async fn request_notification_permission(app_handle: AppHandle) -> Result<String, String> {
+    match app_handle.notification().request_permission() {
+        Ok(permission) => match permission {
+            PermissionState::Granted => Ok("granted".to_string()),
+            PermissionState::Denied => Ok("denied".to_string()),
+            PermissionState::Prompt => Ok("prompt".to_string()),
+            PermissionState::PromptWithRationale => Ok("prompt-with-rationale".to_string()),
+        },
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn check_notification_permission(app_handle: AppHandle) -> Result<String, String> {
+    match app_handle.notification().permission_state() {
+        Ok(permission) => match permission {
+            PermissionState::Granted => Ok("granted".to_string()),
+            PermissionState::Denied => Ok("denied".to_string()),
+            PermissionState::Prompt => Ok("prompt".to_string()),
+            PermissionState::PromptWithRationale => Ok("prompt-with-rationale".to_string()),
+        },
+        Err(e) => Err(e.to_string()),
+    }
+}
+
+#[tauri::command]
+async fn show_notification(
+    app_handle: AppHandle,
+    notification_data: NotificationData,
+) -> Result<(), String> {
+    // Check if app is focused and should suppress notifications
+    let settings = load_notification_settings(app_handle.clone()).await?;
+
+    if !settings.enabled {
+        return Ok(());
+    }
+
+    // Check if main window is focused and suppression is enabled
+    if settings.suppress_when_focused {
+        if let Some(window) = app_handle.get_webview_window("main") {
+            if window.is_focused().unwrap_or(false) {
+                return Ok(());
+            }
+        }
+    }
+
+    // Check quiet hours
+    if settings.quiet_hours_enabled {
+        if let (Some(start), Some(end)) = (&settings.quiet_hours_start, &settings.quiet_hours_end) {
+            let now = chrono::Local::now();
+            let current_time = now.format("%H:%M").to_string();
+
+            // Simple time comparison (doesn't handle overnight ranges perfectly)
+            if current_time >= *start && current_time <= *end {
+                return Ok(());
+            }
+        }
+    }
+
+    // Prepare notification body
+    let body = if settings.show_preview {
+        notification_data.body.clone()
+    } else {
+        "New message".to_string()
+    };
+
+    // Create and show notification
+    let notification = app_handle
+        .notification()
+        .builder()
+        .title(&notification_data.title)
+        .body(&body);
+
+    // Add action data for click handling
+    let mut action_data = HashMap::new();
+    action_data.insert("notification_id".to_string(), notification_data.id.clone());
+    action_data.insert(
+        "type".to_string(),
+        notification_data.notification_type.clone(),
+    );
+
+    if let Some(chat_id) = &notification_data.chat_id {
+        action_data.insert("chat_id".to_string(), chat_id.clone());
+    }
+
+    if let Some(sender_id) = &notification_data.sender_id {
+        action_data.insert("sender_id".to_string(), sender_id.clone());
+    }
+
+    // Store notification data for click handling
+    let store = StoreBuilder::new(&app_handle, std::path::PathBuf::from("notifications.json"))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    store.set(
+        &notification_data.id,
+        serde_json::to_value(&action_data).unwrap(),
+    );
+    store.save().map_err(|e| e.to_string())?;
+
+    notification.show().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn handle_notification_click(
+    app_handle: AppHandle,
+    notification_id: String,
+) -> Result<(), String> {
+    // Load notification data
+    let store = StoreBuilder::new(&app_handle, std::path::PathBuf::from("notifications.json"))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    if let Some(data_value) = store.get(&notification_id) {
+        let data: HashMap<String, String> =
+            serde_json::from_value(data_value.clone()).map_err(|e| e.to_string())?;
+
+        match data.get("type").map(|s| s.as_str()) {
+            Some("message") => {
+                if let Some(chat_id) = data.get("chat_id") {
+                    // Open chat window
+                    create_chat_window(app_handle.clone(), chat_id.clone(), "Contact".to_string())
+                        .await?;
+                }
+
+                // Show main window
+                restore_from_tray(app_handle).await?;
+            }
+            Some("contact_request") => {
+                // Show main window and navigate to contact requests
+                restore_from_tray(app_handle.clone()).await?;
+
+                // Emit event to frontend to show contact requests
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    window
+                        .emit("show-contact-requests", ())
+                        .map_err(|e| e.to_string())?;
+                }
+            }
+            Some("group_invite") => {
+                // Show main window and navigate to group invites
+                restore_from_tray(app_handle.clone()).await?;
+
+                // Emit event to frontend to show group invites
+                if let Some(window) = app_handle.get_webview_window("main") {
+                    window
+                        .emit("show-group-invites", ())
+                        .map_err(|e| e.to_string())?;
+                }
+            }
+            _ => {
+                // Default: just show main window
+                restore_from_tray(app_handle).await?;
+            }
+        }
+
+        // Clean up notification data
+        store.delete(&notification_id);
+        let _ = store.save();
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn save_notification_settings(
+    app_handle: AppHandle,
+    settings: NotificationSettings,
+) -> Result<(), String> {
+    let store = StoreBuilder::new(
+        &app_handle,
+        std::path::PathBuf::from("notification-settings.json"),
+    )
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    store.set("settings", serde_json::to_value(settings).unwrap());
+    store.save().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+#[tauri::command]
+async fn load_notification_settings(app_handle: AppHandle) -> Result<NotificationSettings, String> {
+    let store = StoreBuilder::new(
+        &app_handle,
+        std::path::PathBuf::from("notification-settings.json"),
+    )
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    if let Some(value) = store.get("settings") {
+        let settings: NotificationSettings =
+            serde_json::from_value(value.clone()).map_err(|e| e.to_string())?;
+        Ok(settings)
+    } else {
+        Ok(NotificationSettings::default())
+    }
+}
+
+#[tauri::command]
+async fn clear_all_notifications(app_handle: AppHandle) -> Result<(), String> {
+    // Clear notification store
+    let store = StoreBuilder::new(&app_handle, std::path::PathBuf::from("notifications.json"))
+        .build()
+        .map_err(|e| e.to_string())?;
+
+    store.clear();
+    store.save().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
 fn create_tray_menu(app: &AppHandle) -> Result<Menu<tauri::Wry>, tauri::Error> {
     let show = MenuItem::with_id(app, "show", "Show MSN Messenger", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide to Tray", true, None::<&str>)?;
@@ -197,12 +451,21 @@ fn create_tray_menu(app: &AppHandle) -> Result<Menu<tauri::Wry>, tauri::Error> {
 }
 
 fn main() {
-    tauri::Builder::default()
+    // Initialize Tauri application with modern v2.7 plugin architecture
+    let mut builder = tauri::Builder::default()
         .plugin(tauri_plugin_store::Builder::default().build())
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_dialog::init());
+
+    // Add updater plugin only on desktop platforms (not mobile)
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+    }
+
+    builder
         .invoke_handler(tauri::generate_handler![
             create_chat_window,
             close_chat_window,
@@ -211,7 +474,14 @@ fn main() {
             update_unread_count,
             save_window_state,
             load_window_state,
-            handle_deep_links
+            handle_deep_links,
+            request_notification_permission,
+            check_notification_permission,
+            show_notification,
+            handle_notification_click,
+            save_notification_settings,
+            load_notification_settings,
+            clear_all_notifications
         ])
         .on_window_event(|window, event| {
             match event {

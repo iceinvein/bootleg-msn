@@ -1,5 +1,5 @@
 {
-  "productName": "MSN Messenger",
+  "productName": "Bootleg MSN Messenger",
   "version": "0.3.1",
   "identifier": "com.msnmessenger.app",
   "build": {
@@ -11,7 +11,7 @@
   "app": {
     "windows": [
       {
-        "title": "MSN Messenger",
+        "title": "Bootleg MSN Messenger",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -27,15 +27,18 @@
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: wss:;",
+      "capabilities": [
+        "main-capability"
+      ]
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
     "targets": "all",
     "resources": [],
     "externalBin": [],
-    "copyright": "",
+    "copyright": "© 2025 Puzzles",
     "category": "SocialNetworking",
     "shortDescription": "Modern recreation of MSN Messenger",
     "longDescription": "Bootleg MSN Messenger is a modern recreation of the classic MSN Messenger experience, built with cutting-edge web technologies.",
@@ -58,5 +61,12 @@
       "timestampUrl": ""
     }
   },
-  "plugins": {}
+  "plugins": {
+    "updater": {
+      "active": true,
+      "endpoints": [],
+      "dialog": true,
+      "pubkey": ""
+    }
+  }
 }

@@ -11,7 +11,8 @@
 			"src/**/*",
 			"convex/**/*",
 			"!src/components/ui/**/*",
-			"!convex/_generated/**/*"
+			"!convex/_generated/**/*",
+			"!**/*.test.ts"
 		]
 	},
 	"formatter": {
