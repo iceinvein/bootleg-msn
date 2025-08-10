@@ -1,12 +1,14 @@
 # 💬 Bootleg MSN Messenger
 
-A nostalgic real-time chat application that recreates the classic MSN Messenger experience with modern web technologies. Built with React 19, TypeScript, Tailwind CSS 4, and powered by Convex for real-time backend functionality.
+A nostalgic real-time chat application that recreates the classic MSN Messenger experience with modern web technologies. Available as a **web app**, **desktop application** (Windows/macOS/Linux), and **mobile apps** (iOS/Android). Built with React 19, TypeScript, Tailwind CSS 4, and powered by Convex for real-time backend functionality.
 
 ![MSN Messenger Screenshot](https://img.shields.io/badge/Status-Active%20Development-green)
 ![React](https://img.shields.io/badge/React-19-blue)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
 ![Convex](https://img.shields.io/badge/Convex-Backend-purple)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan)
+![Tauri](https://img.shields.io/badge/Tauri-2.7-orange)
+![Capacitor](https://img.shields.io/badge/Capacitor-7.4-blue)
 
 ## ✨ Features
 
@@ -32,6 +34,29 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 - **Custom status messages**
 - **Gradient blue/purple theme** reminiscent of the original
 - **Toast notifications** for system events
+- **Cross-platform consistency** with platform-specific optimizations
+
+### 📱 Cross-Platform Availability
+
+#### 🌐 Web Application
+
+- **Progressive Web App** with offline capabilities
+- **Browser compatibility** across Chrome, Firefox, Safari, Edge
+- **Responsive design** for desktop and mobile browsers
+
+#### 🖥️ Desktop Application (Tauri)
+
+- **Native performance** with Rust-powered backend
+- **System integration** (notifications, file associations, system tray)
+- **Auto-updates** for seamless version management
+- **Platform-specific optimizations** for Windows, macOS, and Linux
+
+#### 📱 Mobile Applications (Capacitor)
+
+- **Native iOS and Android apps** with app store distribution
+- **Device integration** (camera, push notifications, haptic feedback)
+- **Touch-optimized interface** with native gestures
+- **Offline functionality** for core features
 
 ### 🔐 Authentication & Security
 
@@ -46,37 +71,66 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 ### Frontend
 
 - **React 19** with TypeScript for type-safe development
-- **Vite 6** for fast development and optimized builds
-- **Tailwind CSS 4** with utility-first styling and JIT mode
+- **Vite 6.2** for fast development and optimized builds
+- **Tailwind CSS 4** with utility-first styling and CSS variables
+- **shadcn/ui** as component library foundation
 - **Radix UI** components for accessible UI primitives
 - **Lucide React** for consistent iconography
 - **Sonner** for elegant toast notifications
 - **Next Themes** for dark/light theme support
+- **class-variance-authority** for component variant management
+
+### Cross-Platform Framework
+
+#### 🖥️ Desktop (Tauri v2.7)
+
+- **Rust backend** for high-performance native operations
+- **WebView frontend** with React app in native container
+- **Native APIs** for file system, notifications, and system integration
+- **Security** with sandboxed execution and capability-based permissions
+
+#### 📱 Mobile (Capacitor v7.4)
+
+- **Native containers** for iOS and Android app shells
+- **Web-to-native bridge** for seamless JavaScript to native API communication
+- **Plugin ecosystem** with rich set of native device plugins
+- **Performance** near-native with web technologies
 
 ### Backend
 
 - **Convex** for real-time database and serverless functions
-- **Convex Auth** with Password and Anonymous providers
+- **Convex Auth** with @auth/core integration
 - **Resend** for email verification services
 - **File storage** with Convex's built-in storage system
 
 ### Development Tools
 
 - **TypeScript 5.7** with strict configuration
-- **Biome** for linting and code formatting
+- **Biome 2.1.3** for linting and code formatting
+- **Vitest 3.2.4** for unit and integration testing
+- **@testing-library/react** for component testing
+- **convex-test** for backend function testing
 - **npm-run-all** for parallel script execution
+- **Husky** for git hooks and pre-commit linting
 - **Kiro AI** steering rules for consistent development
 
 ## 🚀 Getting Started
 
 ### Prerequisites
 
+#### Core Requirements
+
 - **Node.js** (v18 or higher)
-- **pnpm** (recommended) or **npm**
+- **pnpm 10.14+** (recommended) or **npm**
 - **Convex account** (free at [convex.dev](https://convex.dev))
 - **Resend account** (optional, for email verification)
 
-### Mobile Development (Optional)
+#### Desktop Development (Optional)
+
+- **Rust** (latest stable version)
+- **Tauri CLI** (installed automatically)
+
+#### Mobile Development (Optional)
 
 For mobile app development, see the [Mobile Setup Guide](docs/MOBILE_SETUP.md):
 
@@ -163,24 +217,27 @@ This will start both the frontend (Vite) and backend (Convex) servers:
 
 ## 📁 Project Structure
 
-```
+```text
 bootleg-msn/
 ├── src/                    # Frontend React application
 │   ├── components/         # React components
 │   │   ├── MessengerApp.tsx    # Main app interface
-│   │   ├── Chat.tsx           # Chat interface
+│   │   ├── ChatWindow.tsx     # Individual chat interface
+│   │   ├── GroupChatWindow.tsx # Group chat interface
 │   │   ├── ContactList.tsx    # Contact management
 │   │   ├── StatusBar.tsx      # User status bar
 │   │   ├── EnhancedSignInForm.tsx # Authentication form
 │   │   ├── EmailVerificationPage.tsx # Email verification
 │   │   ├── SignUpForm.tsx     # User registration
-│   │   └── ui/               # Reusable UI components
+│   │   └── ui/               # shadcn/ui components
 │   ├── hooks/             # Custom React hooks
 │   ├── lib/               # Utility libraries (cn function, etc.)
-│   ├── stores/            # State management
+│   ├── stores/            # Nanostore global state
+│   ├── test/              # Test setup and utilities
 │   ├── utils/             # Helper functions
 │   └── main.tsx           # App entry point
 ├── convex/                # Backend Convex functions
+│   ├── migrations/        # Database migration files
 │   ├── schema.ts          # Database schema definition
 │   ├── auth.ts            # Authentication functions
 │   ├── auth.config.ts     # Auth provider configuration
@@ -191,6 +248,14 @@ bootleg-msn/
 │   ├── userStatus.ts      # User status management
 │   ├── files.ts           # File upload/download
 │   └── _generated/        # Auto-generated Convex files
+├── src-tauri/             # Tauri desktop application
+│   ├── src/               # Rust source code
+│   ├── icons/             # Application icons
+│   ├── capabilities/      # Tauri security capabilities
+│   └── tauri.conf.json    # Tauri configuration
+├── android/               # Android Capacitor project
+├── ios/                   # iOS Capacitor project
+├── scripts/               # Build and deployment scripts
 ├── .kiro/                 # AI development steering rules
 │   └── steering/          # Development guidelines
 └── dist/                  # Build output directory
@@ -217,9 +282,35 @@ bootleg-msn/
 - **Change status:** Click your status in the sidebar
 - **Use emojis:** Click the emoji button in message input
 
+### Platform-Specific Features
+
+#### 🌐 Web Browser
+
+- **Progressive Web App** installation
+- **Browser notifications** (with permission)
+- **File download** via browser download manager
+
+#### 🖥️ Desktop Application
+
+- **Native notifications** with system integration
+- **File system access** for advanced file operations
+- **System tray** integration (minimize to tray)
+- **Auto-updates** for seamless version management
+- **Multiple windows** support
+
+#### 📱 Mobile Applications
+
+- **Push notifications** for real-time alerts
+- **Camera integration** for photo sharing
+- **Haptic feedback** for enhanced interaction
+- **Native sharing** with other apps
+- **Background sync** for offline message delivery
+
 ## 🔧 Development
 
 ### Available Scripts
+
+#### Web Development
 
 ```bash
 # Start development servers (frontend + backend)
@@ -236,21 +327,61 @@ pnpm build
 
 # Build for Netlify deployment
 pnpm build:netlify
+```
 
-# Mobile development
+#### Desktop Development (Tauri)
+
+```bash
+# Start desktop app in development
+pnpm dev:tauri
+
+# Build desktop application
+pnpm build:tauri
+```
+
+#### Mobile Development (Capacitor)
+
+```bash
+# Setup mobile platforms
 pnpm setup:mobile      # Set up Android and iOS platforms
 pnpm setup:android     # Set up Android platform only
+
+# Development
 pnpm dev:android       # Build and run on Android
 pnpm dev:ios           # Build and run on iOS
 
-# Lint and type check
-pnpm lint
+# Production builds
+pnpm build:mobile      # Build web assets for mobile
+pnpm build:android     # Build Android app
+pnpm build:ios         # Build iOS app
+```
 
-# Biome linting only
-pnpm lint:b
+#### Testing
 
-# Biome linting with auto-fix
-pnpm lint:b:fix
+```bash
+# Unit testing
+pnpm test              # Run tests once and exit
+pnpm test:watch        # Run tests in watch mode
+pnpm test:ui           # Run tests with UI interface
+
+# Migration testing
+pnpm test:migration    # Test database migration integration
+```
+
+#### Code Quality
+
+```bash
+# Comprehensive linting and type checking
+pnpm lint              # Full lint: TypeScript + Convex + Vite build + Biome
+
+# Biome-specific linting
+pnpm lint:b            # Biome linting only
+pnpm lint:b:fix        # Auto-fix with Biome
+
+# Version management
+pnpm version:patch     # Increment patch version
+pnpm version:minor     # Increment minor version
+pnpm version:major     # Increment major version
 ```
 
 ### Database Schema
@@ -305,7 +436,9 @@ The version is automatically:
 
 ## 🚀 Deployment
 
-### Convex Deployment
+### Web Application
+
+#### Convex Backend
 
 1. **Deploy to production:**
 
@@ -314,10 +447,9 @@ The version is automatically:
    ```
 
 2. **Update environment variables** for production
-
 3. **Configure custom domain** (optional)
 
-### Frontend Deployment
+#### Frontend Deployment
 
 The frontend can be deployed to any static hosting service:
 
@@ -326,11 +458,49 @@ The frontend can be deployed to any static hosting service:
 - **GitHub Pages**
 - **AWS S3 + CloudFront**
 
-For Netlify deployment, use:
+For Netlify deployment:
 
 ```bash
 pnpm build:netlify
 ```
+
+### Desktop Application (Tauri)
+
+#### Development Build
+
+```bash
+pnpm build:tauri
+```
+
+#### Production Distribution
+
+1. **Code signing** (Windows/macOS)
+2. **Auto-updater configuration**
+3. **Store distribution** (Microsoft Store, Mac App Store)
+
+### Mobile Applications (Capacitor)
+
+#### iOS App Store
+
+1. **Build iOS app:**
+
+   ```bash
+   pnpm build:ios
+   ```
+
+2. **Open in Xcode** for final configuration
+3. **Submit to App Store Connect**
+
+#### Google Play Store
+
+1. **Build Android app:**
+
+   ```bash
+   pnpm build:android
+   ```
+
+2. **Sign APK/AAB** with release keystore
+3. **Upload to Google Play Console**
 
 ## 🤝 Contributing
 
@@ -362,4 +532,6 @@ If you encounter any issues or have questions:
 
 ---
 
-**Built with ❤️ and nostalgia for the golden age of instant messaging**
+## Built with ❤️ and nostalgia for the golden age of instant messaging
+
+Experience the classic MSN Messenger on any device - web, desktop, or mobile!
