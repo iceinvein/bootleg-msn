@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "./styles/mobile.css";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -116,5 +117,63 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+}
+
+/* Mobile-specific styles for Capacitor */
+@layer utilities {
+	/* Capacitor app styles */
+	.capacitor-app {
+		/* Prevent overscroll bounce on iOS */
+		overscroll-behavior: none;
+		/* Ensure full height on mobile */
+		min-height: 100dvh;
+	}
+
+	/* Platform-specific styles */
+	.platform-ios {
+		/* iOS safe area handling */
+		padding-top: env(safe-area-inset-top);
+		padding-bottom: env(safe-area-inset-bottom);
+		padding-left: env(safe-area-inset-left);
+		padding-right: env(safe-area-inset-right);
+	}
+
+	.platform-android {
+		/* Android-specific adjustments */
+		/* Status bar handling is done via StatusBar plugin */
+	}
+
+	/* Keyboard handling */
+	.keyboard-open {
+		/* Adjust layout when keyboard is open */
+		/* This can be customized based on specific needs */
+	}
+
+	/* Mobile-optimized scrolling */
+	.mobile-scroll {
+		-webkit-overflow-scrolling: touch;
+		overscroll-behavior: contain;
+	}
+
+	/* Touch-friendly interactive elements */
+	.touch-target {
+		min-height: 44px;
+		min-width: 44px;
+	}
+
+	/* Prevent text selection on mobile for UI elements */
+	.no-select {
+		-webkit-user-select: none;
+		-moz-user-select: none;
+		-ms-user-select: none;
+		user-select: none;
+		-webkit-touch-callout: none;
+	}
+
+	/* Mobile-optimized focus styles */
+	.mobile-focus:focus {
+		outline: 2px solid var(--color-primary);
+		outline-offset: 2px;
 	}
 }

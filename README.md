@@ -76,6 +76,20 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 - **Convex account** (free at [convex.dev](https://convex.dev))
 - **Resend account** (optional, for email verification)
 
+### Mobile Development (Optional)
+
+For mobile app development, see the [Mobile Setup Guide](docs/MOBILE_SETUP.md):
+
+- **Java 21+** (any version - auto-downloads Java 21 if needed)
+- **Android Studio** (for Android development)
+- **Xcode** (for iOS development, macOS only)
+
+Quick mobile setup:
+
+```bash
+npm run setup:mobile  # Sets up both Android and iOS
+```
+
 ### 1. Clone the Repository
 
 ```bash
@@ -222,6 +236,12 @@ pnpm build
 
 # Build for Netlify deployment
 pnpm build:netlify
+
+# Mobile development
+pnpm setup:mobile      # Set up Android and iOS platforms
+pnpm setup:android     # Set up Android platform only
+pnpm dev:android       # Build and run on Android
+pnpm dev:ios           # Build and run on iOS
 
 # Lint and type check
 pnpm lint

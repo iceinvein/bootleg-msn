@@ -60,4 +60,8 @@ src-tauri/*.deb
 src-tauri/*.rpm
 src-tauri/*.AppImage
 
+# Capacitor native platforms (generated code)
+android/
+ios/
+
 convex-multiplatform-template
