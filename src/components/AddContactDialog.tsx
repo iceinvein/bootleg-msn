@@ -22,7 +22,7 @@ interface AddContactDialogProps {
 	children: React.ReactNode;
 }
 
-export function AddContactDialog({ children }: AddContactDialogProps) {
+export default function AddContactDialog({ children }: AddContactDialogProps) {
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [email, setEmail] = useState("");

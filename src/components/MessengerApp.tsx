@@ -1,7 +1,10 @@
 import { api } from "@convex/_generated/api";
+import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
+import { cn } from "@/lib/utils";
+import { $activeChatWindows } from "@/stores/chatWindows";
 import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
@@ -9,6 +12,11 @@ import { StatusBar } from "./StatusBar";
 import { VersionBadge } from "./VersionInfo";
 
 export function MessengerApp() {
+	const activeWindows = useStore($activeChatWindows);
+	console.log("🚀 ~ MessengerApp ~ activeWindows:", activeWindows);
+	const hasActiveWindows = activeWindows.size > 0;
+	console.log("🚀 ~ MessengerApp ~ hasActiveWindows:", hasActiveWindows);
+
 	const user = useQuery(api.auth.loggedInUser);
 	const initializeUserStatus = useMutation(api.userStatus.initializeUserStatus);
 	const updateLastSeen = useMutation(api.userStatus.updateLastSeen);
@@ -79,9 +87,9 @@ export function MessengerApp() {
 			{/* Account linking notification */}
 			<AccountLinkingNotification />
 
-			<div className="flex flex-1">
+			<div className={cn("flex flex-1")}>
 				{/* Sidebar */}
-				<div className="flex w-full flex-col md:w-90">
+				<div className={cn("flex flex-col", hasActiveWindows && "hidden")}>
 					<StatusBar user={user} />
 					<ContactList />
 					{/* Version info at bottom of status bar */}

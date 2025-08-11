@@ -6,15 +6,14 @@ import type { FunctionReturnType } from "convex/server";
 import type { Infer } from "convex/values";
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
-import { AddContactDialog } from "./AddContactDialog";
-import { ContactRequestsDialog } from "./ContactRequestsDialog";
+import AddContactDialog from "./AddContactDialog";
+import ContactRequestsDialog from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
 import { ModeToggle } from "./mode-toggle";
 import { SettingsDialog } from "./SettingsDialog";
 import { StatusMessage } from "./StatusMessage";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-
 import {
 	Select,
 	SelectContent,

@@ -1,8 +1,8 @@
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 
 interface EmailVerificationPageProps {
@@ -161,30 +161,20 @@ export function EmailVerificationPage({
 						<h1 className="mb-2 font-bold text-2xl">Email Verified!</h1>
 						<p className="mb-6 text-gray-600 dark:text-gray-400">
 							Your email has been successfully verified and your account has
-							been created.
+							been created. Please continue to sign in.
 						</p>
 
 						<div className="space-y-4">
-							<div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
-								<p className="text-green-800 text-sm dark:text-green-200">
-									🎉 Welcome to MSN Messenger! You should be automatically
-									signed in shortly.
-								</p>
-							</div>
-
 							<Button
 								onClick={() => {
 									// Clear the URL and navigate to root
 									window.history.replaceState({}, document.title, "/");
-									if (onVerificationSuccess) {
-										onVerificationSuccess();
-									} else {
-										onBackToSignIn();
-									}
+									onVerificationSuccess?.();
+									onBackToSignIn();
 								}}
 								className="w-full"
 							>
-								Continue to Messenger
+								Continue to Sign In
 							</Button>
 						</div>
 					</div>

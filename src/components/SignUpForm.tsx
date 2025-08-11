@@ -1,7 +1,8 @@
+import { api } from "@convex/_generated/api";
 import { useAction } from "convex/react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Input } from "./ui/input";
@@ -20,6 +21,7 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 	const [name, setName] = useState("");
 	const [isLoading, setIsLoading] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
+	const [showPassword, setShowPassword] = useState(false);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -113,7 +115,12 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 							Try Different Email
 						</Button>
 
-						<Button variant="ghost" type="button" onClick={onBackToSignIn}>
+						<Button
+							variant="ghost"
+							type="button"
+							onClick={onBackToSignIn}
+							className="hover:bg-transparent!"
+						>
 							Back to Sign In
 						</Button>
 					</div>
@@ -166,16 +173,31 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 							<Label htmlFor="password" className="mb-2">
 								Password
 							</Label>
-							<Input
-								type="password"
-								id="password"
-								value={password}
-								onChange={(e) => setPassword(e.target.value)}
-								placeholder="Create a password"
-								className="w-full"
-								required
-								minLength={6}
-							/>
+							<div className="relative">
+								<Input
+									type={showPassword ? "text" : "password"}
+									id="password"
+									value={password}
+									onChange={(e) => setPassword(e.target.value)}
+									placeholder="Create a password"
+									className="w-full"
+									required
+									minLength={6}
+								/>
+								<Button
+									variant="ghost"
+									type="button"
+									size="sm"
+									onClick={() => setShowPassword((prev) => !prev)}
+									className="absolute top-0 right-0 h-full rounded-full p-2 hover:bg-transparent! [&_svg]:h-5! [&_svg]:w-5!"
+								>
+									{showPassword ? (
+										<EyeOffIcon className="h-5 w-5 text-slate-400" />
+									) : (
+										<EyeIcon className="h-5 w-5 text-slate-400" />
+									)}
+								</Button>
+							</div>
 						</div>
 					</form>
 				</CardContent>
@@ -185,15 +207,18 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 						disabled={
 							isLoading || !email.trim() || !password.trim() || !name.trim()
 						}
-						className="w-full"
+						className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
 					>
 						{isLoading ? "Sending Verification Email..." : "Create Account"}
 					</Button>
-					<div className="text-center">
-						<Button variant="ghost" type="button" onClick={onBackToSignIn}>
-							Already have an account? Sign in
-						</Button>
-					</div>
+					<Button
+						variant="ghost"
+						type="button"
+						onClick={onBackToSignIn}
+						className="hover:bg-transparent!"
+					>
+						Already have an account? Sign in
+					</Button>
 					<div className="text-center">
 						<p className="text-accent-foreground/70 text-xs">
 							By creating an account, you agree to verify your email address

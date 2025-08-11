@@ -32,7 +32,7 @@ interface AddMembersDialogProps {
 	children: React.ReactNode;
 }
 
-export function AddMembersDialog({ children }: AddMembersDialogProps) {
+export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 	const selectedChat = useStore($selectedChat);
 
 	const groupId = selectedChat?.group?._id;

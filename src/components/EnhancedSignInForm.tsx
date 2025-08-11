@@ -1,8 +1,9 @@
+import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useAction, useMutation } from "convex/react";
+import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { api } from "../../convex/_generated/api";
 import { EmailVerificationPage } from "./EmailVerificationPage";
 import { SignInWithApple } from "./SignInWithApple";
 import { SignInWithGitHub } from "./SignInWithGithub";
@@ -40,6 +41,7 @@ export function EnhancedSignInForm() {
 	);
 	const [resendCooldown, setResendCooldown] = useState(0);
 	const [canResend, setCanResend] = useState(true);
+	const [showPassword, setShowPassword] = useState(false);
 
 	// Check for verification token in URL
 	useEffect(() => {
@@ -212,9 +214,9 @@ export function EnhancedSignInForm() {
 	return (
 		<div className="flex min-h-screen items-center justify-center">
 			<Card className="w-full max-w-md">
-				<CardHeader>
-					<CardTitle>
-						Bootleg <br /> MSN Messenger
+				<CardHeader className="text-center">
+					<CardTitle className="font-bold text-3xl">
+						Welcome to the bootleg MSN Messenger
 					</CardTitle>
 					<CardDescription>
 						Sign in to start chatting with friends
@@ -249,15 +251,30 @@ export function EnhancedSignInForm() {
 										Forgot your password?
 									</a> */}
 								</div>
-								<Input
-									type="password"
-									id="password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									placeholder="Enter your password"
-									className="w-full"
-									required
-								/>
+								<div className="relative">
+									<Input
+										type={showPassword ? "text" : "password"}
+										id="password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										placeholder="Enter your password"
+										className="w-full"
+										required
+									/>
+									<Button
+										variant="ghost"
+										type="button"
+										size="sm"
+										onClick={() => setShowPassword((prev) => !prev)}
+										className="absolute top-0 right-0 h-full rounded-full p-2 hover:bg-transparent! [&_svg]:h-5! [&_svg]:w-5!"
+									>
+										{showPassword ? (
+											<EyeOffIcon className="h-5 w-5 text-slate-400" />
+										) : (
+											<EyeIcon className="h-5 w-5 text-slate-400" />
+										)}
+									</Button>
+								</div>
 							</div>
 						</div>
 					</form>
@@ -266,30 +283,29 @@ export function EnhancedSignInForm() {
 					<Button
 						type="submit"
 						disabled={isLoading || !email.trim() || !password.trim()}
-						className="w-full"
+						className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
 						onClick={handleSubmit}
 					>
 						{isLoading ? "Signing in..." : "Sign In"}
 					</Button>
-					<div className="relative mt-2 flex items-center">
-						<div className="flex-grow border-accent-foreground/50 border-t" />
+					<Button
+						variant="ghost"
+						type="button"
+						onClick={() => setShowSignUp(true)}
+						className="hover:bg-transparent!"
+					>
+						Don't have an account? Sign up
+					</Button>
+					<div className="relative mb-2 flex w-full items-center">
+						<div className="flex-grow border-accent-foreground/40 border-t" />
 						<span className="mx-4 flex-shrink text-accent-foreground/50 text-sm">
 							or
 						</span>
-						<div className="flex-grow border-accent-foreground/50 border-t" />
+						<div className="flex-grow border-accent-foreground/40 border-t" />
 					</div>
 					<SignInWithGoogle />
 					<SignInWithGitHub />
 					<SignInWithApple />
-					<div className="mt-2 text-center">
-						<Button
-							variant="ghost"
-							type="button"
-							onClick={() => setShowSignUp(true)}
-						>
-							Don't have an account? Sign up
-						</Button>
-					</div>
 				</CardFooter>
 			</Card>
 		</div>

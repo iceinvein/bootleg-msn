@@ -36,7 +36,9 @@ interface ContactRequestsProps {
 	children: React.ReactNode;
 }
 
-export function ContactRequestsDialog({ children }: ContactRequestsProps) {
+export default function ContactRequestsDialog({
+	children,
+}: ContactRequestsProps) {
 	const [isOpen, setIsOpen] = useState(false);
 	const [isLoading, setIsLoading] = useState(false);
 

@@ -26,7 +26,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Group } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
-import { AddMembersDialog } from "./AddMembersModal";
+import AddMembersDialog from "./AddMembersDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 
 interface GroupInfoDialogProps {
