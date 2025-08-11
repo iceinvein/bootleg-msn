@@ -11,7 +11,7 @@ vi.mock("@tauri-apps/api/event", () => ({
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { TauriNotificationService } from "./tauri-notifications";
+import { TauriNotificationService, getTauriNotifications } from "./tauri-notifications";
 
 const mockInvoke = vi.mocked(invoke);
 const mockListen = vi.mocked(listen);
@@ -28,11 +28,20 @@ describe("TauriNotificationService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockListen.mockResolvedValue(() => {});
+		
+		// Reset singleton instance for clean state
+		// @ts-ignore - accessing private static property for testing
+		TauriNotificationService.instance = undefined;
+		
 		service = TauriNotificationService.getInstance();
 	});
 
 	afterEach(() => {
 		vi.resetAllMocks();
+		
+		// Reset singleton instance
+		// @ts-ignore - accessing private static property for testing
+		TauriNotificationService.instance = undefined;
 	});
 
 	describe("Environment Detection", () => {
@@ -320,6 +329,148 @@ describe("TauriNotificationService", () => {
 			const instance2 = TauriNotificationService.getInstance();
 
 			expect(instance1).toBe(instance2);
+		});
+	});
+
+	describe("getTauriNotifications", () => {
+		it("should return service instance in Tauri environment", () => {
+			const service = getTauriNotifications();
+			expect(service).toBeInstanceOf(TauriNotificationService);
+		});
+
+		it("should return null in non-Tauri environment", () => {
+			// Temporarily remove __TAURI__ property
+			const originalTauri = window.__TAURI__;
+			// @ts-ignore
+			window.__TAURI__ = undefined;
+
+			const service = getTauriNotifications();
+			expect(service).toBeNull();
+
+			// Restore for other tests
+			// @ts-ignore
+			window.__TAURI__ = originalTauri;
+		});
+
+		it("should return the same instance on multiple calls", () => {
+			const service1 = getTauriNotifications();
+			const service2 = getTauriNotifications();
+			expect(service1).toBe(service2);
+		});
+	});
+
+	describe("Non-Tauri Environment Behavior", () => {
+		let originalTauri: unknown;
+		let nonTauriService: TauriNotificationService;
+
+		beforeEach(() => {
+			// Save original and remove __TAURI__ property
+			originalTauri = window.__TAURI__;
+			// @ts-ignore
+			window.__TAURI__ = undefined;
+			
+			// Reset singleton instance to test non-Tauri behavior
+			// @ts-ignore - accessing private static property for testing
+			TauriNotificationService.instance = undefined;
+			
+			// Create service instance for testing fallback behavior
+			nonTauriService = TauriNotificationService.getInstance();
+		});
+
+		afterEach(() => {
+			// Restore __TAURI__ property
+			// @ts-ignore
+			window.__TAURI__ = originalTauri;
+			
+			// Reset singleton instance
+			// @ts-ignore - accessing private static property for testing
+			TauriNotificationService.instance = undefined;
+		});
+
+		it("should return 'denied' for permission requests in non-Tauri environment", async () => {
+			const permission = await nonTauriService.requestPermission();
+			expect(permission).toBe("denied");
+			expect(mockInvoke).not.toHaveBeenCalled();
+		});
+
+		it("should return 'denied' for permission checks in non-Tauri environment", async () => {
+			const permission = await nonTauriService.checkPermission();
+			expect(permission).toBe("denied");
+			expect(mockInvoke).not.toHaveBeenCalled();
+		});
+
+		it("should not invoke Tauri APIs for notifications in non-Tauri environment", async () => {
+			const notificationData = {
+				id: "test-notification",
+				title: "Test Title",
+				body: "Test Body",
+				notificationType: "message" as const,
+				timestamp: Date.now(),
+			};
+
+			// Should not throw and should not call invoke
+			await nonTauriService.showNotification(notificationData);
+			expect(mockInvoke).not.toHaveBeenCalled();
+		});
+
+		it("should use localStorage for settings in non-Tauri environment", async () => {
+			const settings = {
+				enabled: true,
+				soundEnabled: false,
+				showPreview: true,
+				suppressWhenFocused: true,
+				quietHoursEnabled: false,
+			};
+
+			// Mock localStorage
+			const localStorageMock = {
+				getItem: vi.fn(),
+				setItem: vi.fn(),
+			};
+			Object.defineProperty(window, 'localStorage', {
+				value: localStorageMock,
+				writable: true,
+			});
+
+			// Save settings should use localStorage
+			await nonTauriService.saveSettings(settings);
+			expect(localStorageMock.setItem).toHaveBeenCalledWith(
+				"tauri-notification-settings",
+				JSON.stringify(settings)
+			);
+			expect(mockInvoke).not.toHaveBeenCalled();
+
+			// Load settings should use localStorage
+			localStorageMock.getItem.mockReturnValue(JSON.stringify(settings));
+			const loadedSettings = await nonTauriService.loadSettings();
+			expect(localStorageMock.getItem).toHaveBeenCalledWith("tauri-notification-settings");
+			expect(loadedSettings).toEqual(settings);
+			expect(mockInvoke).not.toHaveBeenCalled();
+		});
+
+		it("should return default settings when localStorage is empty", async () => {
+			const localStorageMock = {
+				getItem: vi.fn().mockReturnValue(null),
+				setItem: vi.fn(),
+			};
+			Object.defineProperty(window, 'localStorage', {
+				value: localStorageMock,
+				writable: true,
+			});
+
+			const settings = await nonTauriService.loadSettings();
+			expect(settings).toEqual({
+				enabled: true,
+				soundEnabled: true,
+				showPreview: true,
+				suppressWhenFocused: true,
+				quietHoursEnabled: false,
+			});
+		});
+
+		it("should not invoke Tauri APIs for clearing notifications", async () => {
+			await nonTauriService.clearAllNotifications();
+			expect(mockInvoke).not.toHaveBeenCalled();
 		});
 	});
 });

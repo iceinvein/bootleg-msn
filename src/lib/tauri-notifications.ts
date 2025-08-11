@@ -60,6 +60,11 @@ export class TauriNotificationService {
 	}
 
 	private async setupEventListeners() {
+		// Only setup listeners in Tauri environment
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			return;
+		}
+
 		try {
 			// Listen for notification click events from Tauri
 			await listen("notification-clicked", (event) => {
@@ -84,6 +89,10 @@ export class TauriNotificationService {
 	 * Request notification permission from the system
 	 */
 	async requestPermission(): Promise<NotificationPermission> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			return "denied";
+		}
+
 		try {
 			const permission = await invoke<string>(
 				"request_notification_permission",
@@ -99,6 +108,10 @@ export class TauriNotificationService {
 	 * Check current notification permission status
 	 */
 	async checkPermission(): Promise<NotificationPermission> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			return "denied";
+		}
+
 		try {
 			const permission = await invoke<string>("check_notification_permission");
 			return permission as NotificationPermission;
@@ -112,6 +125,14 @@ export class TauriNotificationService {
 	 * Show a native desktop notification
 	 */
 	async showNotification(data: NotificationData): Promise<void> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			// Fallback to web notifications or just log in development
+			if (import.meta.env.DEV) {
+				console.log("Tauri notification (dev):", data.title, data.body);
+			}
+			return;
+		}
+
 		try {
 			const notificationData = {
 				id: data.id,
@@ -134,6 +155,10 @@ export class TauriNotificationService {
 	 * Handle notification click (called internally)
 	 */
 	private async handleNotificationClick(notificationId: string): Promise<void> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			return;
+		}
+
 		try {
 			await invoke("handle_notification_click", { notificationId });
 		} catch (error) {
@@ -145,6 +170,15 @@ export class TauriNotificationService {
 	 * Save notification settings
 	 */
 	async saveSettings(settings: NotificationSettings): Promise<void> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			// Store in localStorage as fallback
+			localStorage.setItem(
+				"tauri-notification-settings",
+				JSON.stringify(settings),
+			);
+			return;
+		}
+
 		try {
 			await invoke("save_notification_settings", { settings });
 		} catch (error) {
@@ -157,6 +191,27 @@ export class TauriNotificationService {
 	 * Load notification settings
 	 */
 	async loadSettings(): Promise<NotificationSettings> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			// Load from localStorage as fallback
+			const stored = localStorage.getItem("tauri-notification-settings");
+			if (stored) {
+				try {
+					return JSON.parse(stored);
+				} catch {
+					// Fall through to default settings
+				}
+			}
+
+			// Return default settings
+			return {
+				enabled: true,
+				soundEnabled: true,
+				showPreview: true,
+				suppressWhenFocused: true,
+				quietHoursEnabled: false,
+			};
+		}
+
 		try {
 			const settings = await invoke<NotificationSettings>(
 				"load_notification_settings",
@@ -179,6 +234,10 @@ export class TauriNotificationService {
 	 * Clear all pending notifications
 	 */
 	async clearAllNotifications(): Promise<void> {
+		if (!TauriNotificationService.isTauriEnvironment()) {
+			return;
+		}
+
 		try {
 			await invoke("clear_all_notifications");
 		} catch (error) {
@@ -292,5 +351,10 @@ export class TauriNotificationService {
 	}
 }
 
-// Export singleton instance
-export const tauriNotifications = TauriNotificationService.getInstance();
+// Export singleton instance getter (lazy initialization)
+export const getTauriNotifications = (): TauriNotificationService | null => {
+	if (!TauriNotificationService.isTauriEnvironment()) {
+		return null;
+	}
+	return TauriNotificationService.getInstance();
+};

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useState } from "react";
 import {
+	getTauriNotifications,
 	type NotificationPermission,
 	type NotificationSettings,
 	TauriNotificationService,
-	tauriNotifications,
 } from "@/lib/tauri-notifications";
 
 export type UseNotificationsReturn = {
@@ -62,12 +62,18 @@ export function useNotifications(): UseNotificationsReturn {
 				setIsLoading(true);
 				setError(null);
 
+				const notificationService = getTauriNotifications();
+				if (!notificationService) {
+					setIsLoading(false);
+					return;
+				}
+
 				// Check current permission
-				const currentPermission = await tauriNotifications.checkPermission();
+				const currentPermission = await notificationService.checkPermission();
 				setPermission(currentPermission);
 
 				// Load settings
-				const currentSettings = await tauriNotifications.loadSettings();
+				const currentSettings = await notificationService.loadSettings();
 				setSettings(currentSettings);
 			} catch (err) {
 				setError(
@@ -91,9 +97,14 @@ export function useNotifications(): UseNotificationsReturn {
 				return "denied";
 			}
 
+			const notificationService = getTauriNotifications();
+			if (!notificationService) {
+				return "denied";
+			}
+
 			try {
 				setError(null);
-				const newPermission = await tauriNotifications.requestPermission();
+				const newPermission = await notificationService.requestPermission();
 				setPermission(newPermission);
 				return newPermission;
 			} catch (err) {
@@ -112,9 +123,14 @@ export function useNotifications(): UseNotificationsReturn {
 				return;
 			}
 
+			const notificationService = getTauriNotifications();
+			if (!notificationService) {
+				return;
+			}
+
 			try {
 				setError(null);
-				await tauriNotifications.saveSettings(newSettings);
+				await notificationService.saveSettings(newSettings);
 				setSettings(newSettings);
 			} catch (err) {
 				const errorMessage =
@@ -140,8 +156,13 @@ export function useNotifications(): UseNotificationsReturn {
 				return;
 			}
 
+			const notificationService = getTauriNotifications();
+			if (!notificationService) {
+				return;
+			}
+
 			try {
-				await tauriNotifications.notifyNewMessage(
+				await notificationService.notifyNewMessage(
 					messageId,
 					senderName,
 					content,
@@ -166,8 +187,13 @@ export function useNotifications(): UseNotificationsReturn {
 				return;
 			}
 
+			const notificationService = getTauriNotifications();
+			if (!notificationService) {
+				return;
+			}
+
 			try {
-				await tauriNotifications.notifyContactRequest(
+				await notificationService.notifyContactRequest(
 					requestId,
 					requesterName,
 					requesterEmail,
@@ -189,8 +215,13 @@ export function useNotifications(): UseNotificationsReturn {
 				return;
 			}
 
+			const notificationService = getTauriNotifications();
+			if (!notificationService) {
+				return;
+			}
+
 			try {
-				await tauriNotifications.notifyGroupInvite(
+				await notificationService.notifyGroupInvite(
 					inviteId,
 					groupName,
 					inviterName,
@@ -207,8 +238,13 @@ export function useNotifications(): UseNotificationsReturn {
 			return;
 		}
 
+		const notificationService = getTauriNotifications();
+		if (!notificationService) {
+			return;
+		}
+
 		try {
-			await tauriNotifications.clearAllNotifications();
+			await notificationService.clearAllNotifications();
 		} catch (err) {
 			console.error("Failed to clear notifications:", err);
 			throw err;
