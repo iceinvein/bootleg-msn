@@ -4,7 +4,7 @@ import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
 import { cn } from "@/lib/utils";
-import { $activeChatWindows } from "@/stores/chatWindows";
+import { $selectedChat } from "@/stores/contact";
 import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
@@ -12,17 +12,16 @@ import { StatusBar } from "./StatusBar";
 import { VersionBadge } from "./VersionInfo";
 
 export function MessengerApp() {
-	const activeWindows = useStore($activeChatWindows);
-	console.log("🚀 ~ MessengerApp ~ activeWindows:", activeWindows);
-	const hasActiveWindows = activeWindows.size > 0;
-	console.log("🚀 ~ MessengerApp ~ hasActiveWindows:", hasActiveWindows);
-
 	const user = useQuery(api.auth.loggedInUser);
+	const selectedChat = useStore($selectedChat);
 	const initializeUserStatus = useMutation(api.userStatus.initializeUserStatus);
 	const updateLastSeen = useMutation(api.userStatus.updateLastSeen);
 
 	// Initialize message notifications for toast alerts
 	useMessageNotifications();
+
+	// Check if a chat is currently selected (for mobile layout)
+	const isChatOpen = !!(selectedChat?.contact || selectedChat?.group);
 
 	// Initialize user status when app loads (with error handling)
 	useEffect(() => {
@@ -77,7 +76,10 @@ export function MessengerApp() {
 	if (!user) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
-				<div className="h-8 w-8 animate-spin rounded-full border-white border-b-2"></div>
+				<output
+					className="h-8 w-8 animate-spin rounded-full border-white border-b-2"
+					aria-label="Loading messenger application"
+				/>
 			</div>
 		);
 	}
@@ -88,8 +90,16 @@ export function MessengerApp() {
 			<AccountLinkingNotification />
 
 			<div className={cn("flex flex-1")}>
-				{/* Sidebar */}
-				<div className={cn("flex flex-col", hasActiveWindows && "hidden")}>
+				{/* Sidebar - Full width on mobile when no chat is open */}
+				<div
+					className={cn(
+						"flex flex-col",
+						// On mobile: full width when no chat, hidden when chat is open
+						// On desktop: always show with normal width
+						"md:flex md:w-auto", // Always show on desktop with auto width
+						isChatOpen ? "hidden md:flex" : "flex w-full md:w-auto", // Full width on mobile when no chat
+					)}
+				>
 					<StatusBar user={user} />
 					<ContactList />
 					{/* Version info at bottom of status bar */}
@@ -98,8 +108,18 @@ export function MessengerApp() {
 					</div>
 				</div>
 
-				{/* Main Chat Area */}
-				<Chat />
+				{/* Main Chat Area - Hidden on mobile when no chat is selected */}
+				<div
+					className={cn(
+						"flex-1",
+						// On mobile: hidden when no chat, shown when chat is open
+						// On desktop: always shown
+						"md:flex", // Always show on desktop
+						isChatOpen ? "flex" : "hidden md:flex", // Hide on mobile when no chat
+					)}
+				>
+					<Chat />
+				</div>
 			</div>
 		</div>
 	);
