@@ -10,6 +10,7 @@ use tauri::{
     AppHandle, Emitter, Manager, WebviewUrl, WebviewWindow,
 };
 use tauri_plugin_notification::{NotificationExt, PermissionState};
+use tauri_plugin_opener::OpenerExt;
 use tauri_plugin_store::StoreBuilder;
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -431,6 +432,23 @@ async fn clear_all_notifications(app_handle: AppHandle) -> Result<(), String> {
     Ok(())
 }
 
+// OAuth and external URL handling
+#[tauri::command]
+async fn open_url(app_handle: AppHandle, url: String) -> Result<(), String> {
+    // Validate URL to prevent security issues
+    if !url.starts_with("https://") && !url.starts_with("http://") {
+        return Err("Invalid URL scheme".to_string());
+    }
+
+    // Open URL in system browser using the opener plugin
+    app_handle
+        .opener()
+        .open_url(&url, None::<&str>)
+        .map_err(|e| format!("Failed to open URL: {}", e))?;
+
+    Ok(())
+}
+
 fn create_tray_menu(app: &AppHandle) -> Result<Menu<tauri::Wry>, tauri::Error> {
     let show = MenuItem::with_id(app, "show", "Show MSN Messenger", true, None::<&str>)?;
     let hide = MenuItem::with_id(app, "hide", "Hide to Tray", true, None::<&str>)?;
@@ -457,6 +475,7 @@ fn main() {
         .plugin(tauri_plugin_notification::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
+        .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_dialog::init());
 
     // Add updater plugin only on desktop platforms (not mobile)
@@ -481,7 +500,8 @@ fn main() {
             handle_notification_click,
             save_notification_settings,
             load_notification_settings,
-            clear_all_notifications
+            clear_all_notifications,
+            open_url
         ])
         .on_window_event(|window, event| {
             match event {

@@ -19,21 +19,6 @@ const APP_VERSION_WITH_PREFIX = APP_VERSION.startsWith("v")
 	? APP_VERSION
 	: `v${APP_VERSION}`;
 
-// Debug logging (only in development)
-if (import.meta.env.DEV) {
-	console.log("🔧 UpdateNotification Environment:", {
-		mode: import.meta.env.DEV ? "development" : "production",
-		PACKAGE_VERSION: import.meta.env.PACKAGE_VERSION,
-		VITE_BUILD_TIMESTAMP: import.meta.env.VITE_BUILD_TIMESTAMP,
-		APP_VERSION,
-		APP_VERSION_WITH_PREFIX,
-		APP_TIMESTAMP: new Date(APP_TIMESTAMP).toISOString(),
-		note: import.meta.env.DEV
-			? "Using fixed timestamp for dev"
-			: "Using build timestamp",
-	});
-}
-
 export function UpdateNotification() {
 	const [hasCheckedInitially, setHasCheckedInitially] = useState(false);
 
@@ -69,14 +54,6 @@ export function UpdateNotification() {
 	useEffect(() => {
 		if (updateCheck && !hasCheckedInitially) {
 			setHasCheckedInitially(true);
-			// Log version info for debugging
-			console.log("🔍 Update Check:", {
-				clientVersion: APP_VERSION_WITH_PREFIX,
-				clientTimestamp: APP_TIMESTAMP,
-				serverVersion: updateCheck.latestVersion,
-				serverTimestamp: updateCheck.latestTimestamp,
-				hasUpdate: updateCheck.hasUpdate,
-			});
 			return; // Don't show alert on initial load
 		}
 

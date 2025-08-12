@@ -9,7 +9,6 @@ import { mobileNotifications } from "@/lib/mobile-notifications";
 export function CapacitorIntegration() {
 	useEffect(() => {
 		if (isNativePlatform()) {
-			console.log("Running on native platform:", getPlatform());
 			initializeCapacitor();
 			mobileNotifications.initialize();
 		}
@@ -18,27 +17,23 @@ export function CapacitorIntegration() {
 	useEffect(() => {
 		// Handle app resume events
 		const handleAppResume = () => {
-			console.log("App resumed - refreshing data");
 			// Trigger data refresh or reconnection logic here
 		};
 
 		// Handle app pause events
 		const handleAppPause = () => {
-			console.log("App paused - saving state");
 			// Save current state or pause real-time connections
 		};
 
 		// Handle deep links
 		const handleDeepLink = (event: CustomEvent) => {
-			console.log("Deep link received:", event.detail);
 			// Handle navigation based on deep link
 			const url = event.detail as string;
 
 			// Example: msn://chat/user123 or msn://group/group456
 			if (url.startsWith("msn://")) {
-				const path = url.replace("msn://", "");
-				// Navigate to appropriate screen based on path
-				console.log("Navigating to:", path);
+				const _path = url.replace("msn://", "");
+				// TODO: Navigate to appropriate screen based on path
 			}
 		};
 

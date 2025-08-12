@@ -4,7 +4,7 @@ import Google from "@auth/core/providers/google";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 	providers: [
@@ -228,3 +228,194 @@ export const getUserAuthMethods = query({
 		};
 	},
 });
+
+/**
+ * Generate OAuth URL for system browser authentication
+ */
+export const generateOAuthUrl = action({
+	args: {
+		provider: v.union(
+			v.literal("google"),
+			v.literal("github"),
+			v.literal("apple"),
+		),
+		platform: v.union(
+			v.literal("web"),
+			v.literal("desktop"),
+			v.literal("mobile"),
+		),
+		redirectUri: v.optional(v.string()),
+	},
+	returns: v.string(),
+	handler: async (_ctx, { provider, platform, redirectUri }) => {
+		// Get environment variables for OAuth configuration
+		const baseUrl = process.env.SITE_URL ?? "http://localhost:5173";
+
+		// Determine redirect URI based on platform
+		let finalRedirectUri = redirectUri;
+		if (!finalRedirectUri) {
+			switch (platform) {
+				case "desktop":
+					finalRedirectUri = `${baseUrl}/oauth-callback`;
+					break;
+				case "mobile":
+					finalRedirectUri = "com.bootlegmsn.messenger://oauth-callback";
+					break;
+				default:
+					finalRedirectUri = `${baseUrl}/oauth-callback`;
+			}
+		}
+
+		// Generate OAuth URLs based on provider
+		switch (provider) {
+			case "google":
+				return generateGoogleOAuthUrl(finalRedirectUri);
+			case "github":
+				return generateGitHubOAuthUrl(finalRedirectUri);
+			case "apple":
+				return generateAppleOAuthUrl(finalRedirectUri);
+			default:
+				throw new Error(`Unsupported OAuth provider: ${provider}`);
+		}
+	},
+});
+
+/**
+ * Handle OAuth callback and exchange code for tokens
+ */
+export const handleOAuthCallback = action({
+	args: {
+		provider: v.union(
+			v.literal("google"),
+			v.literal("github"),
+			v.literal("apple"),
+		),
+		code: v.string(),
+		state: v.optional(v.string()),
+	},
+	returns: v.object({
+		success: v.boolean(),
+		provider: v.string(),
+		code: v.string(),
+		state: v.optional(v.string()),
+	}),
+	handler: async (_ctx, { provider, code, state }) => {
+		// This would handle the OAuth callback flow
+		// For now, return a placeholder response
+		return {
+			success: true,
+			provider,
+			code,
+			state,
+			// In production, this would return user data and tokens
+		};
+	},
+});
+
+/**
+ * Get OAuth configuration for frontend
+ */
+export const getOAuthConfig = query({
+	args: {},
+	returns: v.object({
+		google: v.object({
+			enabled: v.boolean(),
+			clientId: v.optional(v.string()),
+		}),
+		github: v.object({
+			enabled: v.boolean(),
+			clientId: v.optional(v.string()),
+		}),
+		apple: v.object({
+			enabled: v.boolean(),
+			clientId: v.optional(v.string()),
+		}),
+	}),
+	handler: async (_ctx) => {
+		return {
+			google: {
+				enabled: !!process.env.AUTH_GOOGLE_ID,
+				clientId: process.env.AUTH_GOOGLE_ID,
+			},
+			github: {
+				enabled: !!process.env.AUTH_GITHUB_ID,
+				clientId: process.env.AUTH_GITHUB_ID,
+			},
+			apple: {
+				enabled: !!process.env.AUTH_APPLE_ID,
+				clientId: process.env.AUTH_APPLE_ID,
+			},
+		};
+	},
+});
+
+/**
+ * Generate Google OAuth URL
+ */
+function generateGoogleOAuthUrl(redirectUri: string): string {
+	const clientId = process.env.AUTH_GOOGLE_ID;
+	if (!clientId) {
+		throw new Error("Google OAuth client ID not configured");
+	}
+
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: redirectUri,
+		response_type: "code",
+		scope: "openid email profile",
+		access_type: "offline",
+		prompt: "consent",
+	});
+
+	return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+/**
+ * Generate GitHub OAuth URL
+ */
+function generateGitHubOAuthUrl(redirectUri: string): string {
+	const clientId = process.env.AUTH_GITHUB_ID;
+	if (!clientId) {
+		throw new Error("GitHub OAuth client ID not configured");
+	}
+
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: redirectUri,
+		scope: "user:email",
+		state: generateRandomState(),
+	});
+
+	return `https://github.com/login/oauth/authorize?${params.toString()}`;
+}
+
+/**
+ * Generate Apple OAuth URL
+ */
+function generateAppleOAuthUrl(redirectUri: string): string {
+	const clientId = process.env.AUTH_APPLE_ID;
+	if (!clientId) {
+		throw new Error("Apple OAuth client ID not configured");
+	}
+
+	const params = new URLSearchParams({
+		client_id: clientId,
+		redirect_uri: redirectUri,
+		response_type: "code",
+		scope: "name email",
+		response_mode: "form_post",
+		state: generateRandomState(),
+	});
+
+	return `https://appleid.apple.com/auth/authorize?${params.toString()}`;
+}
+
+/**
+ * Generate random state parameter for OAuth security
+ */
+function generateRandomState(): string {
+	return (
+		Math.random().toString(36).substring(2, 15) +
+		Math.random().toString(36).substring(2, 15)
+	);
+}

@@ -5,6 +5,7 @@ import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { EmailVerificationPage } from "./EmailVerificationPage";
+
 import { SignInWithApple } from "./SignInWithApple";
 import { SignInWithGitHub } from "./SignInWithGithub";
 import { SignInWithGoogle } from "./SignInWithGoogle";
@@ -303,9 +304,22 @@ export function EnhancedSignInForm() {
 						</span>
 						<div className="flex-grow border-accent-foreground/40 border-t" />
 					</div>
-					<SignInWithGoogle />
-					<SignInWithGitHub />
-					<SignInWithApple />
+					<div className="space-y-2">
+						<SignInWithGoogle />
+						<SignInWithGitHub />
+						<SignInWithApple />
+					</div>
+
+					{/* Help text for OAuth users */}
+					<div className="mt-4 space-y-2 text-center">
+						<p className="text-muted-foreground text-xs">
+							Having trouble with OAuth? The sign-in will open in your system
+							browser.
+						</p>
+						<p className="text-muted-foreground text-xs">
+							If you get stuck in the OAuth flow, simply return to this page.
+						</p>
+					</div>
 				</CardFooter>
 			</Card>
 		</div>
