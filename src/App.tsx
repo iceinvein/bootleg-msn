@@ -10,15 +10,19 @@ import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { UpdateNotificationTest } from "./components/UpdateNotificationTest";
 import { Toaster } from "./components/ui/sonner";
+import { Platform } from "./utils/platform";
 
 function App() {
 	const [isOAuthCallback, setIsOAuthCallback] = useState(false);
 
 	useEffect(() => {
-		// Check if this is an OAuth callback
-		const urlParams = new URLSearchParams(window.location.search);
-		const hasOAuthParams = urlParams.has("code") || urlParams.has("error");
-		setIsOAuthCallback(hasOAuthParams);
+		// Only check for OAuth callback on mobile/desktop platforms
+		// Web platforms use Convex Auth server-side OAuth
+		if (Platform.supportsSystemBrowser()) {
+			const urlParams = new URLSearchParams(window.location.search);
+			const hasOAuthParams = urlParams.has("code") || urlParams.has("error");
+			setIsOAuthCallback(hasOAuthParams);
+		}
 	}, []);
 
 	const handleOAuthComplete = () => {

@@ -3,6 +3,7 @@
  */
 
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { Platform } from "@/utils/platform";
@@ -23,8 +24,10 @@ type OAuthCallbackProps = {
 
 export function OAuthCallback({ onComplete }: OAuthCallbackProps) {
 	const { signIn } = useAuthActions();
+	const { isAuthenticated } = useConvexAuth();
 	const [isProcessing, setIsProcessing] = useState(true);
 	const [error, setError] = useState<string | null>(null);
+	const [authCompleted, setAuthCompleted] = useState(false);
 
 	useEffect(() => {
 		const processOAuthCallback = async () => {
@@ -85,15 +88,10 @@ export function OAuthCallback({ onComplete }: OAuthCallbackProps) {
 				// For web, complete the OAuth flow directly
 				await signIn(provider, { code, state });
 
-				toast.success("Successfully signed in!");
+				// Mark auth as completed and let the effect handle the rest
+				setAuthCompleted(true);
 
-				// Clean up URL and return to main app
-				window.history.replaceState(
-					{},
-					document.title,
-					window.location.pathname,
-				);
-				onComplete();
+				toast.success("Successfully signed in!");
 			} catch (err) {
 				const errorMessage =
 					err instanceof Error ? err.message : "OAuth authentication failed";
@@ -126,7 +124,16 @@ export function OAuthCallback({ onComplete }: OAuthCallbackProps) {
 		};
 
 		processOAuthCallback();
-	}, [signIn, onComplete]);
+	}, [signIn]);
+
+	// Separate effect to handle completion when auth is confirmed
+	useEffect(() => {
+		if (authCompleted && isAuthenticated) {
+			// Clean up URL and return to main app
+			window.history.replaceState({}, document.title, window.location.pathname);
+			onComplete();
+		}
+	}, [authCompleted, isAuthenticated, onComplete]);
 
 	const handleRetry = () => {
 		// Clean up URL and return to main app
