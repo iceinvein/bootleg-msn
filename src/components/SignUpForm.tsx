@@ -138,94 +138,96 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 						Create your account to start chatting
 					</p>
 				</CardHeader>
-				<CardContent>
-					<form onSubmit={handleSubmit} className="space-y-6">
-						<div>
-							<Label htmlFor="name" className="mb-2">
-								Full Name
-							</Label>
-							<Input
-								id="name"
-								value={name}
-								onChange={(e) => setName(e.target.value)}
-								placeholder="Enter your full name"
-								className="w-full"
-								required
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="email" className="mb-2">
-								Email Address
-							</Label>
-							<Input
-								type="email"
-								id="email"
-								value={email}
-								onChange={(e) => setEmail(e.target.value)}
-								placeholder="Enter your email address"
-								className="w-full"
-								required
-							/>
-						</div>
-
-						<div>
-							<Label htmlFor="password" className="mb-2">
-								Password
-							</Label>
-							<div className="relative">
+				<form onSubmit={handleSubmit} className="space-y-6">
+					<CardContent>
+						<div className="space-y-6">
+							<div>
+								<Label htmlFor="name" className="mb-2">
+									Full Name
+								</Label>
 								<Input
-									type={showPassword ? "text" : "password"}
-									id="password"
-									value={password}
-									onChange={(e) => setPassword(e.target.value)}
-									placeholder="Create a password"
+									id="name"
+									value={name}
+									onChange={(e) => setName(e.target.value)}
+									placeholder="Enter your full name"
 									className="w-full"
 									required
-									minLength={6}
 								/>
-								<Button
-									variant="ghost"
-									type="button"
-									size="sm"
-									onClick={() => setShowPassword((prev) => !prev)}
-									className="absolute top-0 right-0 h-full rounded-full p-2 hover:bg-transparent! [&_svg]:h-5! [&_svg]:w-5!"
-								>
-									{showPassword ? (
-										<EyeOffIcon className="h-5 w-5 text-slate-400" />
-									) : (
-										<EyeIcon className="h-5 w-5 text-slate-400" />
-									)}
-								</Button>
+							</div>
+
+							<div>
+								<Label htmlFor="email" className="mb-2">
+									Email Address
+								</Label>
+								<Input
+									type="email"
+									id="email"
+									value={email}
+									onChange={(e) => setEmail(e.target.value)}
+									placeholder="Enter your email address"
+									className="w-full"
+									required
+								/>
+							</div>
+
+							<div>
+								<Label htmlFor="password" className="mb-2">
+									Password
+								</Label>
+								<div className="relative">
+									<Input
+										type={showPassword ? "text" : "password"}
+										id="password"
+										value={password}
+										onChange={(e) => setPassword(e.target.value)}
+										placeholder="Create a password"
+										className="w-full"
+										required
+										minLength={6}
+									/>
+									<Button
+										variant="ghost"
+										type="button"
+										size="sm"
+										onClick={() => setShowPassword((prev) => !prev)}
+										className="absolute top-0 right-0 h-full rounded-full p-2 hover:bg-transparent! [&_svg]:h-5! [&_svg]:w-5!"
+									>
+										{showPassword ? (
+											<EyeOffIcon className="h-5 w-5 text-slate-400" />
+										) : (
+											<EyeIcon className="h-5 w-5 text-slate-400" />
+										)}
+									</Button>
+								</div>
 							</div>
 						</div>
-					</form>
-				</CardContent>
-				<CardFooter className="mt-2 flex-col gap-4">
-					<Button
-						type="submit"
-						disabled={
-							isLoading || !email.trim() || !password.trim() || !name.trim()
-						}
-						className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
-					>
-						{isLoading ? "Sending Verification Email..." : "Create Account"}
-					</Button>
-					<Button
-						variant="ghost"
-						type="button"
-						onClick={onBackToSignIn}
-						className="hover:bg-transparent!"
-					>
-						Already have an account? Sign in
-					</Button>
-					<div className="text-center">
-						<p className="text-accent-foreground/70 text-xs">
-							By creating an account, you agree to verify your email address
-							first.
-						</p>
-					</div>
-				</CardFooter>
+					</CardContent>
+					<CardFooter className="mt-2 flex-col gap-4">
+						<Button
+							type="submit"
+							disabled={
+								isLoading || !email.trim() || !password.trim() || !name.trim()
+							}
+							className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+						>
+							{isLoading ? "Sending Verification Email..." : "Create Account"}
+						</Button>
+						<Button
+							variant="ghost"
+							type="button"
+							onClick={onBackToSignIn}
+							className="hover:bg-transparent!"
+						>
+							Already have an account? Sign in
+						</Button>
+						<div className="text-center">
+							<p className="text-accent-foreground/70 text-xs">
+								By creating an account, you agree to verify your email address
+								first.
+							</p>
+						</div>
+					</CardFooter>
+				</form>
 			</Card>
 		</div>
 	);
