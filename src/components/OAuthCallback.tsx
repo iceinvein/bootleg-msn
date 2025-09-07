@@ -1,239 +1,127 @@
 /**
- * OAuth callback handler for system browser authentication
+ * OAuth callback handler - now simplified since deep link handling is in useOAuth hook
  */
 
-import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Platform } from "@/utils/platform";
-import { Button } from "./ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-
-const VALID_OAUTH_PROVIDERS = ["google", "github", "apple"] as const;
-type ValidOAuthProvider = (typeof VALID_OAUTH_PROVIDERS)[number];
-
-const isValidOAuthProvider = (
-	provider: string,
-): provider is ValidOAuthProvider =>
-	VALID_OAUTH_PROVIDERS.includes(provider as ValidOAuthProvider);
 
 type OAuthCallbackProps = {
 	onComplete: () => void;
+	oauthData?: { code: string; state?: string; error?: string } | null;
 };
 
-export function OAuthCallback({ onComplete }: OAuthCallbackProps) {
-	const { signIn } = useAuthActions();
-	const { isAuthenticated } = useConvexAuth();
+/**
+ * Simplified OAuth callback component
+ * Deep link handling is now done in the useOAuth hook
+ */
+export function OAuthCallback({ onComplete, oauthData }: OAuthCallbackProps) {
 	const [isProcessing, setIsProcessing] = useState(true);
 	const [error, setError] = useState<string | null>(null);
-	const [authCompleted, setAuthCompleted] = useState(false);
 
 	useEffect(() => {
-		const processOAuthCallback = async () => {
+		const processOAuth = async () => {
+			if (!oauthData) {
+				setError("No OAuth data received");
+				setIsProcessing(false);
+				return;
+			}
+
+			if (oauthData.error) {
+				setError(`OAuth failed: ${oauthData.error}`);
+				setIsProcessing(false);
+				return;
+			}
+
+			// Check if we have an OAuth code from GitHub
+			if (!oauthData.code) {
+				setError("No OAuth code received");
+				setIsProcessing(false);
+				return;
+			}
+
 			try {
-				const urlParams = new URLSearchParams(window.location.search);
-				const code = urlParams.get("code");
-				const state = urlParams.get("state");
-				const error = urlParams.get("error");
-				const providerParam = urlParams.get("provider") || "google"; // Default to google
+				// Process the OAuth code from GitHub
+				const { ConvexHttpClient } = await import("convex/browser");
+				const { api } = await import("@convex/_generated/api");
 
-				if (error) {
-					throw new Error(error);
+				const convexUrl = import.meta.env.VITE_CONVEX_URL;
+				if (!convexUrl) {
+					throw new Error("VITE_CONVEX_URL not configured");
 				}
 
-				if (!code) {
-					throw new Error("No authorization code received");
+				const client = new ConvexHttpClient(convexUrl);
+
+				const result = await client.action(api.auth.exchangeOAuthCode, {
+					provider: "github",
+					code: oauthData.code,
+					state: oauthData.state || undefined,
+				});
+
+				if (result.success) {
+					// Show success message to user
+					toast.success(`Welcome ${result.user.name || result.user.login}!`);
+
+					// Trigger Convex Auth sign-in event (Convex Auth handles persistence)
+					window.dispatchEvent(
+						new CustomEvent("convex-auth-signin", {
+							detail: {
+								provider: "github-desktop",
+								githubId: result.githubId,
+								accessToken: result.accessToken,
+								onComplete: () => {
+									setIsProcessing(false);
+									onComplete();
+								},
+							},
+						}),
+					);
+				} else {
+					setError("Failed to complete authentication");
+					setIsProcessing(false);
 				}
-
-				// Validate provider parameter
-				const provider: ValidOAuthProvider = isValidOAuthProvider(providerParam)
-					? providerParam
-					: "google"; // Fallback to google if invalid
-
-				// For desktop apps, emit success event to Tauri
-				if (Platform.isDesktop()) {
-					try {
-						const { emit } = await import("@tauri-apps/api/event");
-						await emit("oauth-result", {
-							success: true,
-							code,
-							state,
-							provider,
-						});
-
-						// Show success message and close window
-						toast.success(
-							"Authentication successful! You can close this window.",
-						);
-
-						// Try to close the window after a delay
-						setTimeout(() => {
-							window.close();
-						}, 2000);
-
-						return;
-					} catch {
-						// Continue with web flow as fallback
-					}
-				}
-
-				// For mobile apps, redirect to app scheme
-				if (Platform.isMobile()) {
-					const appUrl = `com.bootlegmsn.messenger://oauth-callback?success=true&code=${encodeURIComponent(code)}&state=${encodeURIComponent(state || "")}&provider=${provider}`;
-					window.location.href = appUrl;
-					return;
-				}
-
-				// For web, complete the OAuth flow directly
-				await signIn(provider, { code, state });
-
-				// Mark auth as completed and let the effect handle the rest
-				setAuthCompleted(true);
-
-				toast.success("Successfully signed in!");
-			} catch (err) {
-				const errorMessage =
-					err instanceof Error ? err.message : "OAuth authentication failed";
-				setError(errorMessage);
-
-				// For desktop, emit error event
-				if (Platform.isDesktop()) {
-					try {
-						const { emit } = await import("@tauri-apps/api/event");
-						await emit("oauth-result", {
-							success: false,
-							error: errorMessage,
-						});
-					} catch {
-						// Failed to emit Tauri error event
-					}
-				}
-
-				// For mobile, redirect with error
-				if (Platform.isMobile()) {
-					const appUrl = `com.bootlegmsn.messenger://oauth-callback?success=false&error=${encodeURIComponent(errorMessage)}`;
-					window.location.href = appUrl;
-					return;
-				}
-
-				toast.error(errorMessage);
-			} finally {
+			} catch (actionError) {
+				setError(`Authentication failed: ${actionError}`);
 				setIsProcessing(false);
 			}
 		};
 
-		processOAuthCallback();
-	}, [signIn]);
-
-	// Separate effect to handle completion when auth is confirmed
-	useEffect(() => {
-		if (authCompleted && isAuthenticated) {
-			// Clean up URL and return to main app
-			window.history.replaceState({}, document.title, window.location.pathname);
-			onComplete();
-		}
-	}, [authCompleted, isAuthenticated, onComplete]);
-
-	const handleRetry = () => {
-		// Clean up URL and return to main app
-		window.history.replaceState({}, document.title, window.location.pathname);
-		onComplete();
-	};
-
-	const handleCloseWindow = () => {
-		if (Platform.isDesktop()) {
-			window.close();
-		} else {
-			handleRetry();
-		}
-	};
-
-	if (isProcessing) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<Card className="w-full max-w-md">
-					<CardHeader className="text-center">
-						<CardTitle>Processing Authentication</CardTitle>
-					</CardHeader>
-					<CardContent className="text-center">
-						<div className="mb-4">
-							<div className="mx-auto h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
-						</div>
-						<p className="text-muted-foreground">
-							Please wait while we complete your sign-in...
-						</p>
-					</CardContent>
-				</Card>
-			</div>
-		);
-	}
+		processOAuth();
+	}, [oauthData, onComplete]);
 
 	if (error) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
-				<Card className="w-full max-w-md">
-					<CardHeader className="text-center">
-						<CardTitle className="text-red-600">
-							Authentication Failed
-						</CardTitle>
-					</CardHeader>
-					<CardContent className="space-y-4 text-center">
-						<div className="rounded-lg bg-red-50 p-4 dark:bg-red-900/20">
-							<p className="text-red-800 text-sm dark:text-red-200">{error}</p>
-						</div>
-
-						<div className="flex gap-2">
-							<Button onClick={handleRetry} className="flex-1">
-								Back to Sign In
-							</Button>
-
-							{Platform.isDesktop() && (
-								<Button
-									variant="outline"
-									onClick={handleCloseWindow}
-									className="flex-1"
-								>
-									Close Window
-								</Button>
-							)}
-						</div>
-					</CardContent>
-				</Card>
+				<div className="text-center">
+					<h2 className="mb-2 font-semibold text-lg text-red-500">
+						Authentication Failed
+					</h2>
+					<p className="mb-4 text-muted-foreground">{error}</p>
+					<button
+						type="button"
+						onClick={onComplete}
+						className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+					>
+						Try Again
+					</button>
+				</div>
 			</div>
 		);
 	}
 
-	// Success state (mainly for web)
 	return (
 		<div className="flex min-h-screen items-center justify-center">
-			<Card className="w-full max-w-md">
-				<CardHeader className="text-center">
-					<CardTitle className="text-green-600">
-						Authentication Successful!
-					</CardTitle>
-				</CardHeader>
-				<CardContent className="space-y-4 text-center">
-					<div className="rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
-						<p className="text-green-800 text-sm dark:text-green-200">
-							You have been successfully signed in.
-							{Platform.isDesktop()
-								? " You can close this window."
-								: " Redirecting..."}
-						</p>
-					</div>
-
-					{Platform.isDesktop() ? (
-						<Button onClick={handleCloseWindow} className="w-full">
-							Close Window
-						</Button>
-					) : (
-						<Button onClick={onComplete} className="w-full">
-							Continue to App
-						</Button>
-					)}
-				</CardContent>
-			</Card>
+			<div className="text-center">
+				<h2 className="mb-2 font-semibold text-lg">Completing sign-in...</h2>
+				<p className="mb-4 text-muted-foreground">
+					{isProcessing
+						? "Finalizing authentication with Convex Auth..."
+						: "Authentication complete!"}
+				</p>
+				<p className="mb-4 text-muted-foreground text-sm">
+					Please wait while we complete your sign-in process.
+				</p>
+				<div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-blue-500 border-t-transparent"></div>
+			</div>
 		</div>
 	);
 }

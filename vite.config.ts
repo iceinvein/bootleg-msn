@@ -46,10 +46,35 @@ window.addEventListener('message', async (message) => {
 		alias: {
 			"@": path.resolve(__dirname, "./src"),
 			"@convex": path.resolve(__dirname, "./convex"),
+			// Explicit alias for Tauri API
+			"@tauri-apps/api": path.resolve(
+				__dirname,
+				"node_modules/@tauri-apps/api"
+			),
+			"@tauri-apps/plugin-shell": path.resolve(
+				__dirname,
+				"node_modules/@tauri-apps/plugin-shell"
+			),
+			"@tauri-apps/plugin-store": path.resolve(
+				__dirname,
+				"node_modules/@tauri-apps/plugin-store"
+			),
 		},
+	},
+	optimizeDeps: {
+		include: ["@tauri-apps/api", "@tauri-apps/plugin-shell", "@tauri-apps/plugin-store"],
 	},
 	define: {
 		"import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
 		"import.meta.env.VITE_BUILD_TIMESTAMP": JSON.stringify(Date.now().toString()),
+	},
+	build: {
+		target: process.env.TAURI_PLATFORM == "windows" ? "chrome105" : "safari13",
+		// don't minify in debug mode
+		minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
+		sourcemap: !!process.env.TAURI_DEBUG,
+		rollupOptions: {
+			external: [], // ensure nothing is wrongly externalized
+		},
 	},
 };});

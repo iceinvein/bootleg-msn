@@ -11,7 +11,7 @@ const APP_VERSION = import.meta.env.PACKAGE_VERSION || "0.1.0"; // Default to pa
 const APP_TIMESTAMP = import.meta.env.DEV
 	? 1754544000000 // Fixed timestamp for development (prevents constant updates)
 	: import.meta.env.VITE_BUILD_TIMESTAMP
-		? parseInt(import.meta.env.VITE_BUILD_TIMESTAMP)
+		? Number.parseInt(import.meta.env.VITE_BUILD_TIMESTAMP, 10)
 		: Date.now();
 
 // Add 'v' prefix to match database format

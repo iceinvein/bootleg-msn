@@ -67,6 +67,13 @@
       "endpoints": [],
       "dialog": true,
       "pubkey": ""
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": [
+          "msn-messenger"
+        ]
+      }
     }
   }
 }

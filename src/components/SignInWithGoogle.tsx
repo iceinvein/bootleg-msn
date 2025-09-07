@@ -1,26 +1,19 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { GoogleLogo } from "@/components/GoogleLogo";
 import { Button } from "@/components/ui/button";
-import { showOAuthInstructions, signInWithProvider } from "@/services/oauth";
-import { Platform } from "@/utils/platform";
+import { useOAuth } from "@/hooks/useOAuth";
 
 export function SignInWithGoogle() {
-	const { signIn } = useAuthActions();
+	const { loginWithGoogle } = useOAuth();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleGoogleSignIn = async () => {
 		setIsLoading(true);
 
 		try {
-			// Show instructions for system browser OAuth
-			if (Platform.supportsSystemBrowser()) {
-				showOAuthInstructions("google");
-			}
-
-			await signInWithProvider("google", signIn);
+			await loginWithGoogle();
 		} catch {
-			// Error handling is done in OAuthService
+			// Error handling is done in useOAuth hook
 		} finally {
 			setIsLoading(false);
 		}

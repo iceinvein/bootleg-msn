@@ -4,7 +4,7 @@ import { Button } from "./ui/button";
 
 const APP_VERSION = import.meta.env.PACKAGE_VERSION || "0.0.0";
 const APP_TIMESTAMP = import.meta.env.VITE_BUILD_TIMESTAMP
-	? parseInt(import.meta.env.VITE_BUILD_TIMESTAMP)
+	? Number.parseInt(import.meta.env.VITE_BUILD_TIMESTAMP, 10)
 	: Date.now();
 const APP_VERSION_WITH_PREFIX = APP_VERSION.startsWith("v")
 	? APP_VERSION

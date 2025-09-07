@@ -1,26 +1,19 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { AppleLogo } from "@/components/AppleLogo";
 import { Button } from "@/components/ui/button";
-import { showOAuthInstructions, signInWithProvider } from "@/services/oauth";
-import { Platform } from "@/utils/platform";
+import { useOAuth } from "@/hooks/useOAuth";
 
 export function SignInWithApple() {
-	const { signIn } = useAuthActions();
+	const { loginWithApple } = useOAuth();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleAppleSignIn = async () => {
 		setIsLoading(true);
 
 		try {
-			// Show instructions for system browser OAuth
-			if (Platform.supportsSystemBrowser()) {
-				showOAuthInstructions("apple");
-			}
-
-			await signInWithProvider("apple", signIn);
+			await loginWithApple();
 		} catch {
-			// Error handling is done in OAuthService
+			// Error handling is done in useOAuth hook
 		} finally {
 			setIsLoading(false);
 		}

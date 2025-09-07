@@ -1,26 +1,19 @@
-import { useAuthActions } from "@convex-dev/auth/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { showOAuthInstructions, signInWithProvider } from "@/services/oauth";
-import { Platform } from "@/utils/platform";
+import { useOAuth } from "@/hooks/useOAuth";
 import { GitHubLogo } from "./GitHubLogo";
 
 export function SignInWithGitHub() {
-	const { signIn } = useAuthActions();
+	const { loginWithGitHub } = useOAuth();
 	const [isLoading, setIsLoading] = useState(false);
 
 	const handleGitHubSignIn = async () => {
 		setIsLoading(true);
 
 		try {
-			// Show instructions for system browser OAuth
-			if (Platform.supportsSystemBrowser()) {
-				showOAuthInstructions("github");
-			}
-
-			await signInWithProvider("github", signIn);
+			await loginWithGitHub();
 		} catch {
-			// Error handling is done in OAuthService
+			// Error handling is done in useOAuth hook
 		} finally {
 			setIsLoading(false);
 		}

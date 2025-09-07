@@ -12,7 +12,8 @@
 			"convex/**/*",
 			"!src/components/ui/**/*",
 			"!convex/_generated/**/*",
-			"!**/*.test.ts"
+			"!**/*.test.ts",
+			"!src/index.css"
 		]
 	},
 	"formatter": {
@@ -87,6 +88,10 @@
 				},
 				"noUnusedImports": {
 					"level": "error",
+					"options": {}
+				},
+				"useUniqueElementIds": {
+					"level": "off",
 					"options": {}
 				}
 			},

@@ -335,7 +335,9 @@ export class TauriNotificationService {
 	private emit(event: string, data: EventData): void {
 		const listeners = this.eventListeners.get(event);
 		if (listeners) {
-			listeners.forEach((callback) => callback(data));
+			listeners.forEach((callback) => {
+				callback(data);
+			});
 		}
 	}
 

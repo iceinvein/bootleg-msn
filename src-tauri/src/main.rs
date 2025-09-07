@@ -197,24 +197,6 @@ async fn load_window_state(
     }
 }
 
-#[tauri::command]
-async fn handle_deep_links(app_handle: AppHandle, url: String) -> Result<(), String> {
-    // Parse deep link URLs like msn://chat/user-id or msn://add-contact/email
-    if url.starts_with("msn://") {
-        let path = url.strip_prefix("msn://").unwrap_or("");
-
-        if path.starts_with("chat/") {
-            let chat_id = path.strip_prefix("chat/").unwrap_or("");
-            if !chat_id.is_empty() {
-                create_chat_window(app_handle, chat_id.to_string(), "Contact".to_string()).await?;
-            }
-        }
-        // Add more deep link handlers as needed
-    }
-
-    Ok(())
-}
-
 // Notification management commands
 #[tauri::command]
 async fn request_notification_permission(app_handle: AppHandle) -> Result<String, String> {
@@ -476,7 +458,8 @@ fn main() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_opener::init())
-        .plugin(tauri_plugin_dialog::init());
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_deep_link::init());
 
     // Add updater plugin only on desktop platforms (not mobile)
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
@@ -493,7 +476,6 @@ fn main() {
             update_unread_count,
             save_window_state,
             load_window_state,
-            handle_deep_links,
             request_notification_permission,
             check_notification_permission,
             show_notification,

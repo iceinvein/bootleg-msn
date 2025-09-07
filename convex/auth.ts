@@ -1,16 +1,80 @@
 import Apple from "@auth/core/providers/apple";
 import Github from "@auth/core/providers/github";
 import Google from "@auth/core/providers/google";
+import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { action, mutation, query } from "./_generated/server";
+
+/**
+ * Custom ConvexCredentials provider for GitHub Desktop OAuth
+ * This provider validates GitHub access tokens and creates Convex Auth sessions
+ * Used after OAuth code exchange to complete the authentication flow
+ */
+const GitHubDesktop = ConvexCredentials({
+	id: "github-desktop",
+	authorize: async (credentials, ctx) => {
+		// Validate required credentials from the OAuth flow
+		if (!credentials.githubId || !credentials.accessToken) {
+			throw new Error("Missing GitHub credentials");
+		}
+
+		// Verify the GitHub access token by fetching user data
+		const userResponse = await fetch("https://api.github.com/user", {
+			headers: {
+				Authorization: `Bearer ${credentials.accessToken}`,
+				Accept: "application/vnd.github.v3+json",
+			},
+		});
+
+		if (!userResponse.ok) {
+			throw new Error("Invalid GitHub access token");
+		}
+
+		const userData = await userResponse.json();
+
+		// Get user's primary email (may be private)
+		const emailResponse = await fetch("https://api.github.com/user/emails", {
+			headers: {
+				Authorization: `Bearer ${credentials.accessToken}`,
+				Accept: "application/vnd.github.v3+json",
+			},
+		});
+
+		const emailData = await emailResponse.json();
+		const primaryEmail =
+			emailData.find((email: any) => email.primary)?.email || userData.email;
+
+		// Create or link the user account using Convex Auth's createAccount
+		const { createAccount } = await import("@convex-dev/auth/server");
+
+		const result = await createAccount(ctx, {
+			provider: "github-desktop",
+			account: {
+				id: userData.id.toString(),
+			},
+			profile: {
+				id: userData.id.toString(),
+				name: userData.name,
+				email: primaryEmail,
+				image: userData.avatar_url,
+			},
+		});
+
+		return { userId: result.user._id };
+	},
+});
 
 export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 	providers: [
 		Password,
 		Google,
-		Github,
+		Github({
+			clientId: process.env.AUTH_GITHUB_DESKTOP_ID,
+			clientSecret: process.env.AUTH_GITHUB_DESKTOP_SECRET,
+		}),
+		GitHubDesktop,
 		Apple({
 			profile: (appleInfo) => {
 				const name = appleInfo.user
@@ -25,6 +89,30 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 		}),
 	],
 	callbacks: {
+		async redirect({ redirectTo }) {
+			// Allow deep link redirects for mobile/desktop apps
+			if (redirectTo.startsWith("msn-messenger://")) {
+				return redirectTo;
+			}
+
+			// Default behavior for web - return relative paths as-is
+			if (redirectTo.startsWith("/")) {
+				return redirectTo;
+			}
+			// For absolute URLs, validate they're from the same origin
+			try {
+				const urlObj = new URL(redirectTo);
+				const siteUrl = process.env.SITE_URL || "http://localhost:5173";
+				const siteOrigin = new URL(siteUrl).origin;
+				if (urlObj.origin === siteOrigin) {
+					return redirectTo;
+				}
+			} catch {
+				// Invalid URL, fall back to default
+			}
+			// Default fallback
+			return "/";
+		},
 		async createOrUpdateUser(ctx, args) {
 			// Define proper type for user updates
 			type UserUpdates = {
@@ -229,5 +317,126 @@ export const getUserAuthMethods = query({
 	},
 });
 
-// OAuth URL generation and callback handling is now managed by Convex Auth automatically
-// The built-in providers handle redirects to: https://your-deployment.convex.site/api/auth/callback/{provider}
+/**
+ * Get OAuth URL for system browser authentication
+ * This is the query referenced in the guide: auth:getAuthUrl
+ */
+export const getAuthUrl = query({
+	args: { provider: v.string() },
+	handler: async (_ctx, { provider }) => {
+		// For desktop/mobile, we need to use direct GitHub OAuth with deep link
+		// because Convex Auth's OAuth flow doesn't support custom redirect URIs properly
+
+		if (provider === "github") {
+			const githubClientId = process.env.AUTH_GITHUB_DESKTOP_ID;
+			if (!githubClientId) {
+				throw new Error("AUTH_GITHUB_DESKTOP_ID not configured");
+			}
+
+			const redirectUri = "msn-messenger://auth";
+			const scope = "user:email";
+			const state = Math.random().toString(36).substring(7); // Simple state for CSRF protection
+
+			const oauthUrl = `https://github.com/login/oauth/authorize?client_id=${githubClientId}&redirect_uri=${encodeURIComponent(redirectUri)}&scope=${scope}&state=${state}`;
+
+			return oauthUrl;
+		}
+
+		throw new Error(`Provider ${provider} not supported yet`);
+	},
+});
+
+/**
+ * Exchange OAuth code for GitHub access token and user data
+ * This is called after the deep link callback with the OAuth code
+ * Returns user data and credentials for ConvexCredentials provider
+ */
+export const exchangeOAuthCode = action({
+	args: {
+		provider: v.string(),
+		code: v.string(),
+		state: v.optional(v.string()),
+	},
+	handler: async (_ctx, { provider, code }): Promise<any> => {
+		if (provider === "github") {
+			try {
+				// Exchange code for access token
+				const clientId = process.env.AUTH_GITHUB_DESKTOP_ID;
+				const clientSecret = process.env.AUTH_GITHUB_DESKTOP_SECRET;
+
+				if (!clientId || !clientSecret) {
+					throw new Error("GitHub OAuth credentials not configured");
+				}
+
+				// Exchange code for access token
+				const tokenResponse = await fetch(
+					"https://github.com/login/oauth/access_token",
+					{
+						method: "POST",
+						headers: {
+							Accept: "application/json",
+							"Content-Type": "application/x-www-form-urlencoded",
+						},
+						body: new URLSearchParams({
+							client_id: clientId,
+							client_secret: clientSecret,
+							code: code,
+						}),
+					},
+				);
+
+				const tokenData = await tokenResponse.json();
+
+				if (tokenData.error) {
+					throw new Error(`GitHub OAuth error: ${tokenData.error_description}`);
+				}
+
+				// Get user info from GitHub
+				const userResponse = await fetch("https://api.github.com/user", {
+					headers: {
+						Authorization: `Bearer ${tokenData.access_token}`,
+						Accept: "application/vnd.github.v3+json",
+					},
+				});
+
+				const userData = await userResponse.json();
+
+				// Get user email (might be private)
+				const emailResponse = await fetch(
+					"https://api.github.com/user/emails",
+					{
+						headers: {
+							Authorization: `Bearer ${tokenData.access_token}`,
+							Accept: "application/vnd.github.v3+json",
+						},
+					},
+				);
+
+				const emailData = await emailResponse.json();
+				const primaryEmail =
+					emailData.find((email: any) => email.primary)?.email ||
+					userData.email;
+
+				// Return the user data and access token
+				// The frontend will use signIn("github-desktop", { githubId, accessToken })
+				return {
+					success: true,
+					user: {
+						id: userData.id,
+						login: userData.login,
+						name: userData.name,
+						email: primaryEmail,
+						avatar_url: userData.avatar_url,
+					},
+					githubId: userData.id.toString(),
+					accessToken: tokenData.access_token,
+				};
+			} catch (error) {
+				console.error("OAuth code exchange failed:", error);
+				throw new Error(`OAuth code exchange failed: ${error}`);
+			}
+		}
+
+		throw new Error(`Provider ${provider} not supported yet`);
+	},
+});
