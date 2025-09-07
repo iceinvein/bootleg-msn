@@ -71,8 +71,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
 		Password,
 		Google,
 		Github({
-			clientId: process.env.AUTH_GITHUB_DESKTOP_ID,
-			clientSecret: process.env.AUTH_GITHUB_DESKTOP_SECRET,
+			clientId: process.env.AUTH_GITHUB_ID,
+			clientSecret: process.env.AUTH_GITHUB_SECRET,
 		}),
 		GitHubDesktop,
 		Apple({
