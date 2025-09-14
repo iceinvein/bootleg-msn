@@ -8,10 +8,10 @@ import { useCallback, useState } from "react";
 import { EmojiPicker } from "@/components/EmojiPicker";
 import { Button } from "@/components/ui/button";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+	ResponsivePopover,
+	ResponsivePopoverContent,
+	ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { cn } from "@/lib/utils";
 
 // End-to-end type safe reaction type
@@ -98,14 +98,19 @@ export function ReactionPicker({
 	}
 
 	return (
-		<Popover open={isOpen} onOpenChange={handleOpenChange}>
-			<PopoverTrigger asChild disabled={disabled} className={className}>
+		<ResponsivePopover open={isOpen} onOpenChange={handleOpenChange}>
+			<ResponsivePopoverTrigger
+				asChild
+				disabled={disabled}
+				className={className}
+			>
 				{children}
-			</PopoverTrigger>
-			<PopoverContent
+			</ResponsivePopoverTrigger>
+			<ResponsivePopoverContent
 				className="w-auto rounded-2xl border-2 border-border p-2 shadow-xl"
 				align="center"
 				sideOffset={8}
+				title="React to message"
 			>
 				<div className="flex items-center gap-1">
 					{/* Common reactions */}
@@ -167,7 +172,7 @@ export function ReactionPicker({
 						</p>
 					</div>
 				)}
-			</PopoverContent>
-		</Popover>
+			</ResponsivePopoverContent>
+		</ResponsivePopover>
 	);
 }

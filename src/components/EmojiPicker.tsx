@@ -5,10 +5,10 @@ import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-	Popover,
-	PopoverContent,
-	PopoverTrigger,
-} from "@/components/ui/popover";
+	ResponsivePopover,
+	ResponsivePopoverContent,
+	ResponsivePopoverTrigger,
+} from "@/components/ui/responsive-popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
@@ -305,14 +305,15 @@ export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
 	};
 
 	return (
-		<Popover open={isOpen} onOpenChange={setIsOpen}>
-			<PopoverTrigger asChild>{children}</PopoverTrigger>
-			<PopoverContent
-				className="w-80 rounded-2xl border-2 border-gray-200 p-0 shadow-xl"
+		<ResponsivePopover open={isOpen} onOpenChange={setIsOpen}>
+			<ResponsivePopoverTrigger asChild>{children}</ResponsivePopoverTrigger>
+			<ResponsivePopoverContent
+				className="w-80 rounded-2xl border-2 border-border p-0 shadow-xl md:w-80"
 				align="end"
 				sideOffset={8}
+				title="Choose an emoji"
 			>
-				<div className="rounded-t-2xl p-3 text-accent-foreground">
+				<div className="p-3 text-accent-foreground md:hidden">
 					<h3 className="font-semibold text-sm">Choose an emoji</h3>
 				</div>
 
@@ -330,13 +331,13 @@ export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
 
 					{Object.entries(emojiCategories).map(([key, category]) => (
 						<TabsContent key={key} value={key} className="mt-0">
-							<ScrollArea className="h-64 p-3">
-								<div className="grid grid-cols-8 gap-1">
+							<ScrollArea className="h-64 p-3 md:h-64">
+								<div className="grid grid-cols-8 gap-1 md:grid-cols-8">
 									{category.emojis.map((emoji) => (
 										<Button
 											key={`${key}-${emoji}`}
 											variant="ghost"
-											className="h-10 w-10 cursor-pointer rounded-lg p-0 text-lg transition-all duration-150 hover:scale-110"
+											className="h-10 w-10 cursor-pointer rounded-lg p-0 text-lg transition-all duration-150 hover:scale-110 md:h-10 md:w-10"
 											onClick={() => handleEmojiClick(emoji)}
 										>
 											{emoji}
@@ -349,11 +350,11 @@ export function EmojiPicker({ onEmojiSelect, children }: EmojiPickerProps) {
 				</Tabs>
 
 				<div className="rounded-b-2xl border-t p-3">
-					<p className="text-center text-gray-500 text-xs">
+					<p className="text-center text-muted-foreground text-xs">
 						Click an emoji to add it to your message
 					</p>
 				</div>
-			</PopoverContent>
-		</Popover>
+			</ResponsivePopoverContent>
+		</ResponsivePopover>
 	);
 }

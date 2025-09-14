@@ -38,7 +38,7 @@ const reactionEmojis: Record<ReactionType, string> = {
 	heart: "❤️",
 	laugh: "😂",
 	wow: "😮",
-	sad: "�",
+	sad: "😢",
 	angry: "😡",
 	custom: "", // Will use customEmoji instead
 };

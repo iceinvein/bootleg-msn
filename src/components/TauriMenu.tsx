@@ -10,12 +10,12 @@ import {
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuSeparator,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+	ResponsiveDropdownMenu,
+	ResponsiveDropdownMenuContent,
+	ResponsiveDropdownMenuItem,
+	ResponsiveDropdownMenuSeparator,
+	ResponsiveDropdownMenuTrigger,
+} from "@/components/ui/responsive-dropdown-menu";
 import { useChatWindows, useSystemTray, useTauri } from "@/hooks/useTauri";
 
 type TauriMenuProps = {
@@ -64,8 +64,8 @@ export function TauriMenu({
 
 	return (
 		<div className="tauri-menu">
-			<DropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
-				<DropdownMenuTrigger asChild>
+			<ResponsiveDropdownMenu open={isMenuOpen} onOpenChange={setIsMenuOpen}>
+				<ResponsiveDropdownMenuTrigger asChild>
 					<Button
 						variant="ghost"
 						size="sm"
@@ -74,44 +74,48 @@ export function TauriMenu({
 					>
 						<Menu className="h-4 w-4" />
 					</Button>
-				</DropdownMenuTrigger>
-				<DropdownMenuContent align="start" className="w-56">
-					<DropdownMenuItem
+				</ResponsiveDropdownMenuTrigger>
+				<ResponsiveDropdownMenuContent
+					align="start"
+					className="w-56"
+					title="Application Menu"
+				>
+					<ResponsiveDropdownMenuItem
 						onClick={() => handleMenuAction(onNewChat || (() => {}))}
 					>
 						<MessageSquare className="mr-2 h-4 w-4" />
 						New Chat
-					</DropdownMenuItem>
+					</ResponsiveDropdownMenuItem>
 
-					<DropdownMenuItem onClick={handleNewChatWindow}>
+					<ResponsiveDropdownMenuItem onClick={handleNewChatWindow}>
 						<ExternalLink className="mr-2 h-4 w-4" />
 						New Chat Window
-					</DropdownMenuItem>
+					</ResponsiveDropdownMenuItem>
 
-					<DropdownMenuSeparator />
+					<ResponsiveDropdownMenuSeparator />
 
-					<DropdownMenuItem
+					<ResponsiveDropdownMenuItem
 						onClick={() => handleMenuAction(onOpenContacts || (() => {}))}
 					>
 						<Users className="mr-2 h-4 w-4" />
 						Manage Contacts
-					</DropdownMenuItem>
+					</ResponsiveDropdownMenuItem>
 
-					<DropdownMenuItem
+					<ResponsiveDropdownMenuItem
 						onClick={() => handleMenuAction(onOpenSettings || (() => {}))}
 					>
 						<Settings className="mr-2 h-4 w-4" />
 						Settings
-					</DropdownMenuItem>
+					</ResponsiveDropdownMenuItem>
 
-					<DropdownMenuSeparator />
+					<ResponsiveDropdownMenuSeparator />
 
-					<DropdownMenuItem onClick={handleMinimizeToTray}>
+					<ResponsiveDropdownMenuItem onClick={handleMinimizeToTray}>
 						<Minimize2 className="mr-2 h-4 w-4" />
 						Minimize to Tray
-					</DropdownMenuItem>
-				</DropdownMenuContent>
-			</DropdownMenu>
+					</ResponsiveDropdownMenuItem>
+				</ResponsiveDropdownMenuContent>
+			</ResponsiveDropdownMenu>
 		</div>
 	);
 }

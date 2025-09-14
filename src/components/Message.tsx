@@ -1,29 +1,17 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import {
-	Check,
-	Edit3,
-	MoreHorizontal,
-	SmilePlus,
-	Trash2,
-	User,
-	X,
-} from "lucide-react";
+import { Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	DropdownMenu,
-	DropdownMenuContent,
-	DropdownMenuItem,
-	DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { MessageReactions } from "./MessageReactions";
-import { ReactionPicker, type ReactionType } from "./ReactionPicker";
+import { QuickMessageActions } from "./QuickMessageActions";
+import type { ReactionType } from "./ReactionPicker";
 
 interface MessageProps {
 	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
@@ -31,6 +19,7 @@ interface MessageProps {
 
 export function Message({ message }: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
+	const isMobile = useMediaQuery("(max-width: 768px)");
 
 	// For now, use direct message reactions for all messages since unified messages uses single table
 	// TODO: Refactor to handle group messages properly when system is made consistent
@@ -41,12 +30,16 @@ export function Message({ message }: MessageProps) {
 	const addReaction = useMutation(api.reactions.addMessageReaction);
 	const removeReaction = useMutation(api.reactions.removeMessageReaction);
 
-	const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
 	const [isReactionLoading, setIsReactionLoading] = useState(false);
+	const [isLongPressOpen, setIsLongPressOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const ownsMessage = message.senderId === loggedInUser?._id;
+
+	// Long press handling for mobile
+	const longPressTimer = useRef<NodeJS.Timeout | null>(null);
+	const isLongPressing = useRef(false);
 
 	useEffect(() => {
 		if (isEditing && inputRef.current) {
@@ -54,6 +47,38 @@ export function Message({ message }: MessageProps) {
 			inputRef.current.select();
 		}
 	}, [isEditing]);
+
+	// Long press handlers for mobile
+	const handleLongPressStart = () => {
+		if (!isMobile) return;
+
+		isLongPressing.current = false;
+		longPressTimer.current = setTimeout(() => {
+			isLongPressing.current = true;
+			setIsLongPressOpen(true);
+		}, 500); // 500ms long press threshold
+	};
+
+	const handleLongPressEnd = () => {
+		if (longPressTimer.current) {
+			clearTimeout(longPressTimer.current);
+			longPressTimer.current = null;
+		}
+	};
+
+	const handleLongPressCancel = () => {
+		handleLongPressEnd();
+		isLongPressing.current = false;
+	};
+
+	// Cleanup timer on unmount
+	useEffect(() => {
+		return () => {
+			if (longPressTimer.current) {
+				clearTimeout(longPressTimer.current);
+			}
+		};
+	}, []);
 
 	const handleEdit = () => {
 		setEditContent(message.content);
@@ -186,6 +211,13 @@ export function Message({ message }: MessageProps) {
 										? "msn-gradient text-white shadow-lg hover:shadow-xl"
 										: "border border-border bg-muted/80 text-foreground hover:bg-muted",
 								)}
+								// Long press handlers for mobile
+								onTouchStart={handleLongPressStart}
+								onTouchEnd={handleLongPressEnd}
+								onTouchCancel={handleLongPressCancel}
+								onMouseDown={handleLongPressStart}
+								onMouseUp={handleLongPressEnd}
+								onMouseLeave={handleLongPressCancel}
 							>
 								<p className="break-words text-sm md:text-base">
 									{message.content}
@@ -196,110 +228,109 @@ export function Message({ message }: MessageProps) {
 							</div>
 						)}
 
-						{/* Message actions - show for all messages when hovered */}
+						{/* Message actions - responsive: hover on desktop, tap on mobile */}
 						{!isEditing && (
-							<div
-								className={cn(
-									"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border border-border bg-background/90 p-1 shadow-lg backdrop-blur-md transition-all duration-200",
-									ownsMessage ? "right-0" : "left-0",
-									"pointer-events-none scale-90 opacity-0 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100",
-									isDropdownOpen && "pointer-events-auto scale-100 opacity-100",
-								)}
-							>
-								{/* Quick reaction buttons */}
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => handleQuickReaction("thumbs_up")}
-									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-								>
-									👍
-								</Button>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => handleQuickReaction("heart")}
-									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-								>
-									❤️
-								</Button>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => handleQuickReaction("laugh")}
-									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-								>
-									😂
-								</Button>
-								<Button
-									size="sm"
-									variant="ghost"
-									onClick={() => handleQuickReaction("wow")}
-									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-								>
-									😮
-								</Button>
-
-								{/* More reactions button */}
-								<ReactionPicker
-									onReactionSelect={handleReactionSelect}
-									isLoading={isReactionLoading}
-								>
-									<Button
-										size="sm"
-										variant="ghost"
-										className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
+							<>
+								{/* Desktop: Hover actions */}
+								{!isMobile && (
+									<div
+										className={cn(
+											"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border border-border bg-background/90 p-1 shadow-lg backdrop-blur-md transition-all duration-200",
+											ownsMessage ? "right-0" : "left-0",
+											"pointer-events-none scale-90 opacity-0 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100",
+										)}
 									>
-										<SmilePlus className="h-4 w-4" />
-									</Button>
-								</ReactionPicker>
+										{/* Quick reaction buttons */}
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => handleQuickReaction("thumbs_up")}
+											disabled={isReactionLoading}
+											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+										>
+											👍
+										</Button>
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => handleQuickReaction("heart")}
+											disabled={isReactionLoading}
+											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+										>
+											❤️
+										</Button>
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => handleQuickReaction("laugh")}
+											disabled={isReactionLoading}
+											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+										>
+											😂
+										</Button>
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => handleQuickReaction("wow")}
+											disabled={isReactionLoading}
+											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+										>
+											😮
+										</Button>
 
-								{/* Separator only if there are edit/delete actions for user messages */}
-								{ownsMessage && <div className="mx-1 h-6 w-px bg-border" />}
+										{/* Sad reaction button */}
+										<Button
+											size="sm"
+											variant="ghost"
+											onClick={() => handleQuickReaction("sad")}
+											disabled={isReactionLoading}
+											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+										>
+											😢
+										</Button>
 
-								{/* Edit Button (only for user messages) */}
-								{ownsMessage && (
-									<Button
-										size="sm"
-										variant="ghost"
-										onClick={handleEdit}
-										className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
-									>
-										<Edit3 className="h-4 w-4" />
-									</Button>
-								)}
+										{/* Separator only if there are edit/delete actions for user messages */}
+										{ownsMessage && <div className="mx-1 h-6 w-px bg-border" />}
 
-								{/* More Options (Dropdown for Delete - only for user messages) */}
-								{ownsMessage && (
-									<DropdownMenu onOpenChange={setIsDropdownOpen}>
-										<DropdownMenuTrigger asChild>
+										{/* Edit Button (only for user messages) */}
+										{ownsMessage && (
 											<Button
 												size="sm"
 												variant="ghost"
+												onClick={handleEdit}
 												className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
 											>
-												<MoreHorizontal className="h-4 w-4" />
+												<Edit3 className="h-4 w-4" />
 											</Button>
-										</DropdownMenuTrigger>
-										<DropdownMenuContent
-											align="end"
-											className="w-32 rounded-lg"
-										>
-											<DropdownMenuItem
+										)}
+
+										{/* Delete Button (only for user messages) */}
+										{ownsMessage && (
+											<Button
+												size="sm"
+												variant="ghost"
 												onClick={handleDelete}
-												className="text-destructive text-sm"
+												className="h-8 w-8 rounded-full p-0 text-destructive hover:bg-destructive/10"
 											>
-												<Trash2 className="mr-2 h-3 w-3" />
-												Delete
-											</DropdownMenuItem>
-										</DropdownMenuContent>
-									</DropdownMenu>
+												<Trash2 className="h-4 w-4" />
+											</Button>
+										)}
+									</div>
 								)}
-							</div>
+
+								{/* Mobile: Long press triggered drawer */}
+								{isMobile && (
+									<QuickMessageActions
+										ownsMessage={ownsMessage}
+										isReactionLoading={isReactionLoading}
+										onQuickReaction={handleQuickReaction}
+										onEdit={handleEdit}
+										onDelete={handleDelete}
+										open={isLongPressOpen}
+										onOpenChange={setIsLongPressOpen}
+									/>
+								)}
+							</>
 						)}
 					</div>
 					{/* Message reactions */}
