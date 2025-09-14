@@ -36,6 +36,7 @@ type ResponsiveDialogContentProps = {
 	className?: string;
 	glass?: boolean;
 	showCloseButton?: boolean;
+	animationType?: "scale" | "slideDown" | "fade";
 };
 
 type ResponsiveDialogHeaderProps = {
@@ -119,6 +120,7 @@ function ResponsiveDialogContent({
 	className,
 	glass,
 	showCloseButton,
+	animationType,
 }: ResponsiveDialogContentProps) {
 	const { isMobile } = React.useContext(ResponsiveDialogContext);
 
@@ -143,6 +145,7 @@ function ResponsiveDialogContent({
 			className={className}
 			glass={glass}
 			showCloseButton={showCloseButton}
+			animationType={animationType}
 		>
 			{children}
 		</DialogContent>

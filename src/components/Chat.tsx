@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
 	ArrowLeft,
 	Info,
@@ -18,6 +19,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 import { Message } from "./Message";
+import { fadeInUp, hoverScale, slideInRight, tapScale } from "./ui/animated";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -176,13 +178,11 @@ export function Chat() {
 	};
 
 	return (
-		<div
-			className={`flex flex-1 flex-col ${showChat ? "flex" : "hidden md:flex"}`}
-		>
+		<div className={`chat-container ${showChat ? "flex" : "hidden md:flex"}`}>
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
-					{/* Chat Header */}
-					<div className="mx-4 mt-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
+					{/* Chat Header - Fixed at top */}
+					<div className="chat-header mx-4 mt-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
 								{/* Back button for mobile */}
@@ -255,137 +255,152 @@ export function Chat() {
 						</div>
 					</div>
 
-					{/* Messages */}
-					<ScrollArea className="flex-1 p-3 md:p-4">
-						<div className="space-y-3 pt-12 md:space-y-4">
-							{(!messages || messages.length === 0) && (
-								<div className="py-8 text-center text-gray-500">
-									<MessageCircle className="mx-auto mb-2 h-8 w-8 text-gray-400 opacity-50 md:h-12 md:w-12 dark:text-gray-500" />
-									<p className="text-sm md:text-base">
-										Start a conversation with{" "}
-										{selectedChat.contact?.nickname ??
-											selectedChat.contact?.user?.name ??
-											selectedChat.contact?.user?.email ??
-											selectedChat.group?.name}
-									</p>
-								</div>
-							)}
-
-							{messages?.map((message) => (
-								<Message key={message._id} message={message} />
-							))}
-
-							{contactIsTyping && (
-								<div className="flex justify-start">
-									<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
-										<Avatar className="h-6 w-6 md:h-8 md:w-8">
-											<User className="h-6 w-6 md:h-8 md:w-8" />
-										</Avatar>
-										<div>
-											<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
-												<div className="flex space-x-1">
-													<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
-													<div
-														className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-														style={{ animationDelay: "0.1s" }}
-													/>
-													<div
-														className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-														style={{ animationDelay: "0.2s" }}
-													/>
-												</div>
-											</div>
-											<span className="text-gray-500 text-xs md:text-sm">
-												{selectedChat.contact?.nickname ??
-													selectedChat.contact?.user?.name ??
-													selectedChat.contact?.user?.email ??
-													"Unknown User"}{" "}
-												is typing...
-											</span>
-										</div>
+					{/* Messages - Scrollable middle section */}
+					<div className="chat-messages-container">
+						<ScrollArea className="h-full p-3 md:p-4">
+							<div className="space-y-3 md:space-y-4">
+								{(!messages || messages.length === 0) && (
+									<div className="py-8 text-center text-gray-500">
+										<MessageCircle className="mx-auto mb-2 h-8 w-8 text-gray-400 opacity-50 md:h-12 md:w-12 dark:text-gray-500" />
+										<p className="text-sm md:text-base">
+											Start a conversation with{" "}
+											{selectedChat.contact?.nickname ??
+												selectedChat.contact?.user?.name ??
+												selectedChat.contact?.user?.email ??
+												selectedChat.group?.name}
+										</p>
 									</div>
-								</div>
-							)}
-							{!!groupIsTyping?.length && (
-								<div className="flex justify-start">
-									<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
-										<Avatar className="h-6 w-6 md:h-8 md:w-8">
-											<User className="h-6 w-6 md:h-8 md:w-8" />
-										</Avatar>
-										<div>
-											<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
-												<div className="flex space-x-1">
-													<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
-													<div
-														className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-														style={{ animationDelay: "0.1s" }}
-													/>
-													<div
-														className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-														style={{ animationDelay: "0.2s" }}
-													/>
+								)}
+
+								{messages?.map((message) => (
+									<Message key={message._id} message={message} />
+								))}
+
+								{contactIsTyping && (
+									<div className="flex justify-start">
+										<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
+											<Avatar className="h-6 w-6 md:h-8 md:w-8">
+												<User className="h-6 w-6 md:h-8 md:w-8" />
+											</Avatar>
+											<div>
+												<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
+													<div className="flex space-x-1">
+														<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
+														<div
+															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+															style={{ animationDelay: "0.1s" }}
+														/>
+														<div
+															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+															style={{ animationDelay: "0.2s" }}
+														/>
+													</div>
 												</div>
 												<span className="text-gray-500 text-xs md:text-sm">
-													{groupIsTyping.map((indicator) => (
-														<span key={indicator._id}>
-															{indicator.user?.name ?? indicator.user?.email} is
-															typing...
-														</span>
-													))}
+													{selectedChat.contact?.nickname ??
+														selectedChat.contact?.user?.name ??
+														selectedChat.contact?.user?.email ??
+														"Unknown User"}{" "}
+													is typing...
 												</span>
 											</div>
 										</div>
 									</div>
-								</div>
-							)}
-							<div ref={messagesEndRef} />
-						</div>
-					</ScrollArea>
+								)}
+								{!!groupIsTyping?.length && (
+									<div className="flex justify-start">
+										<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
+											<Avatar className="h-6 w-6 md:h-8 md:w-8">
+												<User className="h-6 w-6 md:h-8 md:w-8" />
+											</Avatar>
+											<div>
+												<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
+													<div className="flex space-x-1">
+														<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
+														<div
+															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+															style={{ animationDelay: "0.1s" }}
+														/>
+														<div
+															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
+															style={{ animationDelay: "0.2s" }}
+														/>
+													</div>
+													<span className="text-gray-500 text-xs md:text-sm">
+														{groupIsTyping.map((indicator) => (
+															<span key={indicator._id}>
+																{indicator.user?.name ?? indicator.user?.email}{" "}
+																is typing...
+															</span>
+														))}
+													</span>
+												</div>
+											</div>
+										</div>
+									</div>
+								)}
+								<div ref={messagesEndRef} />
+							</div>
+						</ScrollArea>
+					</div>
 
-					{/* Message Input */}
-					<div className="mx-4 mb-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
-						<form
-							onSubmit={handleSendMessage}
-							className="flex items-center space-x-2"
+					{/* Message Input - Fixed at bottom */}
+					<div className="chat-input">
+						<motion.div
+							className="glass mx-4 mb-4 rounded-2xl p-3 md:p-4"
+							variants={fadeInUp}
+							initial="initial"
+							animate="animate"
 						>
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+							<form
+								onSubmit={handleSendMessage}
+								className="flex items-center space-x-2"
 							>
-								<Paperclip className="h-3 w-3 md:h-4 md:w-4" />
-							</Button>
-							<EmojiPicker onEmojiSelect={handleEmojiSelect}>
-								<Button
-									type="button"
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
-								>
-									<Smile className="h-3 w-3 md:h-4 md:w-4" />
-								</Button>
-							</EmojiPicker>
-							<Input
-								value={messageInput}
-								onChange={handleInputChange}
-								placeholder={`Message ${
-									selectedChat.contact?.nickname ??
-									selectedChat.contact?.user?.name ??
-									selectedChat.contact?.user?.email ??
-									selectedChat.group?.name ??
-									"Unknown User"
-								}...`}
-								className="h-9 flex-1 rounded-full border-input bg-background text-foreground text-sm focus:border-ring md:h-10 md:text-base"
-							/>
-							<Button
-								type="submit"
-								size="sm"
-								className="msn-gradient h-8 w-8 flex-shrink-0 rounded-full text-white hover:opacity-90 md:h-10 md:w-10"
-							>
-								<Send className="h-3 w-3 md:h-4 md:w-4" />
-							</Button>
-						</form>
+								<motion.div whileHover={hoverScale} whileTap={tapScale}>
+									<Button
+										type="button"
+										variant="ghost"
+										size="sm"
+										className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+									>
+										<Paperclip className="h-3 w-3 md:h-4 md:w-4" />
+									</Button>
+								</motion.div>
+								<EmojiPicker onEmojiSelect={handleEmojiSelect}>
+									<motion.div whileHover={hoverScale} whileTap={tapScale}>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+										>
+											<Smile className="h-3 w-3 md:h-4 md:w-4" />
+										</Button>
+									</motion.div>
+								</EmojiPicker>
+								<Input
+									value={messageInput}
+									onChange={handleInputChange}
+									placeholder={`Message ${
+										selectedChat.contact?.nickname ??
+										selectedChat.contact?.user?.name ??
+										selectedChat.contact?.user?.email ??
+										selectedChat.group?.name ??
+										"Unknown User"
+									}...`}
+									className="h-9 flex-1 rounded-full border-input bg-background text-foreground text-sm focus:border-ring md:h-10 md:text-base"
+								/>
+								<motion.div whileHover={hoverScale} whileTap={tapScale}>
+									<Button
+										type="submit"
+										size="sm"
+										className="msn-gradient h-8 w-8 flex-shrink-0 rounded-full text-white hover:opacity-90 md:h-10 md:w-10"
+									>
+										<Send className="h-3 w-3 md:h-4 md:w-4" />
+									</Button>
+								</motion.div>
+							</form>
+						</motion.div>
 					</div>
 				</>
 			) : (

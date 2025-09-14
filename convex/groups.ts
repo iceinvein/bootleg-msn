@@ -277,11 +277,18 @@ export const getUserGroups = query({
 						),
 				).length;
 
+				// Get the last message timestamp
+				const lastMessage = groupMessagesAfterJoin.sort(
+					(a, b) => b._creationTime - a._creationTime,
+				)[0];
+				const lastMessageTime = lastMessage?._creationTime;
+
 				return {
 					...group,
 					memberCount: memberCount.length,
 					unreadCount: userUnreadCount,
 					userRole: membership.role,
+					lastMessageTime,
 				};
 			}),
 		);

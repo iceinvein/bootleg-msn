@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import { motion } from "framer-motion";
 import { Search, User, Users } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
@@ -86,7 +87,10 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
 			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
-			<ResponsiveDialogContent className="max-h-[90vh] sm:max-w-2xl">
+			<ResponsiveDialogContent
+				className="max-h-[90vh] sm:max-w-2xl"
+				animationType="fade"
+			>
 				<ResponsiveDialogHeader>
 					<ResponsiveDialogTitle className="flex items-center space-x-2">
 						<Users className="h-5 w-5 text-primary" />
@@ -97,12 +101,20 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
 
-				<form
+				<motion.form
 					onSubmit={handleSubmit}
 					className="flex flex-1 flex-col space-y-6 overflow-hidden"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ duration: 0.2, ease: "easeOut" }}
 				>
 					{/* Group Info Section */}
-					<div className="space-y-4">
+					<motion.div
+						className="space-y-4"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ duration: 0.15, delay: 0.05, ease: "easeOut" }}
+					>
 						<div className="flex items-center space-x-4">
 							<div className="relative">
 								<Avatar className="h-16 w-16 border-2 border-gray-200">
@@ -154,10 +166,15 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 								</div>
 							</div>
 						</div>
-					</div>
+					</motion.div>
 
 					{/* Members Selection */}
-					<div className="flex min-h-0 flex-1 flex-col space-y-3">
+					<motion.div
+						className="flex min-h-0 flex-1 flex-col space-y-3"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ duration: 0.15, delay: 0.1, ease: "easeOut" }}
+					>
 						<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 							<Label className="font-semibold text-base text-gray-700 dark:text-gray-300">
 								Add Members ({selectedMembers.length} selected)
@@ -227,39 +244,48 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 								</div>
 							)}
 						</ScrollArea>
-					</div>
+					</motion.div>
 
 					<ResponsiveDialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-between">
-						<Button
-							type="button"
-							variant="outline"
-							onClick={handleReset}
-							className="w-full sm:w-auto"
+						<motion.div
+							className="w-full"
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							transition={{ duration: 0.15, delay: 0.15, ease: "easeOut" }}
 						>
-							Reset
-						</Button>
-						<div className="flex flex-col gap-2 sm:flex-row sm:space-x-2">
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => setIsOpen(false)}
-								disabled={isLoading}
+								onClick={handleReset}
 								className="w-full sm:w-auto"
 							>
-								Cancel
+								Reset
 							</Button>
-							<Button
-								type="submit"
-								className="msn-gradient w-full text-white hover:opacity-90 sm:w-auto"
-								disabled={
-									!groupName.trim() || selectedMembers.length === 0 || isLoading
-								}
-							>
-								Create Group ({selectedMembers.length})
-							</Button>
-						</div>
+							<div className="flex flex-col gap-2 sm:flex-row sm:space-x-2">
+								<Button
+									type="button"
+									variant="outline"
+									onClick={() => setIsOpen(false)}
+									disabled={isLoading}
+									className="w-full sm:w-auto"
+								>
+									Cancel
+								</Button>
+								<Button
+									type="submit"
+									className="msn-gradient w-full text-white hover:opacity-90 sm:w-auto"
+									disabled={
+										!groupName.trim() ||
+										selectedMembers.length === 0 ||
+										isLoading
+									}
+								>
+									Create Group ({selectedMembers.length})
+								</Button>
+							</div>
+						</motion.div>
 					</ResponsiveDialogFooter>
-				</form>
+				</motion.form>
 			</ResponsiveDialogContent>
 		</ResponsiveDialog>
 	);

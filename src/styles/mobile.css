@@ -38,7 +38,7 @@
 
 	/* Adjust message bubbles for mobile */
 	.message-bubble {
-		max-width: 85%;
+		max-width: 100%;
 	}
 
 	/* Mobile-friendly scrolling */

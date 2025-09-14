@@ -68,13 +68,16 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
 			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
-			<ResponsiveDialogContent className="max-h-[90vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
+			<ResponsiveDialogContent
+				className="max-h-[90vh] sm:max-w-2xl"
+				glass={true}
+			>
 				<ResponsiveDialogHeader>
-					<ResponsiveDialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
-						<Info className="h-5 w-5 text-blue-600" />
+					<ResponsiveDialogTitle className="flex items-center space-x-2">
+						<Info className="h-5 w-5 text-primary" />
 						<span>Group Info</span>
 					</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription className="text-gray-600 dark:text-gray-400">
+					<ResponsiveDialogDescription>
 						Manage group settings and members.
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
@@ -90,7 +93,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 					<TabsContent value="info" className="mt-4 space-y-6">
 						{/* Group Header */}
 						<div className="flex items-center space-x-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
-							<Avatar className="h-16 w-16 border-2 border-white shadow-md">
+							<Avatar className="h-16 w-16 border-2 border-background shadow-md">
 								<Users className="h-16 w-16" />
 							</Avatar>
 							<div className="flex-1">
@@ -101,7 +104,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 										// TODO: update group name
 									}}
 									placeholder="Group name"
-									className="rounded px-2 py-1 font-bold text-gray-900 text-xl hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700"
+									className="rounded px-2 py-1 font-bold text-foreground text-xl hover:bg-muted"
 									maxLength={50}
 								/>
 								{group?.description && (
@@ -111,11 +114,11 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 											// TODO: update group description
 										}}
 										placeholder="Add a description..."
-										className="mt-1 rounded px-2 py-1 text-gray-600 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700"
+										className="mt-1 rounded px-2 py-1 text-muted-foreground hover:bg-muted"
 										maxLength={200}
 									/>
 								)}
-								<div className="mt-2 flex items-center space-x-4 text-gray-500 text-sm dark:text-gray-400">
+								<div className="mt-2 flex items-center space-x-4 text-muted-foreground text-sm">
 									<span>{members?.length} members</span>
 									<span>•</span>
 									<span>{onlineMembers} online</span>
@@ -180,19 +183,19 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 								{members?.map((member) => (
 									<div
 										key={member._id}
-										className="flex items-center space-x-3 rounded-lg p-3 transition-colors hover:bg-gray-50 dark:hover:bg-gray-700"
+										className="flex items-center space-x-3 rounded-lg p-3 transition-colors hover:bg-muted/50"
 									>
 										<div className="relative">
 											<Avatar className="h-12 w-12">
 												<User className="h-8 w-8" />
 											</Avatar>
 											<div
-												className={`-bottom-1 -right-1 absolute h-4 w-4 rounded-full border-2 border-white ${getStatusColor(member.status)}`}
+												className={`-bottom-1 -right-1 absolute h-4 w-4 rounded-full border-2 border-background ${getStatusColor(member.status)}`}
 											/>
 										</div>
 										<div className="min-w-0 flex-1">
 											<div className="flex items-center space-x-2">
-												<p className="truncate font-medium text-gray-900 text-sm dark:text-gray-100">
+												<p className="truncate font-medium text-foreground text-sm">
 													{member.user?.name ??
 														member.user?.email ??
 														"Unknown User"}
@@ -212,7 +215,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 													</Badge>
 												)}
 											</div>
-											<p className="text-gray-500 text-xs dark:text-gray-400">
+											<p className="text-muted-foreground text-xs">
 												Joined {formatDate(member.joinedAt)}
 											</p>
 										</div>
@@ -236,7 +239,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 													onClick={() => {
 														// TODO: remove member
 													}}
-													className="border-red-300 text-red-600 text-xs hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+													className="border-destructive text-destructive text-xs hover:bg-destructive/10"
 												>
 													Remove
 												</Button>

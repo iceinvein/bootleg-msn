@@ -65,7 +65,10 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
 			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
-			<ResponsiveDialogContent className="sm:max-w-md">
+			<ResponsiveDialogContent
+				className="sm:max-w-md"
+				animationType="slideDown"
+			>
 				<ResponsiveDialogHeader>
 					<ResponsiveDialogTitle className="flex items-center space-x-2">
 						<UserPlus className="h-5 w-5 text-primary" />
@@ -118,21 +121,23 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 						/>
 					</div>
 					<ResponsiveDialogFooter>
-						<Button
-							type="button"
-							variant="outline"
-							onClick={() => setIsOpen(false)}
-							disabled={isLoading}
-						>
-							Cancel
-						</Button>
-						<Button
-							type="submit"
-							className="msn-gradient text-white hover:opacity-90"
-							disabled={isLoading}
-						>
-							Send Request
-						</Button>
+						<div className="flex w-full gap-2">
+							<Button
+								type="button"
+								variant="outline"
+								onClick={() => setIsOpen(false)}
+								disabled={isLoading}
+							>
+								Cancel
+							</Button>
+							<Button
+								type="submit"
+								className="msn-gradient text-white hover:opacity-90"
+								disabled={isLoading}
+							>
+								Send Request
+							</Button>
+						</div>
 					</ResponsiveDialogFooter>
 				</form>
 			</ResponsiveDialogContent>

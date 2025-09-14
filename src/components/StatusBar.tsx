@@ -4,36 +4,17 @@ import { Avatar, AvatarFallback, AvatarImage } from "@radix-ui/react-avatar";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import type { Infer } from "convex/values";
+
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import AddContactDialog from "./AddContactDialog";
 import ContactRequestsDialog from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
-
 import { SettingsDialog } from "./SettingsDialog";
 import { StatusMessage } from "./StatusMessage";
-
+import { StatusSelector } from "./StatusSelector";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-} from "./ui/select";
-
-const statusOptions = [
-	{ value: "online", label: "Online", color: "status-online", emoji: "🟢" },
-	{ value: "away", label: "Away", color: "status-away", emoji: "🟡" },
-	{ value: "busy", label: "Busy", color: "status-busy", emoji: "🔴" },
-	{
-		value: "invisible",
-		label: "Invisible",
-		color: "status-offline",
-		emoji: "⚫",
-	},
-] as const;
 
 // End-to-end type safe status type
 type StatusValue = Infer<typeof userStatusValidator>;
@@ -67,14 +48,12 @@ export function StatusBar({ user }: StatusBarProps) {
 		});
 	};
 
-	const currentStatusOption =
-		statusOptions.find((s) => s.value === currentStatus) || statusOptions[0];
 	const displayName = user.name ?? "You";
 	const totalRequestCount =
 		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
 
 	return (
-		<div className="border-border border-b bg-background/60 backdrop-blur-sm">
+		<div className="bg-background/60 backdrop-blur-sm">
 			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
 					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
@@ -146,22 +125,10 @@ export function StatusBar({ user }: StatusBarProps) {
 				</div>
 			</div>
 
-			<Select
-				onValueChange={handleStatusChange}
-				value={currentStatusOption.value}
-			>
-				<SelectTrigger className="w-full cursor-pointer rounded-none">
-					<SelectValue placeholder="Status" />
-				</SelectTrigger>
-				<SelectContent>
-					{statusOptions.map((status) => (
-						<SelectItem key={status.value} value={status.value}>
-							<span className="text-lg">{status.emoji}</span>
-							<span className="text-sm">{status.label}</span>
-						</SelectItem>
-					))}
-				</SelectContent>
-			</Select>
+			<StatusSelector
+				currentStatus={currentStatus}
+				onStatusChange={handleStatusChange}
+			/>
 		</div>
 	);
 }

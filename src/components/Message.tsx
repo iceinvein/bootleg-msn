@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
+import { AnimatePresence, motion } from "framer-motion";
 import { Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -12,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { MessageReactions } from "./MessageReactions";
 import { QuickMessageActions } from "./QuickMessageActions";
 import type { ReactionType } from "./ReactionPicker";
+import { fadeInUp, hoverScale, messageBubble, tapScale } from "./ui/animated";
 
 interface MessageProps {
 	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
@@ -156,19 +158,35 @@ export function Message({ message }: MessageProps) {
 	);
 
 	return (
-		<div
+		<motion.div
 			className={cn(
 				`flex w-full overflow-visible`,
 				ownsMessage ? "justify-end" : "justify-start",
 			)}
+			variants={messageBubble}
+			initial="initial"
+			animate="animate"
+			exit="exit"
+			layout
 		>
 			<div className="flex flex-col gap-1">
-				<span className="text-muted-foreground text-xs">
+				{/* Name row - positioned to align with avatar */}
+				<motion.span
+					className={cn(
+						"truncate text-muted-foreground text-xs",
+						ownsMessage ? "ml-8 text-right" : "ml-8 text-left",
+					)}
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					transition={{ delay: 0.1 }}
+				>
 					{message.sender?.name ?? message.sender?.email}
-				</span>
+				</motion.span>
+
+				{/* Message and Avatar row */}
 				<div
 					className={cn(
-						"relative flex max-w-[85%] items-center gap-2 space-x-2 overflow-visible md:max-w-xs lg:max-w-md",
+						"relative flex max-w-full items-center gap-2 space-x-2 overflow-visible",
 						ownsMessage && "flex-row-reverse",
 					)}
 				>
@@ -204,12 +222,12 @@ export function Message({ message }: MessageProps) {
 								</Button>
 							</div>
 						) : (
-							<div
+							<motion.div
 								className={cn(
-									`rounded-2xl px-3 py-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg md:px-4 md:py-2`,
+									`rounded-2xl px-3 py-2 transition-all duration-200 md:px-4 md:py-2`,
 									ownsMessage
-										? "msn-gradient text-white shadow-lg hover:shadow-xl"
-										: "border border-border bg-muted/80 text-foreground hover:bg-muted",
+										? "message-bubble-sent hover-lift"
+										: "message-bubble-received hover-lift",
 								)}
 								// Long press handlers for mobile
 								onTouchStart={handleLongPressStart}
@@ -218,14 +236,23 @@ export function Message({ message }: MessageProps) {
 								onMouseDown={handleLongPressStart}
 								onMouseUp={handleLongPressEnd}
 								onMouseLeave={handleLongPressCancel}
+								whileHover={hoverScale}
+								whileTap={tapScale}
 							>
 								<p className="break-words text-sm md:text-base">
 									{message.content}
 									{message.isEdited && (
-										<span className="ml-2 text-xs opacity-70">(edited)</span>
+										<motion.span
+											className="ml-2 text-xs opacity-70"
+											initial={{ opacity: 0, scale: 0.8 }}
+											animate={{ opacity: 0.7, scale: 1 }}
+											transition={{ delay: 0.2 }}
+										>
+											(edited)
+										</motion.span>
 									)}
 								</p>
-							</div>
+							</motion.div>
 						)}
 
 						{/* Message actions - responsive: hover on desktop, tap on mobile */}
@@ -351,6 +378,6 @@ export function Message({ message }: MessageProps) {
 					)}
 				</div>
 			</div>
-		</div>
+		</motion.div>
 	);
 }

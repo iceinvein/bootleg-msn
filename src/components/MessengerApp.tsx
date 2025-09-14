@@ -85,18 +85,18 @@ export function MessengerApp() {
 	}
 
 	return (
-		<div className="flex min-h-screen flex-col">
+		<div className="flex h-screen flex-col">
 			{/* Account linking notification */}
 			<AccountLinkingNotification />
 
-			<div className={cn("flex flex-1")}>
+			<div className={cn("flex flex-1 overflow-hidden")}>
 				{/* Sidebar - Full width on mobile when no chat is open */}
 				<div
 					className={cn(
 						"flex flex-col",
 						// On mobile: full width when no chat, hidden when chat is open
 						// On desktop: always show with normal width
-						"md:flex md:w-auto", // Always show on desktop with auto width
+						"md:flex md:w-auto", // Auto width on desktop
 						isChatOpen ? "hidden md:flex" : "flex w-full md:w-auto", // Full width on mobile when no chat
 					)}
 				>
@@ -111,7 +111,7 @@ export function MessengerApp() {
 				{/* Main Chat Area - Hidden on mobile when no chat is selected */}
 				<div
 					className={cn(
-						"flex-1",
+						"h-full flex-1",
 						// On mobile: hidden when no chat, shown when chat is open
 						// On desktop: always shown
 						"md:flex", // Always show on desktop
