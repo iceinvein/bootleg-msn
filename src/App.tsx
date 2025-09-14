@@ -2,14 +2,13 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useEffect, useState } from "react";
 import { CapacitorIntegration } from "./components/CapacitorIntegration";
-import { EnhancedSignInForm } from "./components/EnhancedSignInForm";
 import { MessengerApp } from "./components/MessengerApp";
 import { MobileProvider } from "./components/MobileProvider";
 import { OAuthCallback } from "./components/OAuthCallback";
+import { SignInForm } from "./components/SignInForm";
 import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
-// import { UpdateNotificationTest } from "./components/UpdateNotificationTest";
 import { Toaster } from "./components/ui/sonner";
 import { Platform } from "./utils/platform";
 
@@ -162,13 +161,12 @@ function App() {
 								</AuthLoading>
 
 								<Unauthenticated>
-									<EnhancedSignInForm />
+									<SignInForm />
 								</Unauthenticated>
 
 								<Authenticated>
 									<MessengerApp />
 									<UpdateNotification />
-									{/* {import.meta.env.DEV && <UpdateNotificationTest />} */}
 								</Authenticated>
 							</>
 						)}

@@ -22,7 +22,7 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-export function EnhancedSignInForm() {
+export function SignInForm() {
 	const { signIn } = useAuthActions();
 	const checkEmailVerification = useMutation(
 		api.auth.checkEmailVerificationForAuth,

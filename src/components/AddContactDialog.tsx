@@ -5,13 +5,13 @@ import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	ResponsiveDialog,
 	ResponsiveDialogContent,
 	ResponsiveDialogDescription,
+	ResponsiveDialogFooter,
 	ResponsiveDialogHeader,
 	ResponsiveDialogTitle,
 	ResponsiveDialogTrigger,
@@ -117,7 +117,7 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 							disabled={isLoading}
 						/>
 					</div>
-					<DialogFooter>
+					<ResponsiveDialogFooter>
 						<Button
 							type="button"
 							variant="outline"
@@ -133,7 +133,7 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 						>
 							Send Request
 						</Button>
-					</DialogFooter>
+					</ResponsiveDialogFooter>
 				</form>
 			</ResponsiveDialogContent>
 		</ResponsiveDialog>

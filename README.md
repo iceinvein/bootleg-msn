@@ -226,7 +226,7 @@ bootleg-msn/
 │   │   ├── GroupChatWindow.tsx # Group chat interface
 │   │   ├── ContactList.tsx    # Contact management
 │   │   ├── StatusBar.tsx      # User status bar
-│   │   ├── EnhancedSignInForm.tsx # Authentication form
+│   │   ├── SignInForm.tsx     # Authentication form
 │   │   ├── EmailVerificationPage.tsx # Email verification
 │   │   ├── SignUpForm.tsx     # User registration
 │   │   └── ui/               # shadcn/ui components

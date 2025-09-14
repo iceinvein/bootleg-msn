@@ -13,13 +13,13 @@ import {
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	ResponsiveDialog,
 	ResponsiveDialogContent,
 	ResponsiveDialogDescription,
+	ResponsiveDialogFooter,
 	ResponsiveDialogHeader,
 	ResponsiveDialogTitle,
 	ResponsiveDialogTrigger,
@@ -234,7 +234,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 						</div>
 					)}
 
-					<DialogFooter className="flex justify-between">
+					<ResponsiveDialogFooter className="flex justify-between">
 						<Button type="button" variant="outline" onClick={handleReset}>
 							Clear Selection
 						</Button>
@@ -255,7 +255,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 								{selectedMembers.length !== 1 ? "s" : ""}
 							</Button>
 						</div>
-					</DialogFooter>
+					</ResponsiveDialogFooter>
 				</form>
 			</ResponsiveDialogContent>
 		</ResponsiveDialog>
