@@ -130,10 +130,8 @@ function ResponsiveDialogContent({
 			+ ' flex flex-col max-h-[90vh] overflow-hidden'; // Add flex layout and scrolling
 
 		return (
-			<DrawerContent
-				className={`${mobileClassName} p-4 pb-8`}
-			>
-				<div className="flex flex-col overflow-hidden h-full">
+			<DrawerContent className={mobileClassName}>
+				<div className="p-4 flex-1 overflow-y-auto" data-vaul-no-drag="true">
 					{children}
 				</div>
 			</DrawerContent>
