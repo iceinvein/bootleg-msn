@@ -182,7 +182,7 @@ export function Chat() {
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
 					{/* Chat Header */}
-					<div className="mx-4 mt-4 rounded-4xl border-gray-200 border-b bg-white p-3 shadow-sm md:p-4 dark:border-gray-700 dark:bg-gray-800">
+					<div className="mx-4 mt-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
 								{/* Back button for mobile */}
@@ -343,7 +343,7 @@ export function Chat() {
 					</ScrollArea>
 
 					{/* Message Input */}
-					<div className="mx-4 mb-4 rounded-4xl border-gray-200 border-t bg-white p-3 md:p-4 dark:border-gray-700 dark:bg-gray-800">
+					<div className="mx-4 mb-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
 						<form
 							onSubmit={handleSendMessage}
 							className="flex items-center space-x-2"
@@ -376,12 +376,12 @@ export function Chat() {
 									selectedChat.group?.name ??
 									"Unknown User"
 								}...`}
-								className="h-9 flex-1 rounded-full border-gray-300 bg-white text-gray-900 text-sm focus:border-blue-500 md:h-10 md:text-base dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100 dark:focus:border-blue-400"
+								className="h-9 flex-1 rounded-full border-input bg-background text-foreground text-sm focus:border-ring md:h-10 md:text-base"
 							/>
 							<Button
 								type="submit"
 								size="sm"
-								className="h-8 w-8 flex-shrink-0 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 md:h-10 md:w-10"
+								className="msn-gradient h-8 w-8 flex-shrink-0 rounded-full text-white hover:opacity-90 md:h-10 md:w-10"
 							>
 								<Send className="h-3 w-3 md:h-4 md:w-4" />
 							</Button>
@@ -389,10 +389,10 @@ export function Chat() {
 					</div>
 				</>
 			) : (
-				<div className="flex flex-1 items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
+				<div className="flex flex-1 items-center justify-center bg-muted/30 p-4">
 					<div className="text-center">
-						<MessageCircle className="mx-auto mb-4 h-12 w-12 text-gray-400 md:h-16 md:w-16 dark:text-gray-500" />
-						<h3 className="mb-2 font-semibold text-base text-gray-600 md:text-lg dark:text-gray-300">
+						<MessageCircle className="mx-auto mb-4 h-12 w-12 text-muted-foreground md:h-16 md:w-16" />
+						<h3 className="mb-2 font-semibold text-base text-muted-foreground md:text-lg">
 							Select a contact or group to start chatting
 						</h3>
 						<p className="text-gray-500 text-sm md:text-base dark:text-gray-400">

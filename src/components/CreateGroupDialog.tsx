@@ -8,17 +8,18 @@ import { toast } from "sonner";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	ResponsiveDialog,
+	ResponsiveDialogContent,
+	ResponsiveDialogDescription,
+	ResponsiveDialogFooter,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+	ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -83,20 +84,23 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-[90vh] border-gray-200 sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
-				<DialogHeader>
-					<DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
-						<Users className="h-5 w-5 text-blue-600" />
+		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			<ResponsiveDialogContent className="max-h-[90vh] sm:max-w-2xl">
+				<ResponsiveDialogHeader>
+					<ResponsiveDialogTitle className="flex items-center space-x-2">
+						<Users className="h-5 w-5 text-primary" />
 						<span>Create Group Chat</span>
-					</DialogTitle>
-					<DialogDescription className="text-gray-600 dark:text-gray-400">
+					</ResponsiveDialogTitle>
+					<ResponsiveDialogDescription>
 						Create a new group chat and invite your contacts to join.
-					</DialogDescription>
-				</DialogHeader>
+					</ResponsiveDialogDescription>
+				</ResponsiveDialogHeader>
 
-				<form onSubmit={handleSubmit} className="space-y-6">
+				<form
+					onSubmit={handleSubmit}
+					className="flex flex-1 flex-col space-y-6 overflow-hidden"
+				>
 					{/* Group Info Section */}
 					<div className="space-y-4">
 						<div className="flex items-center space-x-4">
@@ -153,8 +157,8 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 					</div>
 
 					{/* Members Selection */}
-					<div className="space-y-3">
-						<div className="flex items-center justify-between">
+					<div className="flex min-h-0 flex-1 flex-col space-y-3">
+						<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 							<Label className="font-semibold text-base text-gray-700 dark:text-gray-300">
 								Add Members ({selectedMembers.length} selected)
 							</Label>
@@ -164,12 +168,12 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 									placeholder="Search contacts..."
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-64 border-gray-300 bg-white pl-10 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+									className="w-full border-gray-300 bg-white pl-10 text-gray-900 sm:w-64 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
 								/>
 							</div>
 						</div>
 
-						<ScrollArea className="h-64 rounded-lg border bg-white p-2 dark:border-gray-600 dark:bg-gray-700">
+						<ScrollArea className="max-h-64 min-h-[200px] flex-1 rounded-lg border bg-white p-2 dark:border-gray-600 dark:bg-gray-700">
 							{filteredContacts?.length === 0 ? (
 								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
 									<Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
@@ -225,22 +229,28 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 						</ScrollArea>
 					</div>
 
-					<DialogFooter className="flex justify-between">
-						<Button type="button" variant="outline" onClick={handleReset}>
+					<ResponsiveDialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+						<Button
+							type="button"
+							variant="outline"
+							onClick={handleReset}
+							className="w-full sm:w-auto"
+						>
 							Reset
 						</Button>
-						<div className="space-x-2">
+						<div className="flex flex-col gap-2 sm:flex-row sm:space-x-2">
 							<Button
 								type="button"
 								variant="outline"
 								onClick={() => setIsOpen(false)}
 								disabled={isLoading}
+								className="w-full sm:w-auto"
 							>
 								Cancel
 							</Button>
 							<Button
 								type="submit"
-								className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+								className="msn-gradient w-full text-white hover:opacity-90 sm:w-auto"
 								disabled={
 									!groupName.trim() || selectedMembers.length === 0 || isLoading
 								}
@@ -248,9 +258,9 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 								Create Group ({selectedMembers.length})
 							</Button>
 						</div>
-					</DialogFooter>
+					</ResponsiveDialogFooter>
 				</form>
-			</DialogContent>
-		</Dialog>
+			</ResponsiveDialogContent>
+		</ResponsiveDialog>
 	);
 }

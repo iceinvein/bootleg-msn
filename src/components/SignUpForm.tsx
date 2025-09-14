@@ -64,12 +64,12 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 
 	if (emailSent) {
 		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+			<div className="flex min-h-screen items-center justify-center bg-background">
+				<div className="w-full max-w-md rounded-lg p-8 glass shadow-xl border-white/20 dark:border-white/10">
 					<div className="mb-8 text-center">
-						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900">
+						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
 							<svg
-								className="h-8 w-8 text-blue-600 dark:text-blue-400"
+								className="h-8 w-8 text-primary"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -90,13 +90,13 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 					</div>
 
 					<div className="space-y-4 text-center">
-						<p className="text-gray-600 text-sm dark:text-gray-400">
+						<p className="text-muted-foreground text-sm">
 							Click the link in your email to verify your account and complete
 							the sign-up process.
 						</p>
 
-						<div className="rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-							<p className="text-blue-800 text-xs dark:text-blue-200">
+						<div className="rounded-lg bg-info/10 border border-info/20 p-4">
+							<p className="text-info-foreground text-xs">
 								💡 Don't see the email? Check your spam folder or wait a few
 								minutes for it to arrive.
 							</p>
@@ -130,11 +130,11 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center">
-			<Card className="w-full max-w-md">
+		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/20">
+			<Card className="w-full max-w-md" glass={true}>
 				<CardHeader>
-					<h3 className="font-bold text-2xl">Join bootleg MSN Messenger</h3>
-					<p className="text-accent-foreground/60 text-sm">
+					<h3 className="font-bold text-2xl text-foreground">Join bootleg MSN Messenger</h3>
+					<p className="text-muted-foreground text-sm">
 						Create your account to start chatting
 					</p>
 				</CardHeader>
@@ -208,7 +208,7 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 							disabled={
 								isLoading || !email.trim() || !password.trim() || !name.trim()
 							}
-							className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+							className="w-full msn-gradient text-white hover:opacity-90"
 						>
 							{isLoading ? "Sending Verification Email..." : "Create Account"}
 						</Button>
@@ -221,7 +221,7 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 							Already have an account? Sign in
 						</Button>
 						<div className="text-center">
-							<p className="text-accent-foreground/70 text-xs">
+							<p className="text-muted-foreground text-xs">
 								By creating an account, you agree to verify your email address
 								first.
 							</p>

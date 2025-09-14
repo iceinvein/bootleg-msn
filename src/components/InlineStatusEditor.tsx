@@ -73,13 +73,13 @@ export function InlineStatusEditor({
 					onKeyDown={handleKeyDown}
 					placeholder={placeholder}
 					maxLength={maxLength}
-					className="h-6 border-white/50 bg-white/90 px-2 py-1 text-gray-900 text-xs focus:border-white focus:ring-1 focus:ring-white md:h-7 md:text-sm dark:border-gray-600/50 dark:bg-gray-800/90 dark:text-gray-100 dark:focus:border-gray-400 dark:focus:ring-gray-400"
+					className="h-6 border-border/50 bg-background/90 px-2 py-1 text-foreground text-xs focus:border-ring focus:ring-1 focus:ring-ring md:h-7 md:text-sm"
 				/>
 				<Button
 					size="sm"
 					variant="ghost"
 					onClick={handleSave}
-					className={`h-6 w-6 p-0 ${textColor.includes("white") ? "text-white hover:bg-white/20" : "text-gray-600 hover:bg-gray-200 dark:text-gray-300 dark:hover:bg-gray-600"}`}
+					className={`h-6 w-6 p-0 ${textColor.includes("white") ? "text-white hover:bg-white/20" : "text-foreground hover:bg-muted"}`}
 				>
 					<Check className="h-3 w-3" />
 				</Button>

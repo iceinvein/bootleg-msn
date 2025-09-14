@@ -24,6 +24,13 @@
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
+	--color-success: var(--success);
+	--color-success-foreground: var(--success-foreground);
+	--color-warning: var(--warning);
+	--color-warning-foreground: var(--warning-foreground);
+	--color-info: var(--info);
+	--color-info-foreground: var(--info-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
@@ -59,9 +66,42 @@
 	--accent: oklch(0.968 0.007 247.896);
 	--accent-foreground: oklch(0.208 0.042 265.755);
 	--destructive: oklch(0.577 0.245 27.325);
+	--destructive-foreground: oklch(0.984 0.003 247.858);
+	--success: oklch(0.696 0.17 162.48);
+	--success-foreground: oklch(0.984 0.003 247.858);
+	--warning: oklch(0.769 0.188 70.08);
+	--warning-foreground: oklch(0.129 0.042 264.695);
+	--info: oklch(0.488 0.243 264.376);
+	--info-foreground: oklch(0.984 0.003 247.858);
 	--border: oklch(0.929 0.013 255.508);
 	--input: oklch(0.929 0.013 255.508);
 	--ring: oklch(0.704 0.04 256.788);
+
+	/* Glassmorphism Variables */
+	--glass-bg: oklch(1 0 0 / 0.8);
+	--glass-border: oklch(1 0 0 / 0.2);
+	--glass-shadow: 0 8px 32px oklch(0 0 0 / 0.1);
+	--glass-blur: 12px;
+	--glass-blur-sm: 8px;
+	--glass-blur-lg: 16px;
+	--glass-blur-xl: 24px;
+
+	/* MSN Messenger Theme Variables */
+	--msn-blue: oklch(0.488 0.243 264.376);
+	--msn-blue-light: oklch(0.588 0.243 264.376);
+	--msn-blue-dark: oklch(0.388 0.243 264.376);
+	--msn-purple: oklch(0.627 0.265 303.9);
+	--msn-purple-light: oklch(0.727 0.265 303.9);
+	--msn-purple-dark: oklch(0.527 0.265 303.9);
+	--msn-gradient: linear-gradient(135deg, var(--msn-blue) 0%, var(--msn-purple) 100%);
+	--msn-gradient-subtle: linear-gradient(135deg, var(--msn-blue-light) 0%, var(--msn-purple-light) 100%);
+
+	/* Enhanced Status Colors */
+	--status-online: oklch(0.696 0.17 162.48);
+	--status-away: oklch(0.769 0.188 70.08);
+	--status-busy: oklch(0.577 0.245 27.325);
+	--status-offline: oklch(0.554 0.046 257.417);
+	--status-glow: 0 0 8px currentColor;
 	--chart-1: oklch(0.646 0.222 41.116);
 	--chart-2: oklch(0.6 0.118 184.704);
 	--chart-3: oklch(0.398 0.07 227.392);
@@ -93,9 +133,29 @@
 	--accent: oklch(0.279 0.041 260.031);
 	--accent-foreground: oklch(0.984 0.003 247.858);
 	--destructive: oklch(0.704 0.191 22.216);
+	--destructive-foreground: oklch(0.984 0.003 247.858);
+	--success: oklch(0.696 0.17 162.48);
+	--success-foreground: oklch(0.984 0.003 247.858);
+	--warning: oklch(0.769 0.188 70.08);
+	--warning-foreground: oklch(0.129 0.042 264.695);
+	--info: oklch(0.588 0.243 264.376);
+	--info-foreground: oklch(0.984 0.003 247.858);
 	--border: oklch(1 0 0 / 10%);
 	--input: oklch(1 0 0 / 15%);
 	--ring: oklch(0.551 0.027 264.364);
+
+	/* Dark Mode Glassmorphism */
+	--glass-bg: oklch(0.208 0.042 265.755 / 0.8);
+	--glass-border: oklch(1 0 0 / 0.1);
+	--glass-shadow: 0 8px 32px oklch(0 0 0 / 0.3);
+
+	/* Dark Mode MSN Colors */
+	--msn-blue: oklch(0.588 0.243 264.376);
+	--msn-blue-light: oklch(0.688 0.243 264.376);
+	--msn-blue-dark: oklch(0.488 0.243 264.376);
+	--msn-purple: oklch(0.727 0.265 303.9);
+	--msn-purple-light: oklch(0.827 0.265 303.9);
+	--msn-purple-dark: oklch(0.627 0.265 303.9);
 	--chart-1: oklch(0.488 0.243 264.376);
 	--chart-2: oklch(0.696 0.17 162.48);
 	--chart-3: oklch(0.769 0.188 70.08);
@@ -117,6 +177,216 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+	}
+}
+
+@layer utilities {
+	/* Semantic color utilities */
+	.text-success {
+		color: hsl(var(--success));
+	}
+	.text-success-foreground {
+		color: hsl(var(--success-foreground));
+	}
+	.bg-success {
+		background-color: hsl(var(--success));
+	}
+	.bg-success\/10 {
+		background-color: hsl(var(--success) / 0.1);
+	}
+	.border-success {
+		border-color: hsl(var(--success));
+	}
+
+	.text-warning {
+		color: hsl(var(--warning));
+	}
+	.text-warning-foreground {
+		color: hsl(var(--warning-foreground));
+	}
+	.bg-warning {
+		background-color: hsl(var(--warning));
+	}
+	.bg-warning\/10 {
+		background-color: hsl(var(--warning) / 0.1);
+	}
+	.border-warning {
+		border-color: hsl(var(--warning));
+	}
+
+	.text-info {
+		color: hsl(var(--info));
+	}
+	.text-info-foreground {
+		color: hsl(var(--info-foreground));
+	}
+	.bg-info {
+		background-color: hsl(var(--info));
+	}
+	.bg-info\/10 {
+		background-color: hsl(var(--info) / 0.1);
+	}
+	.border-info {
+		border-color: hsl(var(--info));
+	}
+}
+
+@layer utilities {
+	/* Glassmorphism Utilities */
+	.glass {
+		background: var(--glass-bg);
+		border: 1px solid var(--glass-border);
+		backdrop-filter: blur(var(--glass-blur));
+		-webkit-backdrop-filter: blur(var(--glass-blur));
+		box-shadow: var(--glass-shadow);
+	}
+
+	.glass-sm {
+		backdrop-filter: blur(var(--glass-blur-sm));
+		-webkit-backdrop-filter: blur(var(--glass-blur-sm));
+	}
+
+	.glass-lg {
+		backdrop-filter: blur(var(--glass-blur-lg));
+		-webkit-backdrop-filter: blur(var(--glass-blur-lg));
+	}
+
+	.glass-xl {
+		backdrop-filter: blur(var(--glass-blur-xl));
+		-webkit-backdrop-filter: blur(var(--glass-blur-xl));
+	}
+
+	.glass-subtle {
+		background: var(--glass-bg);
+		backdrop-filter: blur(var(--glass-blur-sm));
+		-webkit-backdrop-filter: blur(var(--glass-blur-sm));
+	}
+
+	/* MSN Gradient Utilities */
+	.msn-gradient {
+		background: var(--msn-gradient);
+	}
+
+	.msn-gradient-subtle {
+		background: var(--msn-gradient-subtle);
+	}
+
+	.msn-gradient-text {
+		background: var(--msn-gradient);
+		-webkit-background-clip: text;
+		background-clip: text;
+		-webkit-text-fill-color: transparent;
+	}
+
+	/* Status Glow Effects */
+	.status-glow {
+		box-shadow: var(--status-glow);
+	}
+
+	.status-online {
+		color: var(--status-online);
+	}
+
+	.status-away {
+		color: var(--status-away);
+	}
+
+	.status-busy {
+		color: var(--status-busy);
+	}
+
+	.status-offline {
+		color: var(--status-offline);
+	}
+
+	/* MSN-inspired animations */
+	.msn-pulse {
+		animation: msn-pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+	}
+
+	.msn-bounce {
+		animation: msn-bounce 1s infinite;
+	}
+
+	.msn-fade-in {
+		animation: msn-fade-in 0.5s ease-out;
+	}
+
+	.msn-slide-up {
+		animation: msn-slide-up 0.3s ease-out;
+	}
+
+	.msn-scale-in {
+		animation: msn-scale-in 0.2s ease-out;
+	}
+
+	/* Glassmorphism hover effects */
+	.glass-hover {
+		transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	}
+
+	.glass-hover:hover {
+		backdrop-filter: blur(20px);
+		-webkit-backdrop-filter: blur(20px);
+		transform: translateY(-2px);
+		box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+	}
+}
+
+@keyframes msn-pulse {
+	0%, 100% {
+		opacity: 1;
+	}
+	50% {
+		opacity: 0.7;
+	}
+}
+
+@keyframes msn-bounce {
+	0%, 20%, 53%, 80%, 100% {
+		transform: translate3d(0, 0, 0);
+	}
+	40%, 43% {
+		transform: translate3d(0, -8px, 0);
+	}
+	70% {
+		transform: translate3d(0, -4px, 0);
+	}
+	90% {
+		transform: translate3d(0, -2px, 0);
+	}
+}
+
+@keyframes msn-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(10px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes msn-slide-up {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+@keyframes msn-scale-in {
+	from {
+		opacity: 0;
+		transform: scale(0.9);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
 	}
 }
 

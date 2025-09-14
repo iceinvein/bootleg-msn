@@ -4,7 +4,7 @@ import { useQuery } from "convex/react";
 import { User, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
-import { getStatusColor } from "@/utils/style";
+import { getStatusColorWithGlow } from "@/utils/style";
 import { Avatar } from "./ui/avatar";
 import { Badge } from "./ui/badge";
 import { ScrollArea } from "./ui/scroll-area";
@@ -21,7 +21,7 @@ export function ContactList() {
 				{/* Groups Section */}
 				{!!groupChats?.length && (
 					<>
-						<div className="px-2 py-1 font-semibold text-gray-500 text-xs uppercase tracking-wide dark:text-gray-400">
+						<div className="px-2 py-1 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
 							Groups ({groupChats.length})
 						</div>
 						{groupChats?.map((group) => (
@@ -29,9 +29,9 @@ export function ContactList() {
 								type="button"
 								key={group?._id}
 								className={cn(
-									"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all hover:bg-gray-100 active:bg-gray-200 md:p-3 dark:active:bg-gray-600 dark:hover:bg-gray-700",
+									"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all duration-200 hover:scale-[1.02] hover:bg-muted/50 active:scale-[0.98] md:p-3",
 									selectedChat?.group?._id === group?._id &&
-										"border border-blue-200 bg-blue-50 dark:bg-blue-900/20",
+										"border border-primary/20 bg-primary/10 text-primary shadow-lg",
 								)}
 								onClick={() =>
 									$selectedChat.set({
@@ -41,13 +41,13 @@ export function ContactList() {
 								}
 							>
 								<div className="relative">
-									<Avatar className="h-10 w-10 bg-gradient-to-r from-blue-500 to-purple-500 md:h-12 md:w-12">
-										<Users className="h-10 w-10 md:h-12 md:w-12" />
+									<Avatar className="msn-gradient h-10 w-10 md:h-12 md:w-12">
+										<Users className="h-10 w-10 text-white md:h-12 md:w-12" />
 									</Avatar>
 								</div>
 								<div className="min-w-0 flex-1">
 									<div className="flex items-center space-x-2">
-										<p className="truncate font-medium text-gray-900 text-sm md:text-base dark:text-gray-100">
+										<p className="truncate font-medium text-foreground text-sm md:text-base">
 											{group?.name}
 										</p>
 									</div>
@@ -62,7 +62,7 @@ export function ContactList() {
 								)}
 							</button>
 						))}
-						<div className="my-2 border-gray-200 border-b"></div>
+						<div className="my-2 border-border border-b"></div>
 					</>
 				)}
 
@@ -79,9 +79,9 @@ export function ContactList() {
 							type="button"
 							key={contact._id}
 							className={cn(
-								"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all hover:bg-gray-100 active:bg-gray-200 md:p-3 dark:active:bg-gray-600 dark:hover:bg-gray-700",
+								"relative flex w-full cursor-pointer items-center space-x-3 rounded-lg p-2 transition-all duration-200 hover:scale-[1.02] hover:bg-muted/50 active:scale-[0.98] md:p-3",
 								selectedChat?.contact?._id === contact?._id &&
-									"border border-blue-200 bg-blue-50 dark:bg-blue-900/20",
+									"border border-primary/20 bg-primary/10 text-primary shadow-lg",
 							)}
 							onClick={() =>
 								$selectedChat.set({
@@ -95,7 +95,7 @@ export function ContactList() {
 									<User className="h-10 w-10 md:h-12 md:w-12" />
 								</Avatar>
 								<div
-									className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white md:h-4 md:w-4 ${getStatusColor(contact.status)}`}
+									className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white md:h-4 md:w-4 ${getStatusColorWithGlow(contact.status)}`}
 								/>
 							</div>
 							<div className="min-w-0 flex-1">

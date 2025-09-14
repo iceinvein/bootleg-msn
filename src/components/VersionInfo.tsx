@@ -40,7 +40,7 @@ export function VersionBadge() {
 	const version = currentVersion?.version || packageVersion;
 
 	return (
-		<span className="rounded bg-gray-100 px-2 py-1 text-gray-600 text-xs dark:bg-gray-800 dark:text-gray-400">
+		<span className="rounded bg-muted px-2 py-1 text-muted-foreground text-xs">
 			{version}
 		</span>
 	);

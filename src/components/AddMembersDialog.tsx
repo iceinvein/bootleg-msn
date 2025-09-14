@@ -13,17 +13,17 @@ import {
 import { useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	ResponsiveDialog,
+	ResponsiveDialogContent,
+	ResponsiveDialogDescription,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+	ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { $selectedChat } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
@@ -95,18 +95,18 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-[90vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
-				<DialogHeader>
-					<DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
-						<UserPlus className="h-5 w-5 text-blue-600" />
+		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			<ResponsiveDialogContent className="max-h-[90vh] sm:max-w-2xl">
+				<ResponsiveDialogHeader>
+					<ResponsiveDialogTitle className="flex items-center space-x-2">
+						<UserPlus className="h-5 w-5 text-primary" />
 						<span>Add Members to Group</span>
-					</DialogTitle>
-					<DialogDescription className="text-gray-600 dark:text-gray-400">
+					</ResponsiveDialogTitle>
+					<ResponsiveDialogDescription>
 						Select contacts to add to this group chat.
-					</DialogDescription>
-				</DialogHeader>
+					</ResponsiveDialogDescription>
+				</ResponsiveDialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
 					{/* Search Bar */}
@@ -248,7 +248,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 							</Button>
 							<Button
 								type="submit"
-								className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+								className="msn-gradient text-white hover:opacity-90"
 								disabled={selectedMembers.length === 0}
 							>
 								Add {selectedMembers.length} Member
@@ -257,7 +257,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 						</div>
 					</DialogFooter>
 				</form>
-			</DialogContent>
-		</Dialog>
+			</ResponsiveDialogContent>
+		</ResponsiveDialog>
 	);
 }

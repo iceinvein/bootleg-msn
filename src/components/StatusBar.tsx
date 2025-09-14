@@ -9,9 +9,10 @@ import { useState } from "react";
 import AddContactDialog from "./AddContactDialog";
 import ContactRequestsDialog from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
-import { ModeToggle } from "./mode-toggle";
+
 import { SettingsDialog } from "./SettingsDialog";
 import { StatusMessage } from "./StatusMessage";
+
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import {
@@ -23,10 +24,15 @@ import {
 } from "./ui/select";
 
 const statusOptions = [
-	{ value: "online", label: "Online", color: "bg-green-500", emoji: "🟢" },
-	{ value: "away", label: "Away", color: "bg-yellow-500", emoji: "🟡" },
-	{ value: "busy", label: "Busy", color: "bg-red-500", emoji: "🔴" },
-	{ value: "invisible", label: "Invisible", color: "bg-gray-500", emoji: "⚫" },
+	{ value: "online", label: "Online", color: "status-online", emoji: "🟢" },
+	{ value: "away", label: "Away", color: "status-away", emoji: "🟡" },
+	{ value: "busy", label: "Busy", color: "status-busy", emoji: "🔴" },
+	{
+		value: "invisible",
+		label: "Invisible",
+		color: "status-offline",
+		emoji: "⚫",
+	},
 ] as const;
 
 // End-to-end type safe status type
@@ -68,7 +74,7 @@ export function StatusBar({ user }: StatusBarProps) {
 		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
 
 	return (
-		<div>
+		<div className="border-border border-b bg-background/60 backdrop-blur-sm">
 			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
 					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
@@ -109,7 +115,7 @@ export function StatusBar({ user }: StatusBarProps) {
 						>
 							<UserCheck className="md:h-5! md:w-5!" />
 							{totalRequestCount > 0 && (
-								<Badge className="-top-1 -right-1 absolute h-5 w-5 bg-red-500 p-0 text-white text-xs hover:bg-red-500">
+								<Badge className="-top-1 -right-1 absolute h-5 w-5 bg-destructive p-0 text-destructive-foreground text-xs hover:bg-destructive">
 									{totalRequestCount}
 								</Badge>
 							)}
@@ -137,7 +143,6 @@ export function StatusBar({ user }: StatusBarProps) {
 							<Settings className="md:h-5! md:w-5!" />
 						</Button>
 					</SettingsDialog>
-					<ModeToggle />
 				</div>
 			</div>
 

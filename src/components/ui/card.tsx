@@ -2,14 +2,21 @@ import * as React from "react"
 
 import { cn } from "@/lib/utils"
 
-function Card({ className, ...props }: React.ComponentProps<"div">) {
+interface CardProps extends React.ComponentProps<"div"> {
+  glass?: boolean;
+  glassVariant?: "subtle" | "default" | "strong";
+}
+
+function Card({ className, glass = false, glassVariant = "default", ...props }: CardProps) {
+  const baseClasses = "text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm";
+  const glassClasses = glass
+    ? `bg-background/${glassVariant === "subtle" ? "60" : glassVariant === "strong" ? "90" : "80"} backdrop-blur-md border-border`
+    : "bg-card";
+
   return (
     <div
       data-slot="card"
-      className={cn(
-        "bg-card text-card-foreground flex flex-col gap-6 rounded-xl border py-6 shadow-sm",
-        className
-      )}
+      className={cn(baseClasses, glassClasses, className)}
       {...props}
     />
   )

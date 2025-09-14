@@ -5,17 +5,17 @@ import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogFooter,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+import { DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+	ResponsiveDialog,
+	ResponsiveDialogContent,
+	ResponsiveDialogDescription,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+	ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
 
 interface AddContactDialogProps {
@@ -63,18 +63,18 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="sm:max-w-md dark:border-gray-600 dark:bg-gray-800">
-				<DialogHeader>
-					<DialogTitle className="flex items-center space-x-2">
-						<UserPlus className="h-5 w-5 text-blue-600" />
+		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			<ResponsiveDialogContent className="sm:max-w-md">
+				<ResponsiveDialogHeader>
+					<ResponsiveDialogTitle className="flex items-center space-x-2">
+						<UserPlus className="h-5 w-5 text-primary" />
 						<span>Add New Contact</span>
-					</DialogTitle>
-					<DialogDescription>
+					</ResponsiveDialogTitle>
+					<ResponsiveDialogDescription>
 						Send a contact request to someone you'd like to chat with.
-					</DialogDescription>
-				</DialogHeader>
+					</ResponsiveDialogDescription>
+				</ResponsiveDialogHeader>
 				<form onSubmit={handleSubmit} className="space-y-4">
 					<div className="space-y-2">
 						<Label htmlFor="email" className="flex items-center space-x-2">
@@ -128,14 +128,14 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 						</Button>
 						<Button
 							type="submit"
-							className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+							className="msn-gradient text-white hover:opacity-90"
 							disabled={isLoading}
 						>
 							Send Request
 						</Button>
 					</DialogFooter>
 				</form>
-			</DialogContent>
-		</Dialog>
+			</ResponsiveDialogContent>
+		</ResponsiveDialog>
 	);
 }

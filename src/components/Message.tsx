@@ -138,7 +138,7 @@ export function Message({ message }: MessageProps) {
 			)}
 		>
 			<div className="flex flex-col gap-1">
-				<span className="text-accent-foreground/50 text-xs">
+				<span className="text-muted-foreground text-xs">
 					{message.sender?.name ?? message.sender?.email}
 				</span>
 				<div
@@ -147,19 +147,19 @@ export function Message({ message }: MessageProps) {
 						ownsMessage && "flex-row-reverse",
 					)}
 				>
-					<Avatar className="h-6 w-6 border-2 border-accent-foreground md:h-8 md:w-8">
+					<Avatar className="h-6 w-6 border-2 border-border md:h-8 md:w-8">
 						<User className="h-6 w-6 md:h-8 md:w-8" />
 					</Avatar>
 
 					<div className="group relative overflow-visible">
 						{isEditing ? (
-							<div className="flex items-center space-x-2 rounded-2xl border-2 border-blue-500 bg-white p-2 dark:bg-gray-700">
+							<div className="flex items-center space-x-2 rounded-2xl border-2 border-primary bg-background p-2">
 								<Input
 									ref={inputRef}
 									value={editContent}
 									onChange={(e) => setEditContent(e.target.value)}
 									onKeyDown={handleKeyDown}
-									className="h-auto border-none bg-transparent p-0 text-gray-900 text-sm focus:ring-0 md:text-base dark:text-gray-100"
+									className="h-auto border-none bg-transparent p-0 text-foreground text-sm focus:ring-0 md:text-base"
 								/>
 								<Button
 									size="sm"
@@ -181,10 +181,10 @@ export function Message({ message }: MessageProps) {
 						) : (
 							<div
 								className={cn(
-									`rounded-2xl px-3 py-2 md:px-4 md:py-2`,
+									`rounded-2xl px-3 py-2 transition-all duration-200 hover:scale-[1.02] hover:shadow-lg md:px-4 md:py-2`,
 									ownsMessage
-										? "bg-blue-500 text-white"
-										: "bg-gray-100 text-gray-900 dark:bg-gray-700 dark:text-gray-100",
+										? "msn-gradient text-white shadow-lg hover:shadow-xl"
+										: "border border-border bg-muted/80 text-foreground hover:bg-muted",
 								)}
 							>
 								<p className="break-words text-sm md:text-base">
@@ -200,10 +200,10 @@ export function Message({ message }: MessageProps) {
 						{!isEditing && (
 							<div
 								className={cn(
-									"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border-transparent bg-gray-800 p-1 shadow-lg transition-opacity duration-200 dark:bg-gray-900",
+									"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border border-border bg-background/90 p-1 shadow-lg backdrop-blur-md transition-all duration-200",
 									ownsMessage ? "right-0" : "left-0",
-									"pointer-events-none opacity-0 group-hover:pointer-events-auto group-hover:opacity-100",
-									isDropdownOpen && "pointer-events-auto opacity-100",
+									"pointer-events-none scale-90 opacity-0 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100",
+									isDropdownOpen && "pointer-events-auto scale-100 opacity-100",
 								)}
 							>
 								{/* Quick reaction buttons */}
@@ -212,7 +212,7 @@ export function Message({ message }: MessageProps) {
 									variant="ghost"
 									onClick={() => handleQuickReaction("thumbs_up")}
 									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
+									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 								>
 									👍
 								</Button>
@@ -221,7 +221,7 @@ export function Message({ message }: MessageProps) {
 									variant="ghost"
 									onClick={() => handleQuickReaction("heart")}
 									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
+									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 								>
 									❤️
 								</Button>
@@ -230,7 +230,7 @@ export function Message({ message }: MessageProps) {
 									variant="ghost"
 									onClick={() => handleQuickReaction("laugh")}
 									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
+									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 								>
 									😂
 								</Button>
@@ -239,7 +239,7 @@ export function Message({ message }: MessageProps) {
 									variant="ghost"
 									onClick={() => handleQuickReaction("wow")}
 									disabled={isReactionLoading}
-									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-gray-700"
+									className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 								>
 									😮
 								</Button>
@@ -252,14 +252,14 @@ export function Message({ message }: MessageProps) {
 									<Button
 										size="sm"
 										variant="ghost"
-										className="h-8 w-8 rounded-full p-0 text-gray-300 hover:bg-gray-700"
+										className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
 									>
 										<SmilePlus className="h-4 w-4" />
 									</Button>
 								</ReactionPicker>
 
 								{/* Separator only if there are edit/delete actions for user messages */}
-								{ownsMessage && <div className="mx-1 h-6 w-px bg-gray-600" />}
+								{ownsMessage && <div className="mx-1 h-6 w-px bg-border" />}
 
 								{/* Edit Button (only for user messages) */}
 								{ownsMessage && (
@@ -267,7 +267,7 @@ export function Message({ message }: MessageProps) {
 										size="sm"
 										variant="ghost"
 										onClick={handleEdit}
-										className="h-8 w-8 rounded-full p-0 text-gray-300 hover:bg-gray-700"
+										className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
 									>
 										<Edit3 className="h-4 w-4" />
 									</Button>
@@ -280,18 +280,18 @@ export function Message({ message }: MessageProps) {
 											<Button
 												size="sm"
 												variant="ghost"
-												className="h-8 w-8 rounded-full p-0 text-gray-300 hover:bg-gray-700"
+												className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
 											>
 												<MoreHorizontal className="h-4 w-4" />
 											</Button>
 										</DropdownMenuTrigger>
 										<DropdownMenuContent
 											align="end"
-											className="w-32 rounded-lg border-gray-200 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+											className="w-32 rounded-lg"
 										>
 											<DropdownMenuItem
 												onClick={handleDelete}
-												className="text-red-600 text-sm dark:text-red-400"
+												className="text-destructive text-sm"
 											>
 												<Trash2 className="mr-2 h-3 w-3" />
 												Delete

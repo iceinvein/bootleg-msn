@@ -103,7 +103,7 @@ export function ReactionPicker({
 				{children}
 			</PopoverTrigger>
 			<PopoverContent
-				className="w-auto rounded-2xl border-2 border-gray-200 p-2 shadow-xl"
+				className="w-auto rounded-2xl border-2 border-border p-2 shadow-xl"
 				align="center"
 				sideOffset={8}
 			>

@@ -9,7 +9,7 @@ import { OAuthCallback } from "./components/OAuthCallback";
 import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
-import { UpdateNotificationTest } from "./components/UpdateNotificationTest";
+// import { UpdateNotificationTest } from "./components/UpdateNotificationTest";
 import { Toaster } from "./components/ui/sonner";
 import { Platform } from "./utils/platform";
 
@@ -168,7 +168,7 @@ function App() {
 								<Authenticated>
 									<MessengerApp />
 									<UpdateNotification />
-									{import.meta.env.DEV && <UpdateNotificationTest />}
+									{/* {import.meta.env.DEV && <UpdateNotificationTest />} */}
 								</Authenticated>
 							</>
 						)}

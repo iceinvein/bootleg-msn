@@ -148,11 +148,11 @@ export function EnhancedSignInForm() {
 	if (needsVerification) {
 		return (
 			<div className="flex min-h-screen items-center justify-center">
-				<div className="w-full max-w-md rounded-lg p-8 shadow-xl dark:border-gray-600 dark:bg-gray-800">
+				<div className="w-full max-w-md rounded-lg border bg-card p-8 shadow-xl">
 					<div className="mb-8 text-center">
-						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-900">
+						<div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-warning/20">
 							<svg
-								className="h-8 w-8 text-yellow-600 dark:text-yellow-400"
+								className="h-8 w-8 text-warning"
 								fill="none"
 								stroke="currentColor"
 								viewBox="0 0 24 24"
@@ -166,18 +166,18 @@ export function EnhancedSignInForm() {
 								/>
 							</svg>
 						</div>
-						<h1 className="mb-2 font-bold text-2xl">
+						<h1 className="mb-2 font-bold text-2xl text-foreground">
 							Email Verification Required
 						</h1>
-						<p className="text-gray-600 dark:text-gray-400">
+						<p className="text-muted-foreground">
 							Please verify your email address{" "}
 							<strong>{needsVerification}</strong> before signing in.
 						</p>
 					</div>
 
 					<div className="space-y-4">
-						<div className="rounded-lg bg-yellow-50 p-4 dark:bg-yellow-900/20">
-							<p className="text-sm text-yellow-800 dark:text-yellow-200">
+						<div className="rounded-lg border border-warning/20 bg-warning/10 p-4">
+							<p className="text-sm text-warning-foreground">
 								📧 Check your inbox for a verification email. If you don't see
 								it, check your spam folder.
 							</p>
@@ -270,9 +270,9 @@ export function EnhancedSignInForm() {
 										className="absolute top-0 right-0 h-full rounded-full p-2 hover:bg-transparent! [&_svg]:h-5! [&_svg]:w-5!"
 									>
 										{showPassword ? (
-											<EyeOffIcon className="h-5 w-5 text-slate-400" />
+											<EyeOffIcon className="h-5 w-5 text-muted-foreground" />
 										) : (
-											<EyeIcon className="h-5 w-5 text-slate-400" />
+											<EyeIcon className="h-5 w-5 text-muted-foreground" />
 										)}
 									</Button>
 								</div>
@@ -284,7 +284,7 @@ export function EnhancedSignInForm() {
 					<Button
 						type="submit"
 						disabled={isLoading || !email.trim() || !password.trim()}
-						className="w-full bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600"
+						className="msn-gradient w-full text-white hover:opacity-90"
 						onClick={handleSubmit}
 					>
 						{isLoading ? "Signing in..." : "Sign In"}
@@ -298,11 +298,11 @@ export function EnhancedSignInForm() {
 						Don't have an account? Sign up
 					</Button>
 					<div className="relative mb-2 flex w-full items-center">
-						<div className="flex-grow border-accent-foreground/40 border-t" />
-						<span className="mx-4 flex-shrink text-accent-foreground/50 text-sm">
+						<div className="flex-grow border-border border-t" />
+						<span className="mx-4 flex-shrink text-muted-foreground text-sm">
 							or
 						</span>
-						<div className="flex-grow border-accent-foreground/40 border-t" />
+						<div className="flex-grow border-border border-t" />
 					</div>
 					<div className="space-y-2">
 						<SignInWithGoogle />

@@ -15,13 +15,13 @@ import { Avatar } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
-} from "@/components/ui/dialog";
+	ResponsiveDialog,
+	ResponsiveDialogContent,
+	ResponsiveDialogDescription,
+	ResponsiveDialogHeader,
+	ResponsiveDialogTitle,
+	ResponsiveDialogTrigger,
+} from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type { Group } from "@/stores/contact";
@@ -66,21 +66,21 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	};
 
 	return (
-		<Dialog open={isOpen} onOpenChange={setIsOpen}>
-			<DialogTrigger asChild>{children}</DialogTrigger>
-			<DialogContent className="max-h-[90vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
-				<DialogHeader>
-					<DialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
+		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
+			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			<ResponsiveDialogContent className="max-h-[90vh] border-gray-200 bg-white sm:max-w-2xl dark:border-gray-600 dark:bg-gray-800">
+				<ResponsiveDialogHeader>
+					<ResponsiveDialogTitle className="flex items-center space-x-2 text-gray-900 dark:text-gray-100">
 						<Info className="h-5 w-5 text-blue-600" />
 						<span>Group Info</span>
-					</DialogTitle>
-					<DialogDescription className="text-gray-600 dark:text-gray-400">
+					</ResponsiveDialogTitle>
+					<ResponsiveDialogDescription className="text-gray-600 dark:text-gray-400">
 						Manage group settings and members.
-					</DialogDescription>
-				</DialogHeader>
+					</ResponsiveDialogDescription>
+				</ResponsiveDialogHeader>
 
 				<Tabs defaultValue="info" className="w-full">
-					<TabsList className="grid w-full grid-cols-2 bg-gray-100 dark:bg-gray-700">
+					<TabsList className="grid w-full grid-cols-2">
 						<TabsTrigger value="info">Group Info</TabsTrigger>
 						<TabsTrigger value="members">
 							Members ({members?.length})
@@ -89,7 +89,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 
 					<TabsContent value="info" className="mt-4 space-y-6">
 						{/* Group Header */}
-						<div className="flex items-center space-x-4 rounded-lg bg-gradient-to-r from-blue-50 to-purple-50 p-4 dark:from-blue-900/20 dark:to-purple-900/20">
+						<div className="flex items-center space-x-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
 							<Avatar className="h-16 w-16 border-2 border-white shadow-md">
 								<Users className="h-16 w-16" />
 							</Avatar>
@@ -248,7 +248,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 						</ScrollArea>
 					</TabsContent>
 				</Tabs>
-			</DialogContent>
-		</Dialog>
+			</ResponsiveDialogContent>
+		</ResponsiveDialog>
 	);
 }
