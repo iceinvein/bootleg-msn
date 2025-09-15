@@ -213,8 +213,8 @@ export function SignInForm() {
 	}
 
 	return (
-		<div className="flex min-h-screen items-center justify-center">
-			<Card className="w-full max-w-md">
+		<div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-background to-secondary/20">
+			<Card className="w-full max-w-md" glass={true}>
 				<CardHeader className="text-center">
 					<CardTitle className="font-bold text-3xl">
 						Welcome to the bootleg MSN Messenger
