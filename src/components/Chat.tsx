@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import {
 	ArrowLeft,
 	Info,
@@ -14,12 +14,13 @@ import {
 	X,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
 import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 import { Message } from "./Message";
-import { fadeInUp, hoverScale, slideInRight, tapScale } from "./ui/animated";
+import { fadeInUp, hoverScale, tapScale } from "./ui/animated";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -258,7 +259,7 @@ export function Chat() {
 					{/* Messages - Scrollable middle section */}
 					<div className="chat-messages-container">
 						<ScrollArea className="h-full p-3 md:p-4">
-							<div className="space-y-3 md:space-y-4">
+							<div className="space-y-1">
 								{(!messages || messages.length === 0) && (
 									<div className="py-8 text-center text-gray-500">
 										<MessageCircle className="mx-auto mb-2 h-8 w-8 text-gray-400 opacity-50 md:h-12 md:w-12 dark:text-gray-500" />
@@ -272,9 +273,43 @@ export function Chat() {
 									</div>
 								)}
 
-								{messages?.map((message) => (
-									<Message key={message._id} message={message} />
-								))}
+								{messages?.map((message, index) => {
+									const prevMessage = index > 0 ? messages[index - 1] : null;
+									const nextMessage =
+										index < messages.length - 1 ? messages[index + 1] : null;
+
+									// Check if this message is consecutive with the previous one
+									const isConsecutive = Boolean(
+										prevMessage &&
+											prevMessage.senderId === message.senderId &&
+											message._creationTime - prevMessage._creationTime <
+												5 * 60 * 1000, // 5 minutes
+									);
+
+									// Check if this is the last message in a group
+									const isLastInGroup = Boolean(
+										!nextMessage ||
+											nextMessage.senderId !== message.senderId ||
+											nextMessage._creationTime - message._creationTime >=
+												5 * 60 * 1000, // 5 minutes
+									);
+
+									return (
+										<div
+											key={message._id}
+											className={cn(
+												// Tight spacing for consecutive messages, normal spacing for new groups
+												isConsecutive ? "mt-1" : "mt-6 md:mt-8",
+											)}
+										>
+											<Message
+												message={message}
+												isConsecutive={isConsecutive}
+												isLastInGroup={isLastInGroup}
+											/>
+										</div>
+									);
+								})}
 
 								{contactIsTyping && (
 									<div className="flex justify-start">

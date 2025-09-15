@@ -17,9 +17,15 @@ import { fadeInUp, hoverScale, messageBubble, tapScale } from "./ui/animated";
 
 interface MessageProps {
 	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
+	isConsecutive?: boolean;
+	isLastInGroup?: boolean;
 }
 
-export function Message({ message }: MessageProps) {
+export function Message({
+	message,
+	isConsecutive = false,
+	isLastInGroup = true,
+}: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
@@ -38,6 +44,27 @@ export function Message({ message }: MessageProps) {
 	const [isLongPressOpen, setIsLongPressOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const ownsMessage = message.senderId === loggedInUser?._id;
+	const hasReactions = reactionSummary && reactionSummary.length > 0;
+
+	// Format timestamp
+	const formatTimestamp = (timestamp: number) => {
+		const date = new Date(timestamp);
+		const now = new Date();
+		const isToday = date.toDateString() === now.toDateString();
+
+		if (isToday) {
+			return date.toLocaleTimeString([], {
+				hour: "2-digit",
+				minute: "2-digit",
+			});
+		} else {
+			return (
+				date.toLocaleDateString([], { month: "short", day: "numeric" }) +
+				" " +
+				date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+			);
+		}
+	};
 
 	// Long press handling for mobile
 	const longPressTimer = useRef<NodeJS.Timeout | null>(null);
@@ -162,6 +189,7 @@ export function Message({ message }: MessageProps) {
 			className={cn(
 				`flex w-full overflow-visible`,
 				ownsMessage ? "justify-end" : "justify-start",
+				hasReactions && "mb-7", // Add 28px margin bottom when reactions are present
 			)}
 			variants={messageBubble}
 			initial="initial"
@@ -170,29 +198,46 @@ export function Message({ message }: MessageProps) {
 			layout
 		>
 			<div className="flex flex-col gap-1">
-				{/* Name row - positioned to align with avatar */}
-				<motion.span
-					className={cn(
-						"truncate text-muted-foreground text-xs",
-						ownsMessage ? "ml-8 text-right" : "ml-8 text-left",
-					)}
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					transition={{ delay: 0.1 }}
-				>
-					{message.sender?.name ?? message.sender?.email}
-				</motion.span>
+				{/* Name and Timestamp - only show on first message in group */}
+				{!isConsecutive && (
+					<motion.div
+						className={cn(
+							"mb-1 flex items-center gap-2 text-muted-foreground text-xs",
+							ownsMessage ? "flex-row-reverse text-right" : "text-left",
+						)}
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						transition={{ delay: 0.2 }}
+					>
+						{/* Sender name - only for group chats */}
+						{message.groupId && (
+							<span className="truncate font-medium">
+								{message.sender?.name ?? message.sender?.email}
+							</span>
+						)}
+						{/* Timestamp */}
+						<span className="shrink-0">
+							{formatTimestamp(message._creationTime)}
+						</span>
+					</motion.div>
+				)}
 
 				{/* Message and Avatar row */}
 				<div
 					className={cn(
-						"relative flex max-w-full items-center gap-2 space-x-2 overflow-visible",
+						"relative flex max-w-full items-center overflow-visible",
+						message.groupId && "gap-2", // Only add gap for group chats with avatars
 						ownsMessage && "flex-row-reverse",
 					)}
 				>
-					<Avatar className="h-6 w-6 border-2 border-border md:h-8 md:w-8">
-						<User className="h-6 w-6 md:h-8 md:w-8" />
-					</Avatar>
+					{/* Avatar - only show for group chats and first message in group */}
+					{message.groupId && !isConsecutive ? (
+						<Avatar className="h-6 w-6 border-2 border-border md:h-8 md:w-8">
+							<User className="h-6 w-6 md:h-8 md:w-8" />
+						</Avatar>
+					) : message.groupId && isConsecutive ? (
+						<div className="h-6 w-6 md:h-8 md:w-8" /> // Spacer to maintain alignment in group chats
+					) : null}
 
 					<div className="group relative overflow-visible">
 						{isEditing ? (
@@ -260,89 +305,100 @@ export function Message({ message }: MessageProps) {
 							<>
 								{/* Desktop: Hover actions */}
 								{!isMobile && (
-									<div
-										className={cn(
-											"absolute bottom-[calc(100%)] z-[9999] flex items-center space-x-1 rounded-full border border-border bg-background/90 p-1 shadow-lg backdrop-blur-md transition-all duration-200",
-											ownsMessage ? "right-0" : "left-0",
-											"pointer-events-none scale-90 opacity-0 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100",
-										)}
-									>
-										{/* Quick reaction buttons */}
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={() => handleQuickReaction("thumbs_up")}
-											disabled={isReactionLoading}
-											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+									<>
+										{/* Invisible bridge to maintain hover state */}
+										<div
+											className={cn(
+												"absolute bottom-[calc(100%)] h-2 w-full",
+												"pointer-events-none group-hover:pointer-events-auto",
+											)}
+										/>
+										<div
+											className={cn(
+												"absolute bottom-[calc(100%+8px)] z-[9999] flex items-center space-x-1 rounded-full border border-border bg-background/90 p-1 shadow-lg backdrop-blur-md transition-all duration-200",
+												ownsMessage ? "right-0" : "left-0",
+												"pointer-events-none scale-90 opacity-0 group-hover:pointer-events-auto group-hover:scale-100 group-hover:opacity-100",
+											)}
 										>
-											👍
-										</Button>
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={() => handleQuickReaction("heart")}
-											disabled={isReactionLoading}
-											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-										>
-											❤️
-										</Button>
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={() => handleQuickReaction("laugh")}
-											disabled={isReactionLoading}
-											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-										>
-											😂
-										</Button>
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={() => handleQuickReaction("wow")}
-											disabled={isReactionLoading}
-											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-										>
-											😮
-										</Button>
-
-										{/* Sad reaction button */}
-										<Button
-											size="sm"
-											variant="ghost"
-											onClick={() => handleQuickReaction("sad")}
-											disabled={isReactionLoading}
-											className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
-										>
-											😢
-										</Button>
-
-										{/* Separator only if there are edit/delete actions for user messages */}
-										{ownsMessage && <div className="mx-1 h-6 w-px bg-border" />}
-
-										{/* Edit Button (only for user messages) */}
-										{ownsMessage && (
+											{/* Quick reaction buttons */}
 											<Button
 												size="sm"
 												variant="ghost"
-												onClick={handleEdit}
-												className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
+												onClick={() => handleQuickReaction("thumbs_up")}
+												disabled={isReactionLoading}
+												className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 											>
-												<Edit3 className="h-4 w-4" />
+												👍
 											</Button>
-										)}
-
-										{/* Delete Button (only for user messages) */}
-										{ownsMessage && (
 											<Button
 												size="sm"
 												variant="ghost"
-												onClick={handleDelete}
-												className="h-8 w-8 rounded-full p-0 text-destructive hover:bg-destructive/10"
+												onClick={() => handleQuickReaction("heart")}
+												disabled={isReactionLoading}
+												className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
 											>
-												<Trash2 className="h-4 w-4" />
+												❤️
 											</Button>
-										)}
-									</div>
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={() => handleQuickReaction("laugh")}
+												disabled={isReactionLoading}
+												className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+											>
+												😂
+											</Button>
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={() => handleQuickReaction("wow")}
+												disabled={isReactionLoading}
+												className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+											>
+												😮
+											</Button>
+
+											{/* Sad reaction button */}
+											<Button
+												size="sm"
+												variant="ghost"
+												onClick={() => handleQuickReaction("sad")}
+												disabled={isReactionLoading}
+												className="h-8 w-8 rounded-full p-0 text-lg hover:bg-muted"
+											>
+												😢
+											</Button>
+
+											{/* Separator only if there are edit/delete actions for user messages */}
+											{ownsMessage && (
+												<div className="mx-1 h-6 w-px bg-border" />
+											)}
+
+											{/* Edit Button (only for user messages) */}
+											{ownsMessage && (
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={handleEdit}
+													className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
+												>
+													<Edit3 className="h-4 w-4" />
+												</Button>
+											)}
+
+											{/* Delete Button (only for user messages) */}
+											{ownsMessage && (
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={handleDelete}
+													className="h-8 w-8 rounded-full p-0 text-destructive hover:bg-destructive/10"
+												>
+													<Trash2 className="h-4 w-4" />
+												</Button>
+											)}
+										</div>
+									</>
 								)}
 
 								{/* Mobile: Long press triggered drawer */}
@@ -364,8 +420,10 @@ export function Message({ message }: MessageProps) {
 					{reactionSummary && reactionSummary.length > 0 && (
 						<div
 							className={cn(
-								"-bottom-5 absolute left-[calc(25%)]",
-								ownsMessage ? "flex justify-end" : "flex justify-start",
+								"-bottom-5 absolute",
+								ownsMessage
+									? "left-2 flex justify-end"
+									: "right-2 flex justify-start",
 							)}
 						>
 							<MessageReactions
