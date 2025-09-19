@@ -18,6 +18,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
 import { useOnlineNotifications } from "@/hooks/useOnlineNotifications";
+import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
 import { EmojiPicker } from "./EmojiPicker";
@@ -70,14 +71,16 @@ export function Chat() {
 		selectedChat?.group?._id ? { groupId: selectedChat?.group?._id } : "skip",
 	);
 
-	const messages = useQuery(
-		api.unifiedMessages.getMessages,
-		selectedChat?.contact?.contactUserId
-			? { otherUserId: selectedChat.contact.contactUserId }
-			: selectedChat?.group?._id
-				? { groupId: selectedChat.group._id }
-				: "skip",
-	);
+	// Get current user for optimistic messages
+	const currentUser = useQuery(api.auth.loggedInUser);
+
+	// Use optimistic messages hook
+	const { messages, addOptimisticMessage, markOptimisticMessageFailed } =
+		useOptimisticMessages({
+			otherUserId: selectedChat?.contact?.contactUserId,
+			groupId: selectedChat?.group?._id,
+			currentUserId: currentUser?._id,
+		});
 
 	// Get nudges for the current conversation (temporarily disabled to fix infinite loop)
 	// const conversationNudges = useQuery(
@@ -163,6 +166,19 @@ export function Chat() {
 		e.preventDefault();
 		if (!messageInput.trim()) return;
 
+		const messageContent = messageInput.trim();
+
+		// Clear input immediately for better UX
+		setMessageInput("");
+
+		// Add optimistic message immediately
+		const optimisticId = addOptimisticMessage(messageContent, "text");
+		if (!optimisticId) {
+			console.error("Failed to create optimistic message");
+			setMessageInput(messageContent); // Restore input on error
+			return;
+		}
+
 		try {
 			// Stop typing indicator before sending
 			await handleTyping(false);
@@ -171,15 +187,23 @@ export function Chat() {
 				typingTimeoutRef.current = null;
 			}
 
+			// Send message to server
 			await sendMessage({
-				content: messageInput.trim(),
+				content: messageContent,
 				messageType: "text",
 				receiverId: selectedChat?.contact?.contactUserId,
 				groupId: selectedChat?.group?._id,
 			});
-			setMessageInput("");
+
+			// No need to mark as sent - optimistic message already looks final
+			// It will be automatically replaced when server confirms
 		} catch (error) {
 			console.error("Failed to send message:", error);
+
+			// Mark optimistic message as failed
+			const errorMessage =
+				error instanceof Error ? error.message : "Failed to send message";
+			markOptimisticMessageFailed(optimisticId, errorMessage);
 		}
 	};
 
@@ -358,14 +382,21 @@ export function Chat() {
 
 									return (
 										<div
-											key={message._id}
+											key={
+												("clientKey" in message &&
+												typeof message.clientKey === "string"
+													? message.clientKey
+													: message._id) as string
+											}
 											className={cn(
 												// Tight spacing for consecutive messages, normal spacing for new groups
 												isConsecutive ? "mt-1" : "mt-6 md:mt-8",
 											)}
 										>
 											<Message
-												message={message}
+												message={
+													message as Parameters<typeof Message>[0]["message"]
+												}
 												isConsecutive={isConsecutive}
 											/>
 										</div>

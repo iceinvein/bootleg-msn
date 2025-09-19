@@ -2,9 +2,9 @@ import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { motion } from "framer-motion";
-import { Check, Edit3, Trash2, User, X } from "lucide-react";
+import { AlertCircle, Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,20 +15,37 @@ import { QuickMessageActions } from "./QuickMessageActions";
 import type { ReactionType } from "./ReactionPicker";
 import { hoverScale, messageBubble, tapScale } from "./ui/animated";
 
+// Support both server messages and optimistic messages
+type ServerMessage = FunctionReturnType<
+	typeof api.unifiedMessages.getMessages
+>[number];
+type OptimisticMessage = ServerMessage & {
+	isOptimistic: true;
+	isSending: boolean;
+	sendError?: string;
+};
+
 type MessageProps = {
-	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
+	message: ServerMessage | OptimisticMessage;
 	isConsecutive?: boolean;
 };
 
-export function Message({ message, isConsecutive = false }: MessageProps) {
+const MessageComponent = function Message({
+	message,
+	isConsecutive = false,
+}: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
-	// For now, use direct message reactions for all messages since unified messages uses single table
-	// TODO: Refactor to handle group messages properly when system is made consistent
-	const reactionSummary = useQuery(api.reactions.getMessageReactionSummary, {
-		messageId: message._id,
-	});
+	// Check if this is an optimistic message
+	const isOptimistic = "isOptimistic" in message && message.isOptimistic;
+	// Suppress entrance/layout animation when a server message is reusing an optimistic key
+	const isReconciledServer = !isOptimistic && "clientKey" in message;
+
+	const reactionSummary = useQuery(
+		api.reactions.getMessageReactionSummary,
+		isOptimistic ? "skip" : { messageId: message._id },
+	);
 
 	const addReaction = useMutation(api.reactions.addMessageReaction);
 	const removeReaction = useMutation(api.reactions.removeMessageReaction);
@@ -187,10 +204,10 @@ export function Message({ message, isConsecutive = false }: MessageProps) {
 				hasReactions && "mb-7", // Add 28px margin bottom when reactions are present
 			)}
 			variants={messageBubble}
-			initial="initial"
+			initial={isReconciledServer ? false : "initial"}
 			animate="animate"
 			exit="exit"
-			layout
+			layout={!isReconciledServer}
 		>
 			<div className="flex flex-col gap-1">
 				{/* Name and Timestamp - only show on first message in group */}
@@ -200,9 +217,9 @@ export function Message({ message, isConsecutive = false }: MessageProps) {
 							"mb-1 flex items-center gap-2 text-muted-foreground text-xs",
 							ownsMessage ? "flex-row-reverse text-right" : "text-left",
 						)}
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						transition={{ delay: 0.2 }}
+						initial={isReconciledServer ? false : { opacity: 0 }}
+						animate={isReconciledServer ? undefined : { opacity: 1 }}
+						transition={isReconciledServer ? undefined : { delay: 0.2 }}
 					>
 						{/* Sender name - only for group chats */}
 						{message.groupId && (
@@ -268,6 +285,11 @@ export function Message({ message, isConsecutive = false }: MessageProps) {
 									ownsMessage
 										? "message-bubble-sent hover-lift"
 										: "message-bubble-received hover-lift",
+									// Only show visual indicators for failed messages
+									isOptimistic &&
+										"sendError" in message &&
+										message.sendError &&
+										"border-2 border-red-500/50",
 								)}
 								// Long press handlers for mobile
 								onTouchStart={handleLongPressStart}
@@ -279,19 +301,40 @@ export function Message({ message, isConsecutive = false }: MessageProps) {
 								whileHover={hoverScale}
 								whileTap={tapScale}
 							>
-								<p className="break-words text-sm md:text-base">
-									{message.content}
-									{message.isEdited && (
-										<motion.span
-											className="ml-2 text-xs opacity-70"
-											initial={{ opacity: 0, scale: 0.8 }}
-											animate={{ opacity: 0.7, scale: 1 }}
-											transition={{ delay: 0.2 }}
-										>
-											(edited)
-										</motion.span>
-									)}
-								</p>
+								<div className="flex items-center gap-2">
+									<p className="flex-1 break-words text-sm md:text-base">
+										{message.content}
+										{message.isEdited && (
+											<motion.span
+												className="ml-2 text-xs opacity-70"
+												initial={
+													isReconciledServer
+														? false
+														: { opacity: 0, scale: 0.8 }
+												}
+												animate={
+													isReconciledServer
+														? undefined
+														: { opacity: 0.7, scale: 1 }
+												}
+												transition={
+													isReconciledServer ? undefined : { delay: 0.2 }
+												}
+											>
+												(edited)
+											</motion.span>
+										)}
+									</p>
+
+									{/* Only show error indicator for failed messages */}
+									{isOptimistic &&
+										"sendError" in message &&
+										message.sendError && (
+											<div title={message.sendError}>
+												<AlertCircle className="h-3 w-3 text-red-500" />
+											</div>
+										)}
+								</div>
 							</motion.div>
 						)}
 
@@ -433,4 +476,13 @@ export function Message({ message, isConsecutive = false }: MessageProps) {
 			</div>
 		</motion.div>
 	);
-}
+};
+
+// Memoize the component to prevent unnecessary re-renders
+export const Message = memo(MessageComponent, (prevProps, nextProps) => {
+	// Custom comparison to prevent re-renders when message object reference is the same
+	return (
+		prevProps.message === nextProps.message &&
+		prevProps.isConsecutive === nextProps.isConsecutive
+	);
+});
