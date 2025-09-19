@@ -211,26 +211,15 @@ AnimatedDiv.displayName = "AnimatedDiv";
 // Hover animations
 export const hoverScale = {
 	scale: 1.02,
-	transition: {
-		duration: 0.2,
-		ease: [0.4, 0, 0.2, 1],
-	},
-};
+} as const;
 
 export const hoverLift = {
 	y: -2,
-	transition: {
-		duration: 0.2,
-		ease: [0.4, 0, 0.2, 1],
-	},
-};
+} as const;
 
 export const tapScale = {
 	scale: 0.98,
-	transition: {
-		duration: 0.1,
-	},
-};
+} as const;
 
 // Typing indicator animation
 export const typingDots: Variants = {

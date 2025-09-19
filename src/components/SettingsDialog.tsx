@@ -84,7 +84,7 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 					<Tabs
 						value={activeTab}
 						onValueChange={setActiveTab}
-						className="flex w-full flex-col overflow-hidden"
+						className="flex max-h-[calc(85vh-8rem)] w-full flex-col overflow-hidden"
 					>
 						<TabsList className="grid w-full flex-shrink-0 grid-cols-3">
 							<TabsTrigger value="account">Account</TabsTrigger>

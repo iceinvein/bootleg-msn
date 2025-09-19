@@ -13,26 +13,26 @@ import {
 } from "./ui/responsive-dialog";
 
 const statusOptions = [
-	{ 
-		value: "online", 
-		label: "Online", 
+	{
+		value: "online",
+		label: "Online",
 		description: "Available to chat",
 		color: "bg-green-500",
-		emoji: "🟢" 
+		emoji: "🟢",
 	},
-	{ 
-		value: "away", 
-		label: "Away", 
+	{
+		value: "away",
+		label: "Away",
 		description: "Away from keyboard",
 		color: "bg-yellow-500",
-		emoji: "🟡" 
+		emoji: "🟡",
 	},
-	{ 
-		value: "busy", 
-		label: "Busy", 
+	{
+		value: "busy",
+		label: "Busy",
 		description: "Do not disturb",
 		color: "bg-red-500",
-		emoji: "🔴" 
+		emoji: "🔴",
 	},
 	{
 		value: "invisible",
@@ -51,14 +51,15 @@ interface StatusSelectorProps {
 	className?: string;
 }
 
-export function StatusSelector({ 
-	currentStatus, 
-	onStatusChange, 
-	className 
+export function StatusSelector({
+	currentStatus,
+	onStatusChange,
+	className,
 }: StatusSelectorProps) {
 	const [isOpen, setIsOpen] = useState(false);
 
-	const currentStatusOption = statusOptions.find(s => s.value === currentStatus) || statusOptions[0];
+	const currentStatusOption =
+		statusOptions.find((s) => s.value === currentStatus) || statusOptions[0];
 
 	const handleStatusSelect = (status: StatusValue) => {
 		onStatusChange(status);
@@ -71,16 +72,18 @@ export function StatusSelector({
 				<Button
 					variant="ghost"
 					className={cn(
-						"glass w-full justify-between rounded-lg p-3 h-auto hover:shadow-md transition-all duration-200",
-						className
+						"glass h-auto w-full justify-between rounded-lg p-3 transition-all duration-200 hover:shadow-md",
+						className,
 					)}
 				>
 					<div className="flex items-center gap-3">
 						<div className="relative">
-							<div className={cn(
-								"h-3 w-3 rounded-full border-2 border-background",
-								getStatusColorWithGlow(currentStatus)
-							)} />
+							<div
+								className={cn(
+									"h-3 w-3 rounded-full border-2 border-background",
+									getStatusColorWithGlow(currentStatus),
+								)}
+							/>
 						</div>
 						<div className="flex flex-col items-start">
 							<span className="font-medium text-sm">
@@ -106,8 +109,9 @@ export function StatusSelector({
 							key={status.value}
 							type="button"
 							className={cn(
-								"glass w-full flex items-center gap-3 p-3 rounded-lg transition-all duration-200 hover:shadow-md",
-								currentStatus === status.value && "ring-2 ring-primary/40 bg-primary/5"
+								"glass flex w-full items-center gap-3 rounded-lg p-3 transition-all duration-200 hover:shadow-md",
+								currentStatus === status.value &&
+									"bg-primary/5 ring-2 ring-primary/40",
 							)}
 							onClick={() => handleStatusSelect(status.value)}
 							initial={{ opacity: 0, y: 10 }}
@@ -117,20 +121,18 @@ export function StatusSelector({
 							whileTap={{ scale: 0.98 }}
 						>
 							<div className="relative">
-								<div className={cn(
-									"h-4 w-4 rounded-full border-2 border-background",
-									getStatusColorWithGlow(status.value)
-								)} />
+								<div
+									className={cn(
+										"h-4 w-4 rounded-full border-2 border-background",
+										getStatusColorWithGlow(status.value),
+									)}
+								/>
 							</div>
-							
+
 							<div className="flex-1 text-left">
 								<div className="flex items-center gap-2">
-									<span className="font-medium text-sm">
-										{status.label}
-									</span>
-									<span className="text-lg">
-										{status.emoji}
-									</span>
+									<span className="font-medium text-sm">{status.label}</span>
+									<span className="text-lg">{status.emoji}</span>
 								</div>
 								<p className="text-muted-foreground text-xs">
 									{status.description}

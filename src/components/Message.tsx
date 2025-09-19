@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,19 +13,14 @@ import { cn } from "@/lib/utils";
 import { MessageReactions } from "./MessageReactions";
 import { QuickMessageActions } from "./QuickMessageActions";
 import type { ReactionType } from "./ReactionPicker";
-import { fadeInUp, hoverScale, messageBubble, tapScale } from "./ui/animated";
+import { hoverScale, messageBubble, tapScale } from "./ui/animated";
 
-interface MessageProps {
+type MessageProps = {
 	message: FunctionReturnType<typeof api.unifiedMessages.getMessages>[number];
 	isConsecutive?: boolean;
-	isLastInGroup?: boolean;
-}
+};
 
-export function Message({
-	message,
-	isConsecutive = false,
-	isLastInGroup = true,
-}: MessageProps) {
+export function Message({ message, isConsecutive = false }: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 	const isMobile = useMediaQuery("(max-width: 768px)");
 

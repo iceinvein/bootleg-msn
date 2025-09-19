@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+/** biome-ignore-all lint/suspicious/noExplicitAny: it's a test */
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import { StatusSelector } from "./StatusSelector";
 
@@ -16,6 +17,7 @@ vi.mock("framer-motion", () => ({
 vi.mock("./ui/responsive-dialog", () => ({
 	ResponsiveDialog: ({ children, open, onOpenChange }: any) => (
 		<div data-testid="responsive-dialog" data-open={open}>
+			{/** biome-ignore lint/a11y/useKeyWithClickEvents: it's test */}
 			<div onClick={() => onOpenChange?.(!open)}>{children}</div>
 		</div>
 	),
@@ -28,7 +30,7 @@ vi.mock("./ui/responsive-dialog", () => ({
 	ResponsiveDialogTitle: ({ children }: any) => (
 		<h2 data-testid="dialog-title">{children}</h2>
 	),
-	ResponsiveDialogTrigger: ({ children, asChild }: any) => (
+	ResponsiveDialogTrigger: ({ children }: any) => (
 		<div data-testid="dialog-trigger">{children}</div>
 	),
 }));
@@ -140,7 +142,7 @@ describe("StatusSelector", () => {
 	it("handles all status values correctly", () => {
 		const statuses = ["online", "away", "busy", "invisible"] as const;
 
-		statuses.forEach((status, index) => {
+		statuses.forEach((status) => {
 			const { unmount } = render(
 				<StatusSelector
 					currentStatus={status}
