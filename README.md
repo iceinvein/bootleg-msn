@@ -50,6 +50,7 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 - **System integration** (notifications, file associations, system tray)
 - **Auto-updates** for seamless version management
 - **Platform-specific optimizations** for Windows, macOS, and Linux
+- **Comprehensive documentation** - See [Tauri Documentation](#-tauri-desktop-documentation)
 
 #### 📱 Mobile Applications (Capacitor)
 
@@ -229,9 +230,14 @@ bootleg-msn/
 │   │   ├── SignInForm.tsx     # Authentication form
 │   │   ├── EmailVerificationPage.tsx # Email verification
 │   │   ├── SignUpForm.tsx     # User registration
+│   │   ├── TauriIntegration.tsx # Tauri desktop integration
+│   │   ├── TauriMenu.tsx      # Native menu components
 │   │   └── ui/               # shadcn/ui components
 │   ├── hooks/             # Custom React hooks
-│   ├── lib/               # Utility libraries (cn function, etc.)
+│   │   └── useTauri.ts        # Tauri-specific React hooks
+│   ├── lib/               # Utility libraries
+│   │   ├── tauri.ts           # Tauri API wrappers
+│   │   └── tauri-notifications.ts # Native notification service
 │   ├── stores/            # Nanostore global state
 │   ├── test/              # Test setup and utilities
 │   ├── utils/             # Helper functions
@@ -250,11 +256,24 @@ bootleg-msn/
 │   └── _generated/        # Auto-generated Convex files
 ├── src-tauri/             # Tauri desktop application
 │   ├── src/               # Rust source code
+│   │   └── main.rs            # Main Rust backend with native integrations
 │   ├── icons/             # Application icons
 │   ├── capabilities/      # Tauri security capabilities
-│   └── tauri.conf.json    # Tauri configuration
+│   │   └── main-capability.json # Security permissions
+│   ├── Cargo.toml         # Rust dependencies
+│   ├── tauri.conf.json    # Tauri configuration
+│   └── entitlements.plist # macOS permissions
 ├── android/               # Android Capacitor project
 ├── ios/                   # iOS Capacitor project
+├── docs/                  # Documentation
+│   ├── TAURI_SETUP.md         # Tauri development setup
+│   ├── TAURI_ARCHITECTURE.md  # System architecture
+│   ├── TAURI_API_REFERENCE.md # API documentation
+│   ├── TAURI_DEPLOYMENT.md    # Build and deployment
+│   ├── TAURI_TROUBLESHOOTING.md # Debugging guide
+│   ├── DESIGN_SYSTEM.md       # UI design system
+│   ├── MOBILE_SETUP.md        # Mobile development
+│   └── VERSION_MANAGEMENT.md  # Version control
 ├── scripts/               # Build and deployment scripts
 ├── .kiro/                 # AI development steering rules
 │   └── steering/          # Development guidelines
@@ -529,6 +548,29 @@ If you encounter any issues or have questions:
 1. **Check the issues** on GitHub
 2. **Review the Convex docs** at [docs.convex.dev](https://docs.convex.dev)
 3. **Create a new issue** with detailed information
+
+---
+
+## 📚 Tauri Desktop Documentation
+
+Comprehensive documentation for the Tauri desktop application:
+
+- **[Setup Guide](docs/TAURI_SETUP.md)** - Development environment setup and getting started
+- **[Architecture Overview](docs/TAURI_ARCHITECTURE.md)** - System design, plugins, and security model
+- **[API Reference](docs/TAURI_API_REFERENCE.md)** - Complete API documentation for Rust commands and TypeScript integration
+- **[Deployment Guide](docs/TAURI_DEPLOYMENT.md)** - Building, code signing, and distribution for all platforms
+- **[Troubleshooting](docs/TAURI_TROUBLESHOOTING.md)** - Common issues, debugging, and platform-specific problems
+
+### Key Tauri Features
+
+- **🦀 Rust Backend**: High-performance native operations with zero-cost abstractions
+- **🪟 Multi-Window Support**: Create separate chat windows with persistent state
+- **🔔 Native Notifications**: System-integrated notifications with click handling
+- **📱 System Tray**: Minimize to tray with unread message badges
+- **🔗 Deep Links**: Handle `msn-messenger://` protocol URLs
+- **🔄 Auto-Updates**: Seamless version management with signed updates
+- **🔒 Security**: Capability-based permissions and sandboxed execution
+- **🎨 Platform Integration**: Native look and feel on Windows, macOS, and Linux
 
 ---
 
