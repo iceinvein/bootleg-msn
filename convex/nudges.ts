@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 import {
 	canSendNudge,
@@ -106,7 +107,12 @@ export const getReceivedNudges = query({
 					throw new Error("Sender user not found");
 				}
 				return {
-					...nudge,
+					_id: nudge._id,
+					fromUserId: nudge.fromUserId,
+					nudgeType: nudge.nudgeType,
+					conversationId: nudge.conversationId,
+					conversationType: nudge.conversationType,
+					createdAt: nudge.createdAt,
 					fromUser: {
 						_id: fromUser._id,
 						name: fromUser.name,
@@ -162,7 +168,12 @@ export const getSentNudges = query({
 					throw new Error("Recipient user not found");
 				}
 				return {
-					...nudge,
+					_id: nudge._id,
+					toUserId: nudge.toUserId,
+					nudgeType: nudge.nudgeType,
+					conversationId: nudge.conversationId,
+					conversationType: nudge.conversationType,
+					createdAt: nudge.createdAt,
 					toUser: {
 						_id: toUser._id,
 						name: toUser.name,
@@ -173,6 +184,119 @@ export const getSentNudges = query({
 		);
 
 		return nudgesWithRecipients;
+	},
+});
+
+// Get nudges for a specific conversation (direct or group)
+export const getConversationNudges = query({
+	args: {
+		otherUserId: v.optional(v.id("users")),
+		groupId: v.optional(v.id("groups")),
+		limit: v.optional(v.number()),
+		since: v.optional(v.number()),
+	},
+	returns: v.array(
+		v.object({
+			_id: v.id("nudges"),
+			fromUserId: v.id("users"),
+			toUserId: v.id("users"),
+			nudgeType: nudgeTypeValidator,
+			conversationId: v.optional(v.string()),
+			conversationType: v.union(v.literal("direct"), v.literal("group")),
+			createdAt: v.number(),
+			fromUser: v.object({
+				_id: v.id("users"),
+				name: v.optional(v.string()),
+				image: v.optional(v.string()),
+			}),
+			toUser: v.object({
+				_id: v.id("users"),
+				name: v.optional(v.string()),
+				image: v.optional(v.string()),
+			}),
+			isFromMe: v.boolean(),
+		}),
+	),
+	handler: async (ctx, args) => {
+		const user = await getCurrentUser(ctx);
+		const limit = args.limit || 20;
+		const since = args.since || Date.now() - 24 * 60 * 60 * 1000; // Last 24 hours by default
+
+		let nudges: Doc<"nudges">[];
+
+		if (args.otherUserId) {
+			// Get nudges between two users (both directions)
+			nudges = await ctx.db
+				.query("nudges")
+				.filter((q) =>
+					q.and(
+						q.or(
+							q.and(
+								q.eq(q.field("fromUserId"), user._id),
+								q.eq(q.field("toUserId"), args.otherUserId),
+							),
+							q.and(
+								q.eq(q.field("fromUserId"), args.otherUserId),
+								q.eq(q.field("toUserId"), user._id),
+							),
+						),
+						q.gte(q.field("createdAt"), since),
+						q.eq(q.field("conversationType"), "direct"),
+					),
+				)
+				.order("asc")
+				.take(limit);
+		} else if (args.groupId) {
+			// Get nudges for a group (not implemented in original schema, but keeping for future)
+			nudges = await ctx.db
+				.query("nudges")
+				.filter((q) =>
+					q.and(
+						q.eq(q.field("conversationId"), args.groupId),
+						q.gte(q.field("createdAt"), since),
+						q.eq(q.field("conversationType"), "group"),
+					),
+				)
+				.order("asc")
+				.take(limit);
+		} else {
+			return [];
+		}
+
+		// Get user details for each nudge
+		const nudgesWithUsers = await Promise.all(
+			nudges.map(async (nudge) => {
+				const fromUser = await ctx.db.get(nudge.fromUserId);
+				const toUser = await ctx.db.get(nudge.toUserId);
+
+				if (!fromUser || !toUser) {
+					throw new Error("User not found");
+				}
+
+				return {
+					_id: nudge._id,
+					fromUserId: nudge.fromUserId,
+					toUserId: nudge.toUserId,
+					nudgeType: nudge.nudgeType,
+					conversationId: nudge.conversationId,
+					conversationType: nudge.conversationType,
+					createdAt: nudge.createdAt,
+					fromUser: {
+						_id: fromUser._id,
+						name: fromUser.name,
+						image: fromUser.image,
+					},
+					toUser: {
+						_id: toUser._id,
+						name: toUser.name,
+						image: toUser.image,
+					},
+					isFromMe: nudge.fromUserId === user._id,
+				};
+			}),
+		);
+
+		return nudgesWithUsers;
 	},
 });
 

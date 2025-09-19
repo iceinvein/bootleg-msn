@@ -12,7 +12,8 @@
 			"convex/**/*",
 			"!src/components/ui/**/*",
 			"!convex/_generated/**/*",
-			"!**/*.test.ts",
+			"!**/*.test.*",
+			"!**/*.spec.*",
 			"!src/index.css"
 		]
 	},

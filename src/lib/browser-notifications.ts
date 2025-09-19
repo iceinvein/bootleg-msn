@@ -280,6 +280,52 @@ class BrowserNotificationService {
 	}
 
 	/**
+	 * Show notification for nudge
+	 */
+	async notifyNudge(
+		nudgeId: string,
+		senderName: string,
+		nudgeType: "nudge" | "buzz",
+		chatId: string,
+		senderId: string,
+	): Promise<void> {
+		await this.showNotification({
+			title: `${senderName} sent you a ${nudgeType}!`,
+			body: nudgeType === "buzz" ? "Bzzzz! 📳" : "Hey! Pay attention! 👋",
+			tag: `nudge-${chatId}`, // Replaces previous nudge notifications from same chat
+			data: {
+				action: "openChat",
+				nudgeId,
+				chatId,
+				senderId,
+			},
+			requireInteraction: false,
+			silent: false, // Always play sound for nudges
+		});
+	}
+
+	/**
+	 * Show notification for contact coming online
+	 */
+	async notifyContactOnline(
+		contactId: string,
+		contactName: string,
+	): Promise<void> {
+		await this.showNotification({
+			title: `${contactName} is now online`,
+			body: "Your contact has signed in",
+			tag: `online-${contactId}`, // Replaces previous online notifications from same contact
+			data: {
+				action: "openChat",
+				chatId: contactId,
+				senderId: contactId,
+			},
+			requireInteraction: false,
+			silent: false, // Play sound for sign-in notifications
+		});
+	}
+
+	/**
 	 * Handle notification actions
 	 */
 	private handleNotificationAction(

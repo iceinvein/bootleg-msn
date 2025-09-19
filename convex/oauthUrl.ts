@@ -14,7 +14,7 @@ export const getAuthUrl = query({
 	args: {
 		provider: v.string(),
 	},
-	handler: async (ctx, { provider }) => {
+	handler: async (_ctx, { provider }) => {
 		// Get the Convex site URL (this is where OAuth callbacks are handled)
 		const convexUrl = process.env.CONVEX_URL;
 		if (!convexUrl) {

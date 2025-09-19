@@ -12,15 +12,25 @@ import {
 	User,
 	Users,
 	X,
+	Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useNudge } from "@/hooks/useNudge";
+import { useOnlineNotifications } from "@/hooks/useOnlineNotifications";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
 import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 import { Message } from "./Message";
-import { fadeInUp, hoverScale, tapScale } from "./ui/animated";
+import {
+	fadeInUp,
+	hoverScale,
+	nudgeShake,
+	nudgeShakeMobile,
+	tapScale,
+} from "./ui/animated";
 import { Avatar } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -34,6 +44,18 @@ export function Chat() {
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+	// Nudge functionality
+	const {
+		sendNudge,
+		isSending: isNudgeSending,
+		cooldownRemaining,
+		isShaking,
+	} = useNudge();
+	const isMobile = useMediaQuery("(max-width: 768px)");
+
+	// Online notifications (for testing)
+	const { playOnlineSound } = useOnlineNotifications();
 
 	const contactIsTyping = useQuery(
 		api.userStatus.getTypingIndicator,
@@ -56,6 +78,24 @@ export function Chat() {
 				? { groupId: selectedChat.group._id }
 				: "skip",
 	);
+
+	// Get nudges for the current conversation (temporarily disabled to fix infinite loop)
+	// const conversationNudges = useQuery(
+	// 	api.nudges.getConversationNudges,
+	// 	selectedChat?.contact?.contactUserId
+	// 		? {
+	// 				otherUserId: selectedChat.contact.contactUserId,
+	// 				limit: 10,
+	// 				since: Date.now() - 60 * 60 * 1000, // Last hour
+	// 			}
+	// 		: selectedChat?.group?._id
+	// 			? {
+	// 					groupId: selectedChat.group._id,
+	// 					limit: 10,
+	// 					since: Date.now() - 60 * 60 * 1000, // Last hour
+	// 				}
+	// 			: "skip",
+	// );
 
 	const sendMessage = useMutation(api.unifiedMessages.sendMessage);
 	const markMessagesAsRead = useMutation(
@@ -147,6 +187,22 @@ export function Chat() {
 		setMessageInput((prev) => prev + emoji);
 	};
 
+	const handleSendNudge = async () => {
+		if (
+			!selectedChat?.contact?.contactUserId ||
+			isNudgeSending ||
+			cooldownRemaining > 0
+		) {
+			return;
+		}
+
+		try {
+			await sendNudge(selectedChat.contact.contactUserId, "nudge");
+		} catch (error) {
+			console.error("Failed to send nudge:", error);
+		}
+	};
+
 	const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = e.target.value;
 		setMessageInput(value);
@@ -179,7 +235,13 @@ export function Chat() {
 	};
 
 	return (
-		<div className={`chat-container ${showChat ? "flex" : "hidden md:flex"}`}>
+		<motion.div
+			className={`chat-container ${showChat ? "flex" : "hidden md:flex"}`}
+			variants={
+				isShaking ? (isMobile ? nudgeShakeMobile : nudgeShake) : undefined
+			}
+			animate={isShaking ? "animate" : "initial"}
+		>
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
 					{/* Chat Header - Fixed at top */}
@@ -243,6 +305,16 @@ export function Chat() {
 										</Button>
 									</GroupInfoDialog>
 								)}
+								{/* Temporary test button for online sound */}
+								<Button
+									variant="ghost"
+									size="sm"
+									className="h-8 w-8 md:h-10 md:w-10"
+									onClick={playOnlineSound}
+									title="Test online sound"
+								>
+									🔊
+								</Button>
 								<Button
 									variant="ghost"
 									size="sm"
@@ -275,22 +347,12 @@ export function Chat() {
 
 								{messages?.map((message, index) => {
 									const prevMessage = index > 0 ? messages[index - 1] : null;
-									const nextMessage =
-										index < messages.length - 1 ? messages[index + 1] : null;
 
 									// Check if this message is consecutive with the previous one
 									const isConsecutive = Boolean(
 										prevMessage &&
 											prevMessage.senderId === message.senderId &&
 											message._creationTime - prevMessage._creationTime <
-												5 * 60 * 1000, // 5 minutes
-									);
-
-									// Check if this is the last message in a group
-									const isLastInGroup = Boolean(
-										!nextMessage ||
-											nextMessage.senderId !== message.senderId ||
-											nextMessage._creationTime - message._creationTime >=
 												5 * 60 * 1000, // 5 minutes
 									);
 
@@ -305,7 +367,6 @@ export function Chat() {
 											<Message
 												message={message}
 												isConsecutive={isConsecutive}
-												isLastInGroup={isLastInGroup}
 											/>
 										</div>
 									);
@@ -413,6 +474,30 @@ export function Chat() {
 										</Button>
 									</motion.div>
 								</EmojiPicker>
+								{/* Nudge Button - Only show for direct chats */}
+								{selectedChat?.contact && (
+									<motion.div whileHover={hoverScale} whileTap={tapScale}>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+											onClick={handleSendNudge}
+											disabled={isNudgeSending || cooldownRemaining > 0}
+											title={
+												cooldownRemaining > 0
+													? `Wait ${cooldownRemaining}s before sending another nudge`
+													: "Send a nudge"
+											}
+										>
+											<Zap
+												className={`h-3 w-3 md:h-4 md:w-4 ${
+													cooldownRemaining > 0 ? "opacity-50" : ""
+												}`}
+											/>
+										</Button>
+									</motion.div>
+								)}
 								<Input
 									value={messageInput}
 									onChange={handleInputChange}
@@ -451,6 +536,6 @@ export function Chat() {
 					</div>
 				</div>
 			)}
-		</div>
+		</motion.div>
 	);
 }

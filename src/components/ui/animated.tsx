@@ -177,6 +177,38 @@ interface AnimatedDivProps extends HTMLMotionProps<"div"> {
 	variant?: keyof typeof animationVariants;
 }
 
+// Nudge shake animation (classic MSN style)
+export const nudgeShake: Variants = {
+	initial: {
+		x: 0,
+		y: 0,
+	},
+	animate: {
+		x: [0, -10, 10, -8, 8, -6, 6, -4, 4, -2, 2, 0],
+		y: [0, -5, 5, -4, 4, -3, 3, -2, 2, -1, 1, 0],
+		transition: {
+			duration: 0.8,
+			ease: "easeInOut",
+		},
+	},
+};
+
+// Subtle nudge shake for mobile (less aggressive)
+export const nudgeShakeMobile: Variants = {
+	initial: {
+		x: 0,
+		y: 0,
+	},
+	animate: {
+		x: [0, -5, 5, -4, 4, -3, 3, -2, 2, -1, 1, 0],
+		y: [0, -2, 2, -2, 2, -1, 1, -1, 1, 0, 0, 0],
+		transition: {
+			duration: 0.6,
+			ease: "easeInOut",
+		},
+	},
+};
+
 const animationVariants = {
 	fadeInUp,
 	fadeInDown,
@@ -186,6 +218,8 @@ const animationVariants = {
 	bounceIn,
 	staggerContainer,
 	staggerItem,
+	nudgeShake,
+	nudgeShakeMobile,
 };
 
 export const AnimatedDiv = forwardRef<HTMLDivElement, AnimatedDivProps>(
@@ -253,6 +287,8 @@ export const statusPulse: Variants = {
 		},
 	},
 };
+
+
 
 // Message bubble animations
 export const messageBubble: Variants = {

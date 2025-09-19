@@ -3,6 +3,7 @@ import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
 import { useEffect } from "react";
 import { useMessageNotifications } from "@/hooks/useMessageNotifications";
+import { useOnlineNotifications } from "@/hooks/useOnlineNotifications";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
 import { AccountLinkingNotification } from "./AccountLinkingNotification";
@@ -19,6 +20,9 @@ export function MessengerApp() {
 
 	// Initialize message notifications for toast alerts
 	useMessageNotifications();
+
+	// Initialize online status notifications for sign-in alerts
+	useOnlineNotifications();
 
 	// Check if a chat is currently selected (for mobile layout)
 	const isChatOpen = !!(selectedChat?.contact || selectedChat?.group);
