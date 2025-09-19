@@ -6,6 +6,7 @@ import { LogOut, Moon, Palette, Sun } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { useThemeCustomization } from "@/hooks/useThemeCustomization";
+import { BrowserNotificationSettings } from "./BrowserNotificationSettings";
 import { ThemePreview } from "./ThemePreview";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
@@ -86,8 +87,9 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 						onValueChange={setActiveTab}
 						className="flex max-h-[calc(85vh-8rem)] w-full flex-col overflow-hidden"
 					>
-						<TabsList className="grid w-full flex-shrink-0 grid-cols-3">
+						<TabsList className="grid w-full flex-shrink-0 grid-cols-4">
 							<TabsTrigger value="account">Account</TabsTrigger>
+							<TabsTrigger value="notifications">Notifications</TabsTrigger>
 							<TabsTrigger value="appearance">Appearance</TabsTrigger>
 							<TabsTrigger value="about">About</TabsTrigger>
 						</TabsList>
@@ -163,6 +165,29 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 													<LogOut className="h-4 w-4" />
 													<span>Sign Out</span>
 												</Button>
+											</motion.div>
+										</TabsContent>
+									</motion.div>
+								)}
+
+								{activeTab === "notifications" && (
+									<motion.div
+										key="notifications"
+										initial={{ opacity: 0 }}
+										animate={{ opacity: 1 }}
+										exit={{ opacity: 0 }}
+										transition={tabTransition}
+									>
+										<TabsContent
+											value="notifications"
+											className="mt-0 space-y-4 pb-4"
+										>
+											<motion.div
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												transition={{ ...itemTransition, delay: 0.05 }}
+											>
+												<BrowserNotificationSettings />
 											</motion.div>
 										</TabsContent>
 									</motion.div>

@@ -5,6 +5,7 @@ import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { chatWindowHelpers } from "@/stores/chatWindows";
 import { $selectedChat } from "@/stores/contact";
+import { useBrowserNotifications } from "./useBrowserNotifications";
 import { useNotifications } from "./useNotifications";
 
 // Type for messages returned from getAllUserMessages query - end-to-end type safe
@@ -20,6 +21,13 @@ export function useMessageNotifications() {
 	// Initialize desktop notifications for Tauri
 	const { notifyNewMessage, isSupported: isDesktopNotificationSupported } =
 		useNotifications();
+
+	// Initialize browser notifications for web
+	const {
+		notifyNewMessage: notifyBrowserMessage,
+		isBrowserEnvironment,
+		canNotify: canNotifyBrowser,
+	} = useBrowserNotifications();
 
 	// Track the last seen message IDs to detect new messages
 	const lastSeenMessageIds = useRef<Set<string>>(new Set());
@@ -159,6 +167,27 @@ export function useMessageNotifications() {
 					// Don't throw here to avoid disrupting the toast notification
 				}
 			}
+
+			// Also show browser notification when running in web browser
+			if (isBrowserEnvironment && canNotifyBrowser) {
+				try {
+					// Generate a unique chat ID for the notification
+					const chatId = message.groupId
+						? `group:${message.groupId}`
+						: `contact:${message.senderId}`;
+
+					await notifyBrowserMessage(
+						message._id,
+						senderName,
+						toastContent,
+						chatId,
+						message.senderId,
+					);
+				} catch (error) {
+					console.error("Failed to show browser notification:", error);
+					// Don't throw here to avoid disrupting the toast notification
+				}
+			}
 		},
 		[
 			getSenderDisplayName,
@@ -166,6 +195,9 @@ export function useMessageNotifications() {
 			openChat,
 			isDesktopNotificationSupported,
 			notifyNewMessage,
+			isBrowserEnvironment,
+			canNotifyBrowser,
+			notifyBrowserMessage,
 		],
 	);
 

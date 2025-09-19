@@ -172,17 +172,30 @@ class MobileNotificationManager {
 	}
 
 	private showWebNotification(options: MobileNotificationOptions) {
-		// Fallback for web - could use browser notifications or toast
-		if ("Notification" in window && Notification.permission === "granted") {
-			new Notification(options.title, {
-				body: options.body,
-				icon: "/icon-192.png",
-				data: options.data,
+		// Use the browser notifications service for better integration
+		import("./browser-notifications")
+			.then(({ browserNotifications }) => {
+				browserNotifications.showNotification({
+					title: options.title,
+					body: options.body,
+					icon: "/icon-192.png",
+					data: options.data,
+					tag: options.id?.toString(),
+				});
+			})
+			.catch(() => {
+				// Fallback to basic notification if browser-notifications fails
+				if ("Notification" in window && Notification.permission === "granted") {
+					new Notification(options.title, {
+						body: options.body,
+						icon: "/icon-192.png",
+						data: options.data,
+					});
+				} else {
+					// Show toast notification as fallback
+					console.log("Web notification:", options.title, options.body);
+				}
 			});
-		} else {
-			// Show toast notification as fallback
-			console.log("Web notification:", options.title, options.body);
-		}
 	}
 }
 
