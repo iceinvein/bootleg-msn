@@ -1,5 +1,5 @@
 import { Resend } from "@convex-dev/resend";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { components, internal } from "./_generated/api";
 import {
 	action,
@@ -41,7 +41,7 @@ export const sendVerificationEmail = action({
 		);
 
 		if (existingVerification?.verified) {
-			throw new Error("Email is already verified");
+			throw new ConvexError("Email is already verified");
 		}
 
 		// Generate verification token
@@ -110,15 +110,15 @@ export const verifyEmail = mutation({
 			.unique();
 
 		if (!verification) {
-			throw new Error("Invalid verification token");
+			throw new ConvexError("Invalid verification token");
 		}
 
 		if (verification.verified) {
-			throw new Error("Email is already verified");
+			throw new ConvexError("Email is already verified");
 		}
 
 		if (verification.expiresAt < Date.now()) {
-			throw new Error("Verification token has expired");
+			throw new ConvexError("Verification token has expired");
 		}
 
 		// Mark as verified
@@ -167,7 +167,7 @@ export const resendVerificationEmail = action({
 		);
 
 		if (existingVerification?.verified) {
-			throw new Error("Email is already verified");
+			throw new ConvexError("Email is already verified");
 		}
 
 		// Generate new verification token

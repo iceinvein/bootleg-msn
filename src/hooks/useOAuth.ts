@@ -7,6 +7,7 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth } from "convex/react";
 import { toast } from "sonner";
+import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 import { Platform } from "@/utils/platform";
 
 type OAuthProvider = "github" | "google" | "apple";
@@ -47,8 +48,9 @@ export function useOAuth() {
 				await signIn(provider);
 			}
 		} catch (error) {
-			console.error(`OAuth error for ${provider}:`, error);
-			toast.error(`Failed to sign in with ${provider}. Please try again.`);
+			// Use centralized error handling for user-friendly messages
+			logAuthError(error, `OAuth-${provider}`);
+			toast.error(getAuthErrorMessage(error));
 			throw error;
 		}
 	}

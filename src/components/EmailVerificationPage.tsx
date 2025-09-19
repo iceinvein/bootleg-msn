@@ -3,6 +3,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 import { Button } from "./ui/button";
 
 interface EmailVerificationPageProps {
@@ -72,29 +73,18 @@ export function EmailVerificationPage({
 								}
 							}, 1500);
 						} catch (signUpError) {
-							console.error("Sign up error:", signUpError);
-							toast.error(
-								"Email verified, but failed to create account. Please try signing in.",
-							);
+							logAuthError(signUpError, "EmailVerification-SignUp");
+							toast.error(getAuthErrorMessage(signUpError));
 						} finally {
 							setIsCreatingAccount(false);
 						}
 					}
 				}
 			} catch (error) {
-				console.error("Verification error:", error);
+				const parsedError = logAuthError(error, "EmailVerification");
 				setVerificationStatus("error");
-				const errorMsg =
-					error instanceof Error ? error.message : "Verification failed";
-				setErrorMessage(errorMsg);
-
-				if (errorMsg.includes("Invalid verification token")) {
-					toast.error("Invalid or expired verification link.");
-				} else if (errorMsg.includes("already verified")) {
-					toast.error("This email is already verified. Please sign in.");
-				} else {
-					toast.error("Verification failed. Please try again.");
-				}
+				setErrorMessage(parsedError.message);
+				toast.error(getAuthErrorMessage(error));
 			} finally {
 				setIsVerifying(false);
 			}

@@ -3,6 +3,7 @@ import { useAction } from "convex/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 import { Button } from "./ui/button";
 import {
 	Card,
@@ -54,16 +55,9 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 			setEmailSent(true);
 			toast.success("Verification email sent! Please check your inbox.");
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error
-					? error.message
-					: "Failed to send verification email";
-
-			if (errorMessage.includes("already verified")) {
-				toast.error("This email is already verified. Please sign in instead.");
-			} else {
-				toast.error(errorMessage);
-			}
+			// Use centralized error handling for user-friendly messages
+			logAuthError(error, "SignUp");
+			toast.error(getAuthErrorMessage(error));
 		} finally {
 			setIsLoading(false);
 		}

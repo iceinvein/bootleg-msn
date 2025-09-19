@@ -4,8 +4,29 @@ import Google from "@auth/core/providers/google";
 import { ConvexCredentials } from "@convex-dev/auth/providers/ConvexCredentials";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { convexAuth, getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
+
+// GitHub API types
+interface GitHubEmail {
+	email: string;
+	primary: boolean;
+	verified: boolean;
+	visibility?: string;
+}
+
+interface OAuthExchangeResult {
+	success: true;
+	user: {
+		id: number;
+		login: string;
+		name: string | null;
+		email: string;
+		avatar_url: string;
+	};
+	githubId: string;
+	accessToken: string;
+}
 
 /**
  * Custom ConvexCredentials provider for GitHub Desktop OAuth
@@ -17,7 +38,7 @@ const GitHubDesktop = ConvexCredentials({
 	authorize: async (credentials, ctx) => {
 		// Validate required credentials from the OAuth flow
 		if (!credentials.githubId || !credentials.accessToken) {
-			throw new Error("Missing GitHub credentials");
+			throw new ConvexError("Missing GitHub credentials");
 		}
 
 		// Verify the GitHub access token by fetching user data
@@ -29,7 +50,7 @@ const GitHubDesktop = ConvexCredentials({
 		});
 
 		if (!userResponse.ok) {
-			throw new Error("Invalid GitHub access token");
+			throw new ConvexError("Invalid GitHub access token");
 		}
 
 		const userData = await userResponse.json();
@@ -44,7 +65,10 @@ const GitHubDesktop = ConvexCredentials({
 
 		const emailData = await emailResponse.json();
 		const primaryEmail =
-			emailData.find((email: any) => email.primary)?.email || userData.email;
+			emailData.find(
+				(email: { email: string; primary: boolean; verified: boolean }) =>
+					email.primary,
+			)?.email || userData.email;
 
 		// Create or link the user account using Convex Auth's createAccount
 		const { createAccount } = await import("@convex-dev/auth/server");
@@ -357,7 +381,7 @@ export const exchangeOAuthCode = action({
 		code: v.string(),
 		state: v.optional(v.string()),
 	},
-	handler: async (_ctx, { provider, code }): Promise<any> => {
+	handler: async (_ctx, { provider, code }): Promise<OAuthExchangeResult> => {
 		if (provider === "github") {
 			try {
 				// Exchange code for access token
@@ -412,9 +436,9 @@ export const exchangeOAuthCode = action({
 					},
 				);
 
-				const emailData = await emailResponse.json();
+				const emailData = (await emailResponse.json()) as GitHubEmail[];
 				const primaryEmail =
-					emailData.find((email: any) => email.primary)?.email ||
+					emailData.find((email: GitHubEmail) => email.primary)?.email ||
 					userData.email;
 
 				// Return the user data and access token

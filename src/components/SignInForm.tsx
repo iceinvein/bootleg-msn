@@ -4,6 +4,11 @@ import { useAction, useMutation } from "convex/react";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import {
+	getAuthErrorMessage,
+	isAuthErrorType,
+	logAuthError,
+} from "@/utils/authErrorHandler";
 import { EmailVerificationPage } from "./EmailVerificationPage";
 
 import { SignInWithApple } from "./SignInWithApple";
@@ -99,16 +104,19 @@ export function SignInForm() {
 				flow: "signIn",
 			});
 		} catch (error) {
-			const errorMessage =
-				error instanceof Error ? error.message : "Sign in failed";
+			// Use centralized error handling for user-friendly messages
+			const parsedError = logAuthError(error, "SignIn");
 
-			if (errorMessage.includes("User not found")) {
-				toast.error("No account found with this email. Please sign up first.");
-			} else if (errorMessage.includes("Invalid password")) {
-				toast.error("Invalid password. Please try again.");
-			} else {
-				toast.error(errorMessage);
+			// Handle specific error types with custom logic if needed
+			if (isAuthErrorType(error, "verification")) {
+				// For verification errors, show the verification UI
+				if (parsedError.message.includes("verify your email")) {
+					setNeedsVerification(email.trim());
+				}
 			}
+
+			// Show user-friendly error message
+			toast.error(getAuthErrorMessage(error));
 		} finally {
 			setIsLoading(false);
 		}

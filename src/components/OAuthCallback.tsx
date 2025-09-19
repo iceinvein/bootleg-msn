@@ -4,6 +4,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 
 type OAuthCallbackProps = {
 	onComplete: () => void;
@@ -27,14 +28,19 @@ export function OAuthCallback({ onComplete, oauthData }: OAuthCallbackProps) {
 			}
 
 			if (oauthData.error) {
-				setError(`OAuth failed: ${oauthData.error}`);
+				const errorMsg = getAuthErrorMessage(
+					new Error(`OAuth failed: ${oauthData.error}`),
+				);
+				setError(errorMsg);
 				setIsProcessing(false);
 				return;
 			}
 
 			// Check if we have an OAuth code from GitHub
 			if (!oauthData.code) {
-				setError("No OAuth code received");
+				setError(
+					"No authorization code received from the provider. Please try signing in again.",
+				);
 				setIsProcessing(false);
 				return;
 			}
@@ -76,11 +82,12 @@ export function OAuthCallback({ onComplete, oauthData }: OAuthCallbackProps) {
 						}),
 					);
 				} else {
-					setError("Failed to complete authentication");
+					setError("Failed to complete authentication. Please try again.");
 					setIsProcessing(false);
 				}
 			} catch (actionError) {
-				setError(`Authentication failed: ${actionError}`);
+				logAuthError(actionError, "OAuthCallback");
+				setError(getAuthErrorMessage(actionError));
 				setIsProcessing(false);
 			}
 		};
