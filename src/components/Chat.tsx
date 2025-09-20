@@ -1,6 +1,7 @@
 import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { motion } from "framer-motion";
 import {
 	ArrowLeft,
@@ -25,6 +26,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 import { Message } from "./Message";
+import { NudgeMessage } from "./NudgeMessage";
 import { TypingIndicator } from "./TypingIndicator";
 import {
 	fadeInUp,
@@ -90,23 +92,31 @@ export function Chat() {
 			currentUserId: currentUser?._id,
 		});
 
-	// Get nudges for the current conversation (temporarily disabled to fix infinite loop)
-	// const conversationNudges = useQuery(
-	// 	api.nudges.getConversationNudges,
-	// 	selectedChat?.contact?.contactUserId
-	// 		? {
-	// 				otherUserId: selectedChat.contact.contactUserId,
-	// 				limit: 10,
-	// 				since: Date.now() - 60 * 60 * 1000, // Last hour
-	// 			}
-	// 		: selectedChat?.group?._id
-	// 			? {
-	// 					groupId: selectedChat.group._id,
-	// 					limit: 10,
-	// 					since: Date.now() - 60 * 60 * 1000, // Last hour
-	// 				}
-	// 			: "skip",
-	// );
+	// Get nudges for the current conversation with stable 'since' to avoid re-fetch loops
+	const [nudgesSince] = useState(() => Date.now() - 12 * 60 * 60 * 1000); // last 12 hours
+
+	// Types for combining messages and nudges without using 'any'
+	type ChatMessage = Parameters<typeof Message>[0]["message"];
+	type ConversationNudge = FunctionReturnType<
+		typeof api.nudges.getConversationNudges
+	>[number];
+
+	const conversationNudges = useQuery(
+		api.nudges.getConversationNudges,
+		selectedChat?.contact?.contactUserId
+			? {
+					otherUserId: selectedChat.contact.contactUserId,
+					limit: 50,
+					since: nudgesSince,
+				}
+			: selectedChat?.group?._id
+				? {
+						groupId: selectedChat.group._id,
+						limit: 50,
+						since: nudgesSince,
+					}
+				: "skip",
+	) as ConversationNudge[] | undefined;
 
 	const sendMessage = useMutation(api.unifiedMessages.sendMessage);
 	const markMessagesAsRead = useMutation(
@@ -376,39 +386,75 @@ export function Chat() {
 									</div>
 								)}
 
-								{messages?.map((message, index) => {
-									const prevMessage = index > 0 ? messages[index - 1] : null;
+								{(() => {
+									// Build a combined, chronologically sorted list of messages and nudges
+									type CombinedItem =
+										| { type: "nudge"; time: number; data: ConversationNudge }
+										| { type: "message"; time: number; data: ChatMessage };
 
-									// Check if this message is consecutive with the previous one
-									const isConsecutive = Boolean(
-										prevMessage &&
-											prevMessage.senderId === message.senderId &&
-											message._creationTime - prevMessage._creationTime <
-												5 * 60 * 1000, // 5 minutes
+									const nudgeItems: CombinedItem[] = (
+										conversationNudges ?? []
+									).map((n) => ({ type: "nudge", time: n.createdAt, data: n }));
+									const messageItems: CombinedItem[] = (messages ?? []).map(
+										(m) => ({
+											type: "message",
+											time: m._creationTime,
+											data: m as ChatMessage,
+										}),
 									);
 
-									return (
-										<div
-											key={
-												("clientKey" in message &&
-												typeof message.clientKey === "string"
-													? message.clientKey
-													: message._id) as string
+									const combined: CombinedItem[] = [
+										...messageItems,
+										...nudgeItems,
+									].sort((a, b) => a.time - b.time);
+
+									return combined.map((item, idx) => {
+										if (item.type === "nudge") {
+											const n = item.data;
+											return (
+												<div key={`nudge-${n._id}`} className="mt-6 md:mt-8">
+													<NudgeMessage
+														senderName={n.fromUser?.name ?? "Unknown User"}
+														nudgeType={n.nudgeType}
+														timestamp={n.createdAt}
+														isOwn={Boolean(n.isFromMe)}
+													/>
+												</div>
+											);
+										}
+
+										// Compute consecutive only against previous message in the combined list
+										let prevMsg: ChatMessage | null = null;
+										for (let j = idx - 1; j >= 0; j--) {
+											if (combined[j].type === "message") {
+												prevMsg = combined[j].data as ChatMessage;
+												break;
 											}
-											className={cn(
-												// Tight spacing for consecutive messages, normal spacing for new groups
-												isConsecutive ? "mt-1" : "mt-6 md:mt-8",
-											)}
-										>
-											<Message
-												message={
-													message as Parameters<typeof Message>[0]["message"]
+										}
+										const m = item.data as ChatMessage;
+										const isConsecutive = Boolean(
+											prevMsg &&
+												prevMsg.senderId === m.senderId &&
+												m._creationTime - prevMsg._creationTime < 5 * 60 * 1000,
+										);
+
+										return (
+											<div
+												key={
+													"clientKey" in m &&
+													typeof (m as Record<string, unknown>).clientKey ===
+														"string"
+														? ((m as Record<string, unknown>)
+																.clientKey as string)
+														: (m._id as string)
 												}
-												isConsecutive={isConsecutive}
-											/>
-										</div>
-									);
-								})}
+												className={cn(isConsecutive ? "mt-1" : "mt-6 md:mt-8")}
+											>
+												<Message message={m} isConsecutive={isConsecutive} />
+											</div>
+										);
+									});
+								})()}
 
 								{contactIsTyping && (
 									<div className="flex justify-start">
