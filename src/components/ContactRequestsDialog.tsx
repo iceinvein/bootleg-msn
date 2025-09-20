@@ -6,7 +6,7 @@ import { Clock, Inbox, Send, User, UserCheck, UserX } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { formatTime } from "@/utils/data";
 
 export interface ContactRequest {
@@ -47,6 +48,14 @@ export default function ContactRequestsDialog({
 	const currentUser = useQuery(api.auth.loggedInUser);
 	const pendingRequests = useQuery(api.contacts.getPendingRequests);
 	const sentRequests = useQuery(api.contacts.getSentRequests);
+	const pendingUserIds: Id<"users">[] | undefined = pendingRequests?.map(
+		(r) => r.userId as Id<"users">,
+	);
+	const sentUserIds: Id<"users">[] | undefined = sentRequests?.map(
+		(r) => r.contactUserId as Id<"users">,
+	);
+	const avatarMapPending = useUserAvatarUrls(pendingUserIds);
+	const avatarMapSent = useUserAvatarUrls(sentUserIds);
 	const acceptContactRequest = useMutation(api.contacts.acceptContactRequest);
 	const rejectContactRequest = useMutation(api.contacts.rejectContactRequest);
 	const cancelSentRequest = useMutation(api.contacts.cancelSentRequest);
@@ -162,7 +171,16 @@ export default function ContactRequestsDialog({
 												className="flex items-start space-x-3 rounded-lg border border-info bg-info/10 p-4"
 											>
 												<Avatar className="h-12 w-12">
-													<User className="h-12 w-12" />
+													{(() => {
+														const url = avatarMapPending.get(request.userId);
+														return url ? (
+															<AvatarImage src={url} />
+														) : (
+															<AvatarFallback delayMs={0}>
+																<User className="h-12 w-12" />
+															</AvatarFallback>
+														);
+													})()}
 												</Avatar>
 												<div className="min-w-0 flex-1">
 													<div className="mb-1 flex items-center space-x-2">
@@ -232,7 +250,18 @@ export default function ContactRequestsDialog({
 												className="flex items-start space-x-3 rounded-lg border border-warning bg-warning/10 p-4"
 											>
 												<Avatar className="h-12 w-12">
-													<User className="h-12 w-12" />
+													{(() => {
+														const url = avatarMapSent.get(
+															request.contactUserId,
+														);
+														return url ? (
+															<AvatarImage src={url} />
+														) : (
+															<AvatarFallback delayMs={0}>
+																<User className="h-12 w-12" />
+															</AvatarFallback>
+														);
+													})()}
 												</Avatar>
 												<div className="min-w-0 flex-1">
 													<div className="mb-1 flex items-center space-x-2">

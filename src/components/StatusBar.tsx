@@ -7,6 +7,7 @@ import type { Infer } from "convex/values";
 
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
+import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import AddContactDialog from "./AddContactDialog";
 import ContactRequestsDialog from "./ContactRequestsDialog";
 import { CreateGroupDialog } from "./CreateGroupDialog";
@@ -28,6 +29,8 @@ interface StatusBarProps {
 
 export function StatusBar({ user }: StatusBarProps) {
 	const [currentStatus, setCurrentStatus] = useState<StatusValue>("online");
+	const avatarMap = useUserAvatarUrls([user._id]);
+	const avatarUrl = avatarMap.get(user._id);
 	const [statusMessage, setStatusMessage] = useState("");
 
 	const pendingRequests = useQuery(api.contacts.getPendingRequests);
@@ -52,13 +55,30 @@ export function StatusBar({ user }: StatusBarProps) {
 	const totalRequestCount =
 		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
 
+	// Map broader status (which may include 'offline') to selectable set used by StatusSelector
+	const toSelectableStatus = (
+		s: StatusValue,
+	): "online" | "away" | "busy" | "invisible" => {
+		switch (s) {
+			case "online":
+			case "away":
+			case "busy":
+			case "invisible":
+				return s;
+			case "offline":
+				return "invisible";
+			default:
+				return "invisible";
+		}
+	};
+
 	return (
 		<div className="bg-background/60 backdrop-blur-sm">
 			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
 					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
-						<AvatarImage src="/placeholder.svg?height=40&width=40" />
-						<AvatarFallback className="text-xs md:text-sm">
+						{avatarUrl ? <AvatarImage key={avatarUrl} src={avatarUrl} /> : null}
+						<AvatarFallback delayMs={0} className="text-xs md:text-sm">
 							<User className="h-full w-full" />
 						</AvatarFallback>
 					</Avatar>
@@ -126,8 +146,8 @@ export function StatusBar({ user }: StatusBarProps) {
 			</div>
 
 			<StatusSelector
-				currentStatus={currentStatus}
-				onStatusChange={handleStatusChange}
+				currentStatus={toSelectableStatus(currentStatus)}
+				onStatusChange={(s) => handleStatusChange(s)}
 			/>
 		</div>
 	);

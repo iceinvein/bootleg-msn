@@ -305,6 +305,18 @@ const applicationTables = {
 		.index("by_public", ["isPublic"])
 		.index("by_user_and_default", ["userId", "isDefault"]),
 
+	// Avatars stored as storage file references
+	userAvatars: defineTable({
+		userId: v.id("users"),
+		fileId: v.id("_storage"),
+		updatedAt: v.number(),
+	}).index("by_user", ["userId"]),
+	groupAvatars: defineTable({
+		groupId: v.id("groups"),
+		fileId: v.id("_storage"),
+		updatedAt: v.number(),
+	}).index("by_group", ["groupId"]),
+
 	// Conversation backups
 	conversationBackups: defineTable({
 		userId: v.id("users"),

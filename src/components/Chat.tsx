@@ -15,6 +15,7 @@ import {
 	Zap,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
 import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
@@ -31,7 +32,7 @@ import {
 	nudgeShakeMobile,
 	tapScale,
 } from "./ui/animated";
-import { Avatar } from "./ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { ScrollArea } from "./ui/scroll-area";
@@ -41,6 +42,16 @@ export function Chat() {
 
 	const [showChat, setShowChat] = useState(false);
 	const [messageInput, setMessageInput] = useState("");
+
+	// Resolve avatar URLs for selected chat
+	const selectedUserId = selectedChat?.contact?.contactUserId;
+	const selectedGroupId = selectedChat?.group?._id;
+	const userAvatarMap = useUserAvatarUrls(
+		selectedUserId ? [selectedUserId] : undefined,
+	);
+	const groupAvatarMap = useGroupAvatarUrls(
+		selectedGroupId ? [selectedGroupId] : undefined,
+	);
 
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -280,7 +291,16 @@ export function Chat() {
 								<div className="relative">
 									<Avatar className="h-8 w-8 md:h-10 md:w-10">
 										{selectedChat.contact ? (
-											<User className="h-8 w-8 md:h-10 md:w-10" />
+											selectedUserId && userAvatarMap.get(selectedUserId) ? (
+												<AvatarImage src={userAvatarMap.get(selectedUserId)} />
+											) : (
+												<AvatarFallback delayMs={0}>
+													<User className="h-8 w-8 md:h-10 md:w-10" />
+												</AvatarFallback>
+											)
+										) : selectedGroupId &&
+											groupAvatarMap.get(selectedGroupId) ? (
+											<AvatarImage src={groupAvatarMap.get(selectedGroupId)} />
 										) : (
 											<Users className="h-8 w-8 md:h-10 md:w-10" />
 										)}
@@ -393,7 +413,15 @@ export function Chat() {
 									<div className="flex justify-start">
 										<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
 											<Avatar className="h-6 w-6 md:h-8 md:w-8">
-												<User className="h-6 w-6 md:h-8 md:w-8" />
+												{selectedUserId && userAvatarMap.get(selectedUserId) ? (
+													<AvatarImage
+														src={userAvatarMap.get(selectedUserId)}
+													/>
+												) : (
+													<AvatarFallback delayMs={0}>
+														<User className="h-6 w-6 md:h-8 md:w-8" />
+													</AvatarFallback>
+												)}
 											</Avatar>
 											<div>
 												<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">

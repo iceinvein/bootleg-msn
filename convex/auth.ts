@@ -301,6 +301,26 @@ export const updateUserName = mutation({
 	},
 });
 
+// Update the user's profile image (avatar)
+export const updateUserImage = mutation({
+	args: { image: v.union(v.string(), v.null()) },
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) {
+			throw new Error("Not authenticated");
+		}
+
+		if (args.image === null) {
+			// Clear the image field
+			await ctx.db.patch(userId, { image: undefined });
+			return;
+		}
+
+		await ctx.db.patch(userId, { image: args.image });
+	},
+});
+
 // Check if user has multiple authentication methods linked
 export const getUserAuthMethods = query({
 	args: {},

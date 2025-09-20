@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { AlertCircle, Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
@@ -245,7 +245,13 @@ const MessageComponent = function Message({
 					{/* Avatar - only show for group chats and first message in group */}
 					{message.groupId && !isConsecutive ? (
 						<Avatar className="h-6 w-6 border-2 border-border md:h-8 md:w-8">
-							<User className="h-6 w-6 md:h-8 md:w-8" />
+							{message.sender?.image ? (
+								<AvatarImage src={message.sender.image} />
+							) : (
+								<AvatarFallback delayMs={0}>
+									<User className="h-6 w-6 md:h-8 md:w-8" />
+								</AvatarFallback>
+							)}
 						</Avatar>
 					) : message.groupId && isConsecutive ? (
 						<div className="h-6 w-6 md:h-8 md:w-8" /> // Spacer to maintain alignment in group chats

@@ -11,7 +11,7 @@ import {
 	Users,
 } from "lucide-react";
 import { useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -166,7 +166,13 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 											)}
 											<div className="relative">
 												<Avatar className="h-10 w-10">
-													<User className="h-10 w-10" />
+													{contact.user?.image ? (
+														<AvatarImage src={contact.user.image} />
+													) : (
+														<AvatarFallback delayMs={0}>
+															<User className="h-10 w-10" />
+														</AvatarFallback>
+													)}
 												</Avatar>
 												<div
 													className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white ${getStatusColor(contact.status)}`}
@@ -210,7 +216,13 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 											className="flex items-center space-x-2 rounded-full border bg-white px-3 py-1 dark:bg-gray-700"
 										>
 											<Avatar className="h-6 w-6">
-												<User className="h-6 w-6" />
+												{contact.user?.image ? (
+													<AvatarImage src={contact.user.image} />
+												) : (
+													<AvatarFallback delayMs={0}>
+														<User className="h-6 w-6" />
+													</AvatarFallback>
+												)}
 											</Avatar>
 											<span className="font-medium text-gray-900 text-sm dark:text-gray-100">
 												{contact.nickname ??

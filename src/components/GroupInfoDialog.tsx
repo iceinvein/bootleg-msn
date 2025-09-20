@@ -1,5 +1,5 @@
 import { api } from "@convex/_generated/api";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import {
 	Crown,
 	Info,
@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,18 +24,22 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import type { Group } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
 import AddMembersDialog from "./AddMembersDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 
 interface GroupInfoDialogProps {
-	group: Group;
+	group: Group | null;
 	children: React.ReactNode;
 }
 
 export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	const [isOpen, setIsOpen] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
+
+	// We'll keep hooks order stable and branch in render below.
 
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 	const members = useQuery(
@@ -48,6 +52,14 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	);
 
 	const currentUser = members?.find((m) => m.userId === loggedInUser?._id);
+	const avatarMap = useGroupAvatarUrls(group?._id ? [group._id] : undefined);
+	const groupAvatarUrl = group?._id ? avatarMap.get(group._id) : undefined;
+	// Resolve avatars for all members
+	const memberUserIds = members?.map((m) => m.userId);
+	const memberAvatarMap = useUserAvatarUrls(memberUserIds);
+	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
+	const setGroupAvatar = useMutation(api.avatars.setGroupAvatar);
+	const clearGroupAvatar = useMutation(api.avatars.clearGroupAvatar);
 	const isAdmin = currentUser?.role === "admin";
 	const onlineMembers = members?.filter((m) => m.status === "online").length;
 
@@ -64,6 +76,10 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 			day: "numeric",
 		});
 	};
+
+	if (!group) {
+		return null;
+	}
 
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
@@ -93,9 +109,20 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 					<TabsContent value="info" className="mt-4 space-y-6">
 						{/* Group Header */}
 						<div className="flex items-center space-x-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
-							<Avatar className="h-16 w-16 border-2 border-background shadow-md">
-								<Users className="h-16 w-16" />
-							</Avatar>
+							<div className="relative">
+								<Avatar className="h-16 w-16 border-2 border-background shadow-md">
+									{groupAvatarUrl ? (
+										<AvatarImage src={groupAvatarUrl} />
+									) : (
+										<Users className="h-16 w-16" />
+									)}
+								</Avatar>
+								{isUploading && (
+									<div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30">
+										<div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-b-transparent" />
+									</div>
+								)}
+							</div>
 							<div className="flex-1">
 								<InlineStatusEditor
 									initialStatus={group?.name ?? ""}
@@ -127,6 +154,109 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 								</div>
 							</div>
 						</div>
+						{/* Group avatar controls (admin only) */}
+						{isAdmin && (
+							<div className="flex items-center gap-2">
+								<input
+									id="group-avatar-upload"
+									type="file"
+									accept="image/*"
+									className="hidden"
+									onChange={async (e) => {
+										const file = e.target.files?.[0];
+										if (!file) return;
+										setIsUploading(true);
+										try {
+											// Resize to 128x128 like user avatars
+											const dataUrl = await new Promise<string>(
+												(resolve, reject) => {
+													const r = new FileReader();
+													r.onload = () => resolve(r.result as string);
+													r.onerror = reject;
+													r.readAsDataURL(file);
+												},
+											);
+											const img = await new Promise<HTMLImageElement>(
+												(resolve, reject) => {
+													const i = new Image();
+													i.onload = () => resolve(i);
+													i.onerror = reject;
+													i.src = dataUrl;
+												},
+											);
+											const size = 128;
+											const minDim = Math.min(img.width, img.height);
+											const sx = (img.width - minDim) / 2;
+											const sy = (img.height - minDim) / 2;
+											const canvas = document.createElement("canvas");
+											canvas.width = size;
+											canvas.height = size;
+											const ctx = canvas.getContext("2d");
+											if (!ctx) throw new Error("no ctx");
+											ctx.imageSmoothingEnabled = true;
+											ctx.imageSmoothingQuality = "high";
+											ctx.drawImage(
+												img,
+												sx,
+												sy,
+												minDim,
+												minDim,
+												0,
+												0,
+												size,
+												size,
+											);
+											const blob: Blob = await new Promise((resolve, reject) =>
+												canvas.toBlob(
+													(b) =>
+														b
+															? resolve(b)
+															: reject(
+																	new Error("Failed to create image blob"),
+																),
+													file.type.includes("png")
+														? "image/png"
+														: "image/jpeg",
+													0.85,
+												),
+											);
+											const uploadUrl = await generateUploadUrl({});
+											const res = await fetch(uploadUrl, {
+												method: "POST",
+												headers: { "Content-Type": blob.type || file.type },
+												body: blob,
+											});
+											if (!res.ok)
+												throw new Error(`Upload failed ${res.status}`);
+											const { storageId } = await res.json();
+											await setGroupAvatar({
+												groupId: group._id,
+												fileId:
+													storageId as unknown as import("@convex/_generated/dataModel").Id<"_storage">,
+											});
+										} catch (err) {
+											console.error(err);
+										} finally {
+											setIsUploading(false);
+											// reset the input so same file can be selected again if desired
+											(e.target as HTMLInputElement).value = "";
+										}
+									}}
+								/>
+								<label htmlFor="group-avatar-upload">
+									<Button asChild size="sm">
+										<span className="cursor-pointer">Upload avatar</span>
+									</Button>
+								</label>
+								<Button
+									variant="outline"
+									size="sm"
+									onClick={() => clearGroupAvatar({ groupId: group._id })}
+								>
+									Remove
+								</Button>
+							</div>
+						)}
 
 						{/* Quick Actions */}
 						<div className="grid grid-cols-2 gap-3">
@@ -187,7 +317,15 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 									>
 										<div className="relative">
 											<Avatar className="h-12 w-12">
-												<User className="h-8 w-8" />
+												{memberAvatarMap.get(member.userId) ? (
+													<AvatarImage
+														src={memberAvatarMap.get(member.userId)}
+													/>
+												) : (
+													<AvatarFallback delayMs={0}>
+														<User className="h-8 w-8" />
+													</AvatarFallback>
+												)}
 											</Avatar>
 											<div
 												className={`-bottom-1 -right-1 absolute h-4 w-4 rounded-full border-2 border-background ${getStatusColor(member.status)}`}

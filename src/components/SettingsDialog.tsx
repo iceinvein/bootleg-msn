@@ -2,12 +2,15 @@ import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
-import { LogOut, Moon, Palette, Sun } from "lucide-react";
+import { Camera, LogOut, Moon, Palette, Sun, Trash, User } from "lucide-react";
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { useTheme } from "@/components/theme-provider";
+import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useThemeCustomization } from "@/hooks/useThemeCustomization";
 import { BrowserNotificationSettings } from "./BrowserNotificationSettings";
 import { ThemePreview } from "./ThemePreview";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
@@ -21,7 +24,6 @@ import {
 	ResponsiveDialogTrigger,
 } from "./ui/responsive-dialog";
 import { Separator } from "./ui/separator";
-
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { VersionInfo } from "./VersionInfo";
 
@@ -43,11 +45,16 @@ const itemTransition = {
 export function SettingsDialog({ children }: SettingsDialogProps) {
 	const user = useQuery(api.auth.loggedInUser);
 	const updateUserName = useMutation(api.auth.updateUserName);
+	const setUserAvatar = useMutation(api.avatars.setUserAvatar);
+	const clearUserAvatar = useMutation(api.avatars.clearUserAvatar);
+	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 	const { signOut } = useAuthActions();
 	const { theme, setTheme } = useTheme();
 	const { config, presets, applyPreset } = useThemeCustomization();
 	const [name, setName] = useState("");
 	const [isUpdating, setIsUpdating] = useState(false);
+	const [isUploading, setIsUploading] = useState(false);
+	const [fileInputKey, setFileInputKey] = useState(0); // to reset file input
 	const [activeTab, setActiveTab] = useState("account");
 
 	const handleUpdateName = async () => {
@@ -66,6 +73,98 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 	useEffect(() => {
 		setName(user?.name ?? "");
 	}, [user]);
+
+	const myAvatarMap = useUserAvatarUrls(user?._id ? [user._id] : undefined);
+	const myAvatarUrl = user?._id ? myAvatarMap.get(user._id) : undefined;
+
+	const handleAvatarFileChange = async (
+		e: React.ChangeEvent<HTMLInputElement>,
+	) => {
+		const file = e.target.files?.[0];
+		if (!file) return;
+		setIsUploading(true);
+		try {
+			// Resize the image client-side to reduce bandwidth (square crop to 128x128)
+			const resized = await resizeImageToAvatar(file, 128);
+			const uploadBlob = resized ?? file;
+			const uploadUrl = await generateUploadUrl({});
+			const res = await fetch(uploadUrl, {
+				method: "POST",
+				headers: {
+					"Content-Type":
+						uploadBlob.type || file.type || "application/octet-stream",
+				},
+				body: uploadBlob,
+			});
+			if (!res.ok) {
+				throw new Error(`Upload failed with status ${res.status}`);
+			}
+			const { storageId } = (await res.json()) as { storageId: string };
+			// Store storageId server-side for durable resolution
+			await setUserAvatar({
+				fileId:
+					storageId as unknown as import("@convex/_generated/dataModel").Id<"_storage">,
+			});
+			toast.success("Avatar updated");
+		} catch (err) {
+			console.error(err);
+			toast.error("Failed to update avatar");
+		} finally {
+			setIsUploading(false);
+			// reset file input so the same file can be chosen again if needed
+			setFileInputKey((k) => k + 1);
+		}
+	};
+
+	async function resizeImageToAvatar(
+		file: File,
+		targetSize = 128,
+	): Promise<Blob | null> {
+		try {
+			const dataUrl = await new Promise<string>((resolve, reject) => {
+				const reader = new FileReader();
+				reader.onload = () => resolve(reader.result as string);
+				reader.onerror = (e) => reject(e);
+				reader.readAsDataURL(file);
+			});
+			const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+				const image = new Image();
+				image.onload = () => resolve(image);
+				image.onerror = (e) => reject(e);
+				image.src = dataUrl;
+			});
+			const minDim = Math.min(img.width, img.height);
+			// Center-crop square
+			const sx = (img.width - minDim) / 2;
+			const sy = (img.height - minDim) / 2;
+			const canvas = document.createElement("canvas");
+			canvas.width = targetSize;
+			canvas.height = targetSize;
+			const ctx = canvas.getContext("2d");
+			if (!ctx) return null;
+			ctx.imageSmoothingEnabled = true;
+			ctx.imageSmoothingQuality = "high";
+			ctx.drawImage(img, sx, sy, minDim, minDim, 0, 0, targetSize, targetSize);
+			const outputType = file.type.includes("png") ? "image/png" : "image/jpeg";
+			const blob = await new Promise<Blob | null>((resolve) =>
+				canvas.toBlob((b) => resolve(b), outputType, 0.85),
+			);
+			return blob;
+		} catch (err) {
+			console.warn("Avatar resize failed, using original file", err);
+			return null;
+		}
+	}
+
+	const handleRemoveAvatar = async () => {
+		try {
+			await clearUserAvatar({});
+			toast.success("Avatar removed");
+		} catch (err) {
+			console.error(err);
+			toast.error("Failed to remove avatar");
+		}
+	};
 
 	return (
 		<ResponsiveDialog>
@@ -108,6 +207,66 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 											value="account"
 											className="mt-0 space-y-4 pb-4"
 										>
+											{/* Profile Picture */}
+											<motion.div
+												className="space-y-3"
+												initial={{ opacity: 0 }}
+												animate={{ opacity: 1 }}
+												transition={{ ...itemTransition, delay: 0.02 }}
+											>
+												<Label>Avatar</Label>
+												<div className="flex items-center gap-3">
+													<div className="relative">
+														<Avatar className="h-14 w-14 border-2 border-border">
+															{myAvatarUrl ? (
+																<AvatarImage
+																	src={myAvatarUrl}
+																	alt="Your avatar"
+																/>
+															) : (
+																<AvatarFallback delayMs={0}>
+																	<User className="h-8 w-8" />
+																</AvatarFallback>
+															)}
+														</Avatar>
+														{isUploading && (
+															<div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/30">
+																<div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-b-transparent" />
+															</div>
+														)}
+													</div>
+													<div className="flex items-center gap-2">
+														<input
+															key={fileInputKey}
+															id="avatar-upload"
+															type="file"
+															accept="image/*"
+															className="hidden"
+															onChange={handleAvatarFileChange}
+														/>
+														<Button size="sm" asChild disabled={isUploading}>
+															<label
+																htmlFor="avatar-upload"
+																className="flex cursor-pointer items-center gap-1"
+															>
+																<Camera className="h-4 w-4" />
+																{isUploading ? "Uploading..." : "Upload"}
+															</label>
+														</Button>
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={handleRemoveAvatar}
+															disabled={isUploading || !user?.image}
+														>
+															<Trash className="mr-1 h-4 w-4" /> Remove
+														</Button>
+													</div>
+												</div>
+											</motion.div>
+
+											<Separator />
+
 											{/* Profile Settings */}
 											<motion.div
 												className="space-y-2"
