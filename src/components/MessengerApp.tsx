@@ -10,6 +10,11 @@ import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
 import { StatusBar } from "./StatusBar";
+import {
+	ResizableHandle,
+	ResizablePanel,
+	ResizablePanelGroup,
+} from "./ui/resizable";
 import { VersionBadge } from "./VersionInfo";
 
 export function MessengerApp() {
@@ -93,35 +98,52 @@ export function MessengerApp() {
 			{/* Account linking notification */}
 			<AccountLinkingNotification />
 
-			<div className={cn("flex flex-1 overflow-hidden")}>
-				{/* Sidebar - Full width on mobile when no chat is open */}
+			{/* Desktop: resizable panels */}
+			<div className="hidden flex-1 overflow-hidden md:flex">
+				<ResizablePanelGroup
+					direction="horizontal"
+					className="flex-1"
+					autoSaveId="msn_panel_layout_v1"
+				>
+					{/* Left panel: status + contacts */}
+					<ResizablePanel
+						defaultSize={28}
+						minSize={15}
+						maxSize={60}
+						className="min-w-[400px] max-w-[840px]"
+					>
+						<div className="flex h-full flex-col">
+							<StatusBar user={user} />
+							<ContactList />
+							<div className="mt-2 flex justify-center">
+								<VersionBadge />
+							</div>
+						</div>
+					</ResizablePanel>
+					<ResizableHandle withHandle className="mx-1" />
+					{/* Right panel: chat */}
+					{/* @ts-ignore */}
+					<ResizablePanel minSize={15} className="min-w-[400px]">
+						<Chat />
+					</ResizablePanel>
+				</ResizablePanelGroup>
+			</div>
+
+			{/* Mobile: original stacked layout */}
+			<div className={cn("flex flex-1 overflow-hidden md:hidden")}>
+				{/* Sidebar - full width when no chat is open */}
 				<div
-					className={cn(
-						"flex flex-col",
-						// On mobile: full width when no chat, hidden when chat is open
-						// On desktop: always show with normal width
-						"md:flex md:w-auto", // Auto width on desktop
-						isChatOpen ? "hidden md:flex" : "flex w-full md:w-auto", // Full width on mobile when no chat
-					)}
+					className={cn("flex w-full flex-col", isChatOpen ? "hidden" : "flex")}
 				>
 					<StatusBar user={user} />
 					<ContactList />
-					{/* Version info at bottom of status bar */}
 					<div className="mt-2 flex justify-center">
 						<VersionBadge />
 					</div>
 				</div>
 
-				{/* Main Chat Area - Hidden on mobile when no chat is selected */}
-				<div
-					className={cn(
-						"h-full flex-1",
-						// On mobile: hidden when no chat, shown when chat is open
-						// On desktop: always shown
-						"md:flex", // Always show on desktop
-						isChatOpen ? "flex" : "hidden md:flex", // Hide on mobile when no chat
-					)}
-				>
+				{/* Main Chat Area - shown when a chat is selected */}
+				<div className={cn("h-full flex-1", isChatOpen ? "flex" : "hidden")}>
 					<Chat />
 				</div>
 			</div>
