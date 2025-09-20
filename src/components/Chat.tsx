@@ -17,7 +17,6 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
-import { useOnlineNotifications } from "@/hooks/useOnlineNotifications";
 import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
@@ -54,9 +53,6 @@ export function Chat() {
 		isShaking,
 	} = useNudge();
 	const isMobile = useMediaQuery("(max-width: 768px)");
-
-	// Online notifications (for testing)
-	const { playOnlineSound } = useOnlineNotifications();
 
 	const contactIsTyping = useQuery(
 		api.userStatus.getTypingIndicator,
@@ -329,16 +325,6 @@ export function Chat() {
 										</Button>
 									</GroupInfoDialog>
 								)}
-								{/* Temporary test button for online sound */}
-								<Button
-									variant="ghost"
-									size="sm"
-									className="h-8 w-8 md:h-10 md:w-10"
-									onClick={playOnlineSound}
-									title="Test online sound"
-								>
-									🔊
-								</Button>
 								<Button
 									variant="ghost"
 									size="sm"
