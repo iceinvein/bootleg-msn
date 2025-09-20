@@ -22,6 +22,8 @@ export function useOnlineNotifications() {
 	// Play online sound
 	const playOnlineSound = useCallback(() => {
 		try {
+			const settings = browserNotifications.getSettings();
+			if (!settings.sound) return;
 			const audio = new Audio("/sounds/online.mp3");
 			audio.volume = 0.6;
 

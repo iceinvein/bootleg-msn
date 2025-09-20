@@ -47,7 +47,7 @@ class BrowserNotificationService {
 		enabled: true,
 		showPreview: true,
 		suppressWhenFocused: false, // Changed default to false for better UX
-		sound: false,
+		sound: true,
 		quietHoursEnabled: false,
 	};
 

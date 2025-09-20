@@ -1,12 +1,27 @@
 import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useQuery } from "convex/react";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { chatWindowHelpers } from "@/stores/chatWindows";
 import { $selectedChat } from "@/stores/contact";
 import { useBrowserNotifications } from "./useBrowserNotifications";
 import { useNotifications } from "./useNotifications";
+
+// Type-safe Web Audio access without using `any`
+type WebAudioWindow = Window & {
+	webkitAudioContext?: {
+		new (): AudioContext;
+	};
+};
+
+const createAudioContext = (): AudioContext | null => {
+	const w = window as WebAudioWindow;
+	const Ctor = (window.AudioContext || w.webkitAudioContext) as
+		| (new () => AudioContext)
+		| undefined;
+	return Ctor ? new Ctor() : null;
+};
 
 // Type for messages returned from getAllUserMessages query - end-to-end type safe
 type AllUserMessagesReturn = ReturnType<
@@ -19,14 +34,18 @@ export function useMessageNotifications() {
 	const user = useQuery(api.auth.loggedInUser);
 
 	// Initialize desktop notifications for Tauri
-	const { notifyNewMessage, isSupported: isDesktopNotificationSupported } =
-		useNotifications();
+	const {
+		notifyNewMessage,
+		isSupported: isDesktopNotificationSupported,
+		settings: tauriSettings,
+	} = useNotifications();
 
 	// Initialize browser notifications for web
 	const {
 		notifyNewMessage: notifyBrowserMessage,
 		isBrowserEnvironment,
 		canNotify: canNotifyBrowser,
+		settings: browserSettings,
 	} = useBrowserNotifications();
 
 	// Track the last seen message IDs to detect new messages
@@ -35,6 +54,134 @@ export function useMessageNotifications() {
 
 	// Get all messages for the current user (both direct and group messages)
 	const allMessages = useQuery(api.unifiedMessages.getAllUserMessages);
+
+	// Track window focus/visibility to decide when to notify even if chat is open
+	const [isWindowFocused, setIsWindowFocused] = useState<boolean>(
+		typeof document !== "undefined" ? document.hasFocus() : true,
+	);
+	useEffect(() => {
+		const handleFocus = () => setIsWindowFocused(true);
+		const handleBlur = () => setIsWindowFocused(false);
+		const handleVisibility = () =>
+			setIsWindowFocused(
+				typeof document !== "undefined"
+					? document.visibilityState === "visible" && document.hasFocus()
+					: true,
+			);
+
+		window.addEventListener("focus", handleFocus);
+		window.addEventListener("blur", handleBlur);
+		document.addEventListener("visibilitychange", handleVisibility);
+		return () => {
+			window.removeEventListener("focus", handleFocus);
+			window.removeEventListener("blur", handleBlur);
+			document.removeEventListener("visibilitychange", handleVisibility);
+		};
+	}, []);
+
+	// New message sound using public/sounds/message.mp3 with a WebAudio fallback
+	const lastSoundAtRef = useRef<number>(0);
+	const audioRef = useRef<HTMLAudioElement | null>(null);
+	const audioUnlockedRef = useRef<boolean>(false);
+	useEffect(() => {
+		try {
+			audioRef.current = new Audio("/sounds/message.mp3");
+			audioRef.current.preload = "auto";
+			audioRef.current.volume = 0.6;
+			const unlock = async () => {
+				if (!audioRef.current) return;
+				try {
+					const a = audioRef.current;
+					const prevVol = a.volume;
+					a.volume = 0.001;
+					a.currentTime = 0;
+					await a.play();
+					a.pause();
+					a.currentTime = 0;
+					a.volume = prevVol;
+					audioUnlockedRef.current = true;
+					removeListeners();
+				} catch {
+					// If this fails, we'll fallback later
+				}
+			};
+			const onDown = () => void unlock();
+			const onKey = () => void unlock();
+			const removeListeners = () => {
+				window.removeEventListener("mousedown", onDown);
+				window.removeEventListener("touchstart", onDown);
+				window.removeEventListener("keydown", onKey);
+			};
+			window.addEventListener("mousedown", onDown, { once: true });
+			window.addEventListener("touchstart", onDown, { once: true });
+			window.addEventListener("keydown", onKey, { once: true });
+			return removeListeners;
+		} catch {}
+	}, []);
+
+	const playNewMessageSound = useCallback(() => {
+		const now = Date.now();
+		if (now - lastSoundAtRef.current < 750) return; // throttle
+		lastSoundAtRef.current = now;
+
+		const playBeepFallback = () => {
+			try {
+				const ctx = createAudioContext();
+				if (!ctx) return;
+				const osc = ctx.createOscillator();
+				const gain = ctx.createGain();
+				osc.type = "sine";
+				osc.frequency.value = 880;
+				gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+				gain.gain.exponentialRampToValueAtTime(0.05, ctx.currentTime + 0.005);
+				gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.2);
+				osc.connect(gain);
+				gain.connect(ctx.destination);
+				osc.start();
+				osc.stop(ctx.currentTime + 0.22);
+				setTimeout(() => ctx.close().catch(() => {}), 400);
+			} catch {}
+		};
+
+		try {
+			if (audioRef.current) {
+				// Restart from start for crisp ding when multiple messages arrive
+				audioRef.current.currentTime = 0;
+				const p = audioRef.current.play();
+				if (p && typeof p.then === "function") {
+					p.catch(() => {
+						// Autoplay restrictions or other error — try unlock quickly then retry once
+						if (audioUnlockedRef.current) {
+							playBeepFallback();
+						} else {
+							// force a silent prime attempt
+							const a = audioRef.current;
+
+							if (!a) return;
+
+							const prevVol = a.volume;
+							a.volume = 0.001;
+							a.play()
+								.then(() => {
+									a.pause();
+									a.currentTime = 0;
+									a.volume = prevVol;
+									audioUnlockedRef.current = true;
+									// retry real play
+									a.currentTime = 0;
+									a.play().catch(() => playBeepFallback());
+								})
+								.catch(() => playBeepFallback());
+						}
+					});
+				}
+			} else {
+				playBeepFallback();
+			}
+		} catch {
+			playBeepFallback();
+		}
+	}, []);
 
 	// Get contacts and groups for name resolution
 	const contacts = useQuery(api.contacts.getContacts);
@@ -223,12 +370,21 @@ export function useMessageNotifications() {
 			(msg) => !lastSeenMessageIds.current.has(msg._id),
 		);
 
-		// Show notifications for new messages from inactive chats
+		// Show notifications for new messages when window not focused OR chat is inactive
 		for (const message of newMessages) {
-			if (!isChatActive(message)) {
+			const windowNotFocused = !isWindowFocused;
+			const chatInactive = !isChatActive(message);
+			if (windowNotFocused || chatInactive) {
 				showToastNotification(message).catch((error) => {
 					console.error("Failed to show notification:", error);
 				});
+				// Play sound hint when user likely won't see the message immediately, respecting settings
+				const allowSound = isBrowserEnvironment
+					? !!browserSettings?.sound
+					: (tauriSettings?.soundEnabled ?? true);
+				if (allowSound) {
+					playNewMessageSound();
+				}
 			}
 		}
 
@@ -242,6 +398,11 @@ export function useMessageNotifications() {
 		groups,
 		isChatActive,
 		showToastNotification,
+		browserSettings?.sound,
+		tauriSettings?.soundEnabled,
+		playNewMessageSound,
+		isWindowFocused,
+		isBrowserEnvironment,
 	]);
 
 	// Update main window active chat when selectedChat changes

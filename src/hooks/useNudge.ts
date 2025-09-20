@@ -1,29 +1,23 @@
 import { api } from "@convex/_generated/api";
-import { useMutation, useQuery } from "convex/react";
+import type { Id } from "@convex/_generated/dataModel";
+import { useConvex, useMutation, useQuery } from "convex/react";
+import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { browserNotifications } from "@/lib/browser-notifications";
 
-export interface NudgeData {
-	_id: string;
-	fromUserId: string;
-	toUserId: string;
-	nudgeType: "nudge" | "buzz";
-	conversationId?: string;
-	conversationType: "direct" | "group";
-	createdAt: number;
-	fromUser: {
-		_id: string;
-		name: string;
-		image?: string;
-	};
-}
+type ReceivedNudge = FunctionReturnType<
+	typeof api.nudges.getReceivedNudges
+>[number];
 
 export interface UseNudgeReturn {
 	// Send nudge
-	sendNudge: (toUserId: string, nudgeType?: "nudge" | "buzz") => Promise<void>;
-	canSendNudge: (toUserId: string) => Promise<boolean>;
+	sendNudge: (
+		toUserId: Id<"users">,
+		nudgeType?: "nudge" | "buzz",
+	) => Promise<void>;
+	canSendNudge: (toUserId: Id<"users">) => Promise<boolean>;
 
 	// Nudge state
 	isSending: boolean;
@@ -34,7 +28,7 @@ export interface UseNudgeReturn {
 	isShaking: boolean;
 
 	// Recent nudges
-	recentNudges: NudgeData[];
+	recentNudges: ReceivedNudge[];
 }
 
 export function useNudge(): UseNudgeReturn {
@@ -43,25 +37,28 @@ export function useNudge(): UseNudgeReturn {
 	const [isShaking, setIsShaking] = useState(false);
 
 	const isMobile = useMediaQuery("(max-width: 768px)");
-	const cooldownIntervalRef = useRef<NodeJS.Timeout | null>(null);
-	const shakeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+	// Use DOM timer IDs to avoid NodeJS.Timeout type mismatches in browser
+	const cooldownIntervalRef = useRef<number | null>(null);
+	const shakeTimeoutRef = useRef<number | null>(null);
 
 	// Mutations and queries
 	const sendNudgeMutation = useMutation(api.nudges.sendNudge);
-	const canSendNudgeQuery = useMutation(api.nudges.canSendNudge);
+	const convex = useConvex();
 
 	// Use a stable timestamp for the query to avoid constant re-renders
 	const [queryTimestamp] = useState(() => Date.now() - 5 * 60 * 1000); // Last 5 minutes from hook creation
 
 	const recentNudges =
-		useQuery(api.nudges.getReceivedNudges, {
+		(useQuery(api.nudges.getReceivedNudges, {
 			limit: 10,
 			since: queryTimestamp,
-		}) || [];
+		}) as ReceivedNudge[] | undefined) ?? ([] as ReceivedNudge[]);
 
 	// Play nudge sound
 	const playNudgeSound = useCallback(() => {
 		try {
+			const settings = browserNotifications.getSettings();
+			if (!settings.sound) return;
 			const audio = new Audio("/sounds/nudge.mp3");
 			audio.volume = 0.5;
 
@@ -91,7 +88,7 @@ export function useNudge(): UseNudgeReturn {
 		}
 
 		// Stop shaking after animation duration
-		shakeTimeoutRef.current = setTimeout(
+		shakeTimeoutRef.current = window.setTimeout(
 			() => {
 				setIsShaking(false);
 			},
@@ -101,7 +98,7 @@ export function useNudge(): UseNudgeReturn {
 
 	// Send nudge function
 	const sendNudge = useCallback(
-		async (toUserId: string, nudgeType: "nudge" | "buzz" = "nudge") => {
+		async (toUserId: Id<"users">, nudgeType: "nudge" | "buzz" = "nudge") => {
 			if (isSending) return;
 
 			try {
@@ -135,26 +132,28 @@ export function useNudge(): UseNudgeReturn {
 
 	// Check if can send nudge
 	const canSendNudge = useCallback(
-		async (toUserId: string): Promise<boolean> => {
+		async (toUserId: Id<"users">): Promise<boolean> => {
 			try {
-				const result = await canSendNudgeQuery({ toUserId });
+				const result = await convex.query(api.nudges.canSendNudgeToUser, {
+					toUserId,
+				});
 				return result?.canSend ?? false;
 			} catch (error) {
-				console.error("Failed to check nudge cooldown:", error);
+				console.error("Failed to check nudge availability:", error);
 				return false;
 			}
 		},
-		[canSendNudgeQuery],
+		[convex],
 	);
 
 	// Handle cooldown timer
 	useEffect(() => {
 		if (cooldownRemaining > 0) {
-			cooldownIntervalRef.current = setInterval(() => {
+			cooldownIntervalRef.current = window.setInterval(() => {
 				setCooldownRemaining((prev) => {
 					if (prev <= 1) {
 						if (cooldownIntervalRef.current) {
-							clearInterval(cooldownIntervalRef.current);
+							window.clearInterval(cooldownIntervalRef.current);
 						}
 						return 0;
 					}
@@ -165,7 +164,7 @@ export function useNudge(): UseNudgeReturn {
 
 		return () => {
 			if (cooldownIntervalRef.current) {
-				clearInterval(cooldownIntervalRef.current);
+				window.clearInterval(cooldownIntervalRef.current);
 			}
 		};
 	}, [cooldownRemaining]);
@@ -204,13 +203,17 @@ export function useNudge(): UseNudgeReturn {
 				);
 
 				// Show browser notification
+				const senderName = latestNudge.fromUser.name ?? "Unknown User";
+				const chatIdString =
+					latestNudge.conversationId ??
+					(latestNudge.fromUserId as unknown as string);
 				browserNotifications
 					.notifyNudge(
-						latestNudge._id,
-						latestNudge.fromUser.name,
+						String(latestNudge._id as unknown as string),
+						senderName,
 						latestNudge.nudgeType,
-						latestNudge.conversationId || latestNudge.fromUserId,
-						latestNudge.fromUserId,
+						chatIdString,
+						String(latestNudge.fromUserId as unknown as string),
 					)
 					.catch(console.warn);
 			}
@@ -224,7 +227,7 @@ export function useNudge(): UseNudgeReturn {
 				clearInterval(cooldownIntervalRef.current);
 			}
 			if (shakeTimeoutRef.current) {
-				clearTimeout(shakeTimeoutRef.current);
+				window.clearTimeout(shakeTimeoutRef.current);
 			}
 		};
 	}, []);

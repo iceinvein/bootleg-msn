@@ -1,4 +1,12 @@
-import { Bell, BellOff, Clock, Eye, EyeOff, Settings } from "lucide-react";
+import {
+	Bell,
+	BellOff,
+	Clock,
+	Eye,
+	EyeOff,
+	Settings,
+	Volume2,
+} from "lucide-react";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -13,6 +21,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useBrowserNotifications } from "@/hooks/useBrowserNotifications";
+import { useNotifications } from "@/hooks/useNotifications";
 
 export function BrowserNotificationSettings() {
 	const {
@@ -24,6 +33,13 @@ export function BrowserNotificationSettings() {
 		canNotify,
 		isBrowserEnvironment,
 	} = useBrowserNotifications();
+
+	// Tauri notifications (desktop) — if supported, mirror the sound toggle
+	const {
+		settings: tauriSettings,
+		updateSettings: updateTauriSettings,
+		isSupported: isTauriSupported,
+	} = useNotifications();
 
 	const [isRequestingPermission, setIsRequestingPermission] = useState(false);
 
@@ -46,6 +62,17 @@ export function BrowserNotificationSettings() {
 				icon: "/icon-192.png",
 				tag: "test-notification",
 			});
+		}
+	};
+
+	const handleTestSound = async () => {
+		try {
+			const audio = new Audio("/sounds/message.mp3");
+			audio.volume = 0.7;
+			audio.currentTime = 0;
+			await audio.play();
+		} catch (e) {
+			console.warn("Failed to play test sound:", e);
 		}
 	};
 
@@ -144,7 +171,12 @@ export function BrowserNotificationSettings() {
 								<Switch
 									id="notifications-enabled"
 									checked={settings.enabled}
-									onCheckedChange={(enabled) => updateSettings({ enabled })}
+									onCheckedChange={async (enabled) => {
+										updateSettings({ enabled });
+										if (isTauriSupported && tauriSettings) {
+											await updateTauriSettings({ ...tauriSettings, enabled });
+										}
+									}}
 								/>
 							</div>
 
@@ -161,9 +193,15 @@ export function BrowserNotificationSettings() {
 								<Switch
 									id="show-preview"
 									checked={settings.showPreview}
-									onCheckedChange={(showPreview) =>
-										updateSettings({ showPreview })
-									}
+									onCheckedChange={async (showPreview) => {
+										updateSettings({ showPreview });
+										if (isTauriSupported && tauriSettings) {
+											await updateTauriSettings({
+												...tauriSettings,
+												showPreview,
+											});
+										}
+									}}
 									disabled={!settings.enabled}
 								/>
 							</div>
@@ -183,9 +221,41 @@ export function BrowserNotificationSettings() {
 								<Switch
 									id="suppress-focused"
 									checked={settings.suppressWhenFocused}
-									onCheckedChange={(suppressWhenFocused) =>
-										updateSettings({ suppressWhenFocused })
-									}
+									onCheckedChange={async (suppressWhenFocused) => {
+										updateSettings({ suppressWhenFocused });
+										if (isTauriSupported && tauriSettings) {
+											await updateTauriSettings({
+												...tauriSettings,
+												suppressWhenFocused,
+											});
+										}
+									}}
+									disabled={!settings.enabled}
+								/>
+							</div>
+
+							<div className="flex items-center justify-between">
+								<div className="flex items-center gap-3">
+									<Volume2 className="h-4 w-4" />
+									<div>
+										<Label htmlFor="sound-enabled">Play Sound</Label>
+										<p className="text-muted-foreground text-sm">
+											Play a sound for new message notifications
+										</p>
+									</div>
+								</div>
+								<Switch
+									id="sound-enabled"
+									checked={settings.sound}
+									onCheckedChange={async (sound) => {
+										updateSettings({ sound });
+										if (isTauriSupported && tauriSettings) {
+											await updateTauriSettings({
+												...tauriSettings,
+												soundEnabled: sound,
+											});
+										}
+									}}
 									disabled={!settings.enabled}
 								/>
 							</div>
@@ -203,9 +273,15 @@ export function BrowserNotificationSettings() {
 								<Switch
 									id="quiet-hours"
 									checked={settings.quietHoursEnabled}
-									onCheckedChange={(quietHoursEnabled) =>
-										updateSettings({ quietHoursEnabled })
-									}
+									onCheckedChange={async (quietHoursEnabled) => {
+										updateSettings({ quietHoursEnabled });
+										if (isTauriSupported && tauriSettings) {
+											await updateTauriSettings({
+												...tauriSettings,
+												quietHoursEnabled,
+											});
+										}
+									}}
 									disabled={!settings.enabled}
 								/>
 							</div>
@@ -221,9 +297,16 @@ export function BrowserNotificationSettings() {
 												id="quiet-start"
 												type="time"
 												value={settings.quietHoursStart || "22:00"}
-												onChange={(e) =>
-													updateSettings({ quietHoursStart: e.target.value })
-												}
+												onChange={async (e) => {
+													const quietHoursStart = e.target.value;
+													updateSettings({ quietHoursStart });
+													if (isTauriSupported && tauriSettings) {
+														await updateTauriSettings({
+															...tauriSettings,
+															quietHoursStart,
+														});
+													}
+												}}
 												className="mt-1"
 											/>
 										</div>
@@ -235,9 +318,16 @@ export function BrowserNotificationSettings() {
 												id="quiet-end"
 												type="time"
 												value={settings.quietHoursEnd || "08:00"}
-												onChange={(e) =>
-													updateSettings({ quietHoursEnd: e.target.value })
-												}
+												onChange={async (e) => {
+													const quietHoursEnd = e.target.value;
+													updateSettings({ quietHoursEnd });
+													if (isTauriSupported && tauriSettings) {
+														await updateTauriSettings({
+															...tauriSettings,
+															quietHoursEnd,
+														});
+													}
+												}}
 												className="mt-1"
 											/>
 										</div>
@@ -246,8 +336,8 @@ export function BrowserNotificationSettings() {
 							)}
 						</div>
 
-						{/* Test Notification */}
-						<div className="border-t pt-4">
+						{/* Test Notification / Sound */}
+						<div className="flex items-center gap-2 border-t pt-4">
 							<Button
 								onClick={handleTestNotification}
 								variant="outline"
@@ -255,6 +345,14 @@ export function BrowserNotificationSettings() {
 								disabled={!settings.enabled}
 							>
 								Send Test Notification
+							</Button>
+							<Button
+								onClick={handleTestSound}
+								variant="outline"
+								size="sm"
+								disabled={!settings.enabled}
+							>
+								Play Test Sound
 							</Button>
 						</div>
 					</>

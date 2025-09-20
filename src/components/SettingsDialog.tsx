@@ -77,7 +77,7 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 				<div className="flex flex-col">
 					<ResponsiveDialogHeader className="flex-shrink-0">
 						<ResponsiveDialogTitle>Settings</ResponsiveDialogTitle>
-						<ResponsiveDialogDescription>
+						<ResponsiveDialogDescription className="mb-4">
 							Manage your account settings and preferences.
 						</ResponsiveDialogDescription>
 					</ResponsiveDialogHeader>
