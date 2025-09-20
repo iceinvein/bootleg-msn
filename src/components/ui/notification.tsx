@@ -1,4 +1,4 @@
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, cubicBezier } from "framer-motion";
 import { X, Check, AlertCircle, Info, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./button";
@@ -28,7 +28,7 @@ const notificationVariants = {
 		scale: 1,
 		transition: {
 			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
+			ease: cubicBezier(0.4, 0, 0.2, 1),
 		},
 	},
 	exit: {
@@ -49,7 +49,7 @@ const iconVariants = {
 		transition: {
 			delay: 0.1,
 			duration: 0.3,
-			ease: [0.68, -0.55, 0.265, 1.55]
+			ease: cubicBezier(0.68, -0.55, 0.265, 1.55)
 		}
 	}
 };
@@ -60,7 +60,7 @@ const progressVariants = {
 		width: "0%",
 		transition: {
 			duration: duration / 1000,
-			ease: "linear"
+			ease: cubicBezier(0, 0, 1, 1)
 		}
 	})
 };

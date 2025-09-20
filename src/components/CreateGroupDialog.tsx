@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
-import { motion } from "framer-motion";
+import { cubicBezier, motion } from "framer-motion";
 import { Search, User, Users } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
@@ -106,14 +106,18 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 					className="flex flex-1 flex-col space-y-6 overflow-hidden"
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
-					transition={{ duration: 0.2, ease: "easeOut" }}
+					transition={{ duration: 0.2, ease: cubicBezier(0, 0, 0.58, 1) }}
 				>
 					{/* Group Info Section */}
 					<motion.div
 						className="space-y-4"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
-						transition={{ duration: 0.15, delay: 0.05, ease: "easeOut" }}
+						transition={{
+							duration: 0.15,
+							delay: 0.05,
+							ease: cubicBezier(0, 0, 0.58, 1),
+						}}
 					>
 						<div className="flex items-center space-x-4">
 							<div className="relative">
@@ -173,7 +177,11 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 						className="flex min-h-0 flex-1 flex-col space-y-3"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
-						transition={{ duration: 0.15, delay: 0.1, ease: "easeOut" }}
+						transition={{
+							duration: 0.15,
+							delay: 0.1,
+							ease: cubicBezier(0, 0, 0.58, 1),
+						}}
 					>
 						<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 							<Label className="font-semibold text-base text-gray-700 dark:text-gray-300">
@@ -251,7 +259,11 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 							className="w-full"
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
-							transition={{ duration: 0.15, delay: 0.15, ease: "easeOut" }}
+							transition={{
+								duration: 0.15,
+								delay: 0.15,
+								ease: cubicBezier(0, 0, 0.58, 1),
+							}}
 						>
 							<Button
 								type="button"

@@ -1,4 +1,4 @@
-import { motion } from "framer-motion";
+import { motion, cubicBezier } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 interface LoadingSpinnerProps {
@@ -38,7 +38,7 @@ export function LoadingSpinner({ size = "md", className }: LoadingSpinnerProps) 
 			transition={{
 				duration: 1,
 				repeat: Infinity,
-				ease: "linear"
+				ease: cubicBezier(0, 0, 1, 1)
 			}}
 		/>
 	);
@@ -54,7 +54,7 @@ export function LoadingDots({ className }: LoadingDotsProps) {
 			transition: {
 				duration: 1.2,
 				repeat: Infinity,
-				ease: "easeInOut"
+				ease: cubicBezier(0.42, 0, 0.58, 1)
 			}
 		}
 	};
@@ -100,7 +100,7 @@ export function LoadingPulse({ className }: LoadingPulseProps) {
 			transition={{
 				duration: 1.5,
 				repeat: Infinity,
-				ease: "easeInOut"
+				ease: cubicBezier(0.42, 0, 0.58, 1)
 			}}
 		/>
 	);

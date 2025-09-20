@@ -1,7 +1,7 @@
 import * as React from "react"
 import * as DialogPrimitive from "@radix-ui/react-dialog"
 import { XIcon } from "lucide-react"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion, AnimatePresence, cubicBezier } from "framer-motion"
 
 import { cn } from "@/lib/utils"
 
@@ -59,7 +59,7 @@ function DialogOverlay({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.2, ease: "easeOut" }}
+transition={{ duration: 0.2, ease: cubicBezier(0, 0, 0.58, 1) }}
       />
     </DialogPrimitive.Overlay>
   )
@@ -80,7 +80,7 @@ const dialogVariants = {
       y: 0,
       transition: {
         duration: 0.2,
-        ease: "easeOut"
+ease: cubicBezier(0, 0, 0.58, 1)
       }
     },
     exit: {
@@ -88,7 +88,7 @@ const dialogVariants = {
       scale: 0.98,
       transition: {
         duration: 0.15,
-        ease: "easeIn"
+ease: cubicBezier(0.42, 0, 1, 1)
       }
     }
   },
@@ -104,7 +104,7 @@ const dialogVariants = {
       y: 0,
       transition: {
         duration: 0.25,
-        ease: "easeOut"
+ease: cubicBezier(0, 0, 0.58, 1)
       }
     },
     exit: {
@@ -112,7 +112,7 @@ const dialogVariants = {
       y: -10,
       transition: {
         duration: 0.15,
-        ease: "easeIn"
+ease: cubicBezier(0.42, 0, 1, 1)
       }
     }
   },
@@ -126,14 +126,14 @@ const dialogVariants = {
       opacity: 1,
       transition: {
         duration: 0.2,
-        ease: "easeOut"
+ease: cubicBezier(0, 0, 0.58, 1)
       }
     },
     exit: {
       opacity: 0,
       transition: {
         duration: 0.15,
-        ease: "easeIn"
+ease: cubicBezier(0.42, 0, 1, 1)
       }
     }
   }

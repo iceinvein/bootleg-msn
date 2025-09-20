@@ -25,6 +25,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { GroupInfoDialog } from "./GroupInfoDialog";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 import { Message } from "./Message";
+import { TypingIndicator } from "./TypingIndicator";
 import {
 	fadeInUp,
 	hoverScale,
@@ -411,72 +412,31 @@ export function Chat() {
 
 								{contactIsTyping && (
 									<div className="flex justify-start">
-										<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
-											<Avatar className="h-6 w-6 md:h-8 md:w-8">
-												{selectedUserId && userAvatarMap.get(selectedUserId) ? (
-													<AvatarImage
-														src={userAvatarMap.get(selectedUserId)}
-													/>
-												) : (
-													<AvatarFallback delayMs={0}>
-														<User className="h-6 w-6 md:h-8 md:w-8" />
-													</AvatarFallback>
-												)}
-											</Avatar>
-											<div>
-												<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
-													<div className="flex space-x-1">
-														<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
-														<div
-															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-															style={{ animationDelay: "0.1s" }}
-														/>
-														<div
-															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-															style={{ animationDelay: "0.2s" }}
-														/>
-													</div>
-												</div>
-												<span className="text-gray-500 text-xs md:text-sm">
-													{selectedChat.contact?.nickname ??
-														selectedChat.contact?.user?.name ??
-														selectedChat.contact?.user?.email ??
-														"Unknown User"}{" "}
-													is typing...
-												</span>
-											</div>
-										</div>
+										<TypingIndicator
+											className="ml-2 max-w-[85%] md:max-w-xs lg:max-w-md"
+											userName={
+												selectedChat.contact?.nickname ??
+												selectedChat.contact?.user?.name ??
+												selectedChat.contact?.user?.email ??
+												"Unknown User"
+											}
+										/>
 									</div>
 								)}
 								{!!groupIsTyping?.length && (
 									<div className="flex justify-start">
-										<div className="flex max-w-[85%] items-end space-x-2 md:max-w-xs lg:max-w-md">
-											<Avatar className="h-6 w-6 md:h-8 md:w-8">
-												<User className="h-6 w-6 md:h-8 md:w-8" />
-											</Avatar>
-											<div>
-												<div className="rounded-2xl bg-gray-100 px-3 py-2 md:px-4 md:py-2 dark:bg-gray-700">
-													<div className="flex space-x-1">
-														<div className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500" />
-														<div
-															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-															style={{ animationDelay: "0.1s" }}
-														/>
-														<div
-															className="h-2 w-2 animate-bounce rounded-full bg-gray-400 dark:bg-gray-500"
-															style={{ animationDelay: "0.2s" }}
-														/>
-													</div>
-													<span className="text-gray-500 text-xs md:text-sm">
-														{groupIsTyping.map((indicator) => (
-															<span key={indicator._id}>
-																{indicator.user?.name ?? indicator.user?.email}{" "}
-																is typing...
-															</span>
-														))}
-													</span>
-												</div>
-											</div>
+										<div className="flex flex-col space-y-2">
+											{groupIsTyping.map((indicator) => (
+												<TypingIndicator
+													key={indicator._id}
+													className="ml-8 max-w-[85%] md:ml-10 md:max-w-xs lg:max-w-md"
+													userName={
+														indicator.user?.name ??
+														indicator.user?.email ??
+														"Unknown User"
+													}
+												/>
+											))}
 										</div>
 									</div>
 								)}

@@ -1,4 +1,4 @@
-import { motion, type HTMLMotionProps, type Variants } from "framer-motion";
+import { motion, type HTMLMotionProps, type Variants, cubicBezier } from "framer-motion";
 import { forwardRef } from "react";
 import { cn } from "@/lib/utils";
 
@@ -11,10 +11,10 @@ export const fadeInUp: Variants = {
 	animate: {
 		opacity: 1,
 		y: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -33,10 +33,10 @@ export const fadeInDown: Variants = {
 	animate: {
 		opacity: 1,
 		y: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -55,10 +55,10 @@ export const scaleIn: Variants = {
 	animate: {
 		opacity: 1,
 		scale: 1,
-		transition: {
-			duration: 0.2,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.2,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -77,10 +77,10 @@ export const slideInLeft: Variants = {
 	animate: {
 		opacity: 1,
 		x: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -99,10 +99,10 @@ export const slideInRight: Variants = {
 	animate: {
 		opacity: 1,
 		x: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -121,10 +121,10 @@ export const bounceIn: Variants = {
 	animate: {
 		opacity: 1,
 		scale: 1,
-		transition: {
-			duration: 0.6,
-			ease: [0.68, -0.55, 0.265, 1.55],
-		},
+			transition: {
+				duration: 0.6,
+				ease: cubicBezier(0.68, -0.55, 0.265, 1.55),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -158,10 +158,10 @@ export const staggerItem: Variants = {
 	animate: {
 		opacity: 1,
 		y: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
@@ -188,7 +188,7 @@ export const nudgeShake: Variants = {
 		y: [0, -5, 5, -4, 4, -3, 3, -2, 2, -1, 1, 0],
 		transition: {
 			duration: 0.8,
-			ease: "easeInOut",
+			ease: cubicBezier(0.42, 0, 0.58, 1),
 		},
 	},
 };
@@ -204,7 +204,7 @@ export const nudgeShakeMobile: Variants = {
 		y: [0, -2, 2, -2, 2, -1, 1, -1, 1, 0, 0, 0],
 		transition: {
 			duration: 0.6,
-			ease: "easeInOut",
+			ease: cubicBezier(0.42, 0, 0.58, 1),
 		},
 	},
 };
@@ -262,12 +262,12 @@ export const typingDots: Variants = {
 	},
 	animate: {
 		opacity: 1,
-		transition: {
-			repeat: Infinity,
-			repeatType: "reverse",
-			duration: 0.6,
-			ease: "easeInOut",
-		},
+			transition: {
+				repeat: Infinity,
+				repeatType: "reverse",
+				duration: 0.6,
+				ease: cubicBezier(0.42, 0, 0.58, 1),
+			},
 	},
 };
 
@@ -283,7 +283,7 @@ export const statusPulse: Variants = {
 		transition: {
 			duration: 2,
 			repeat: Infinity,
-			ease: "easeInOut",
+			ease: cubicBezier(0.42, 0, 0.58, 1),
 		},
 	},
 };
@@ -301,10 +301,10 @@ export const messageBubble: Variants = {
 		opacity: 1,
 		scale: 1,
 		y: 0,
-		transition: {
-			duration: 0.3,
-			ease: [0.4, 0, 0.2, 1],
-		},
+			transition: {
+				duration: 0.3,
+				ease: cubicBezier(0.4, 0, 0.2, 1),
+			},
 	},
 	exit: {
 		opacity: 0,
