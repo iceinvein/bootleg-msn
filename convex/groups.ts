@@ -599,6 +599,47 @@ export const deleteGroupMessage = mutation({
 	},
 });
 
+export const updateGroupDetails = mutation({
+	args: {
+		groupId: v.id("groups"),
+		name: v.optional(v.string()),
+		description: v.optional(v.string()),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		// Only admins can update group details
+		const membership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", args.groupId).eq("userId", userId),
+			)
+			.unique();
+		if (!membership || membership.role !== "admin") {
+			throw new Error("Only group admins can update group details");
+		}
+
+		const group = await ctx.db.get(args.groupId);
+		if (!group) throw new Error("Group not found");
+
+		const updates: { name?: string; description?: string | undefined } = {};
+		if (typeof args.name === "string") {
+			const trimmed = args.name.trim();
+			if (!trimmed) throw new Error("Group name cannot be empty");
+			updates.name = trimmed;
+		}
+		if (typeof args.description !== "undefined") {
+			const trimmed = args.description?.trim() ?? "";
+			updates.description = trimmed.length > 0 ? trimmed : undefined;
+		}
+
+		if (Object.keys(updates).length === 0) return;
+
+		await ctx.db.patch(args.groupId, updates);
+	},
+});
+
 export const leaveGroup = mutation({
 	args: {
 		groupId: v.id("groups"),

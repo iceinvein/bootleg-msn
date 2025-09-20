@@ -60,6 +60,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	const generateUploadUrl = useMutation(api.files.generateUploadUrl);
 	const setGroupAvatar = useMutation(api.avatars.setGroupAvatar);
 	const clearGroupAvatar = useMutation(api.avatars.clearGroupAvatar);
+	const updateGroupDetails = useMutation(api.groups.updateGroupDetails);
 	const isAdmin = currentUser?.role === "admin";
 	const onlineMembers = members?.filter((m) => m.status === "online").length;
 
@@ -124,27 +125,57 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 								)}
 							</div>
 							<div className="flex-1">
-								<InlineStatusEditor
-									initialStatus={group?.name ?? ""}
-									onSave={() => {
-										if (!group) return;
-										// TODO: update group name
-									}}
-									placeholder="Group name"
-									className="rounded px-2 py-1 font-bold text-foreground text-xl hover:bg-muted"
-									maxLength={50}
-								/>
-								{group?.description && (
+								{isAdmin ? (
 									<InlineStatusEditor
-										initialStatus={group.description}
-										onSave={() => {
-											// TODO: update group description
+										initialStatus={group?.name ?? ""}
+										onSave={async (newName) => {
+											const trimmed = newName.trim();
+											if (!trimmed || trimmed === (group?.name ?? "")) return;
+											try {
+												await updateGroupDetails({
+													groupId: group._id,
+													name: trimmed,
+												});
+											} catch (e) {
+												console.error("Failed to update group name", e);
+											}
+										}}
+										placeholder="Group name"
+										className="rounded px-2 py-1 font-bold text-foreground text-xl hover:bg-muted"
+										maxLength={50}
+									/>
+								) : (
+									<p className="rounded px-2 py-1 font-bold text-foreground text-xl">
+										{group?.name}
+									</p>
+								)}
+
+								{isAdmin ? (
+									<InlineStatusEditor
+										initialStatus={group?.description ?? ""}
+										onSave={async (newDesc) => {
+											const value = newDesc.trim();
+											const normalized = value.length > 0 ? value : "";
+											if (normalized === (group?.description ?? "")) return;
+											try {
+												await updateGroupDetails({
+													groupId: group._id,
+													description: normalized,
+												});
+											} catch (e) {
+												console.error("Failed to update group description", e);
+											}
 										}}
 										placeholder="Add a description..."
 										className="mt-1 rounded px-2 py-1 text-muted-foreground hover:bg-muted"
 										maxLength={200}
 									/>
-								)}
+								) : group?.description ? (
+									<p className="mt-1 rounded px-2 py-1 text-muted-foreground">
+										{group.description}
+									</p>
+								) : null}
+
 								<div className="mt-2 flex items-center space-x-4 text-muted-foreground text-sm">
 									<span>{members?.length} members</span>
 									<span>•</span>
