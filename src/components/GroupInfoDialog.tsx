@@ -4,7 +4,6 @@ import {
 	Crown,
 	Info,
 	Pencil,
-	Settings,
 	User,
 	UserMinus,
 	UserPlus,
@@ -12,6 +11,18 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+	AlertDialog,
+	AlertDialogAction,
+	AlertDialogCancel,
+	AlertDialogContent,
+	AlertDialogDescription,
+	AlertDialogFooter,
+	AlertDialogHeader,
+	AlertDialogTitle,
+	AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -59,7 +70,11 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	const memberUserIds = members?.map((m) => m.userId);
 	const memberAvatarMap = useUserAvatarUrls(memberUserIds);
 	const updateGroupDetails = useMutation(api.groups.updateGroupDetails);
+	const removeGroupMember = useMutation(api.groups.removeGroupMember);
+	const leaveGroup = useMutation(api.groups.leaveGroup);
+	const setMemberRole = useMutation(api.groups.setMemberRole);
 	const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
+	const [isActing, setIsActing] = useState(false);
 	const isAdmin = currentUser?.role === "admin";
 	const onlineMembers = members?.filter((m) => m.status === "online").length;
 
@@ -94,7 +109,7 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 							<Info className="h-5 w-5 text-primary" />
 							<span>Group Info</span>
 						</ResponsiveDialogTitle>
-						<ResponsiveDialogDescription>
+						<ResponsiveDialogDescription className="mb-4">
 							Manage group settings and members.
 						</ResponsiveDialogDescription>
 					</ResponsiveDialogHeader>
@@ -194,56 +209,62 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 								</div>
 							</div>
 
-							{/* Quick Actions */}
-							<div className="grid grid-cols-2 gap-3">
-								<AddMembersDialog>
-									<Button
-										variant="outline"
-										className="flex items-center space-x-2 bg-transparent"
-									>
-										<UserPlus className="h-4 w-4" />
-										<span>Add Members</span>
-									</Button>
-								</AddMembersDialog>
-								{isAdmin && (
-									<Button
-										variant="outline"
-										className="flex items-center space-x-2 bg-transparent"
-									>
-										<Settings className="h-4 w-4" />
-										<span>Group Settings</span>
-									</Button>
-								)}
-							</div>
-
 							{/* Danger Zone */}
 							<div className="border-t pt-4">
 								<h4 className="mb-3 font-semibold text-red-600 dark:text-red-400">
 									Danger Zone
 								</h4>
-								<Button
-									variant="outline"
-									className="border-red-300 bg-transparent text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
-									onClick={() => {
-										// TODO: leave group
-									}}
-								>
-									<UserMinus className="mr-2 h-4 w-4" />
-									Leave Group
-								</Button>
+								<AlertDialog>
+									<AlertDialogTrigger asChild>
+										<Button
+											variant="outline"
+											className="border-red-300 bg-transparent text-red-600 hover:bg-red-50 dark:border-red-600 dark:text-red-400 dark:hover:bg-red-900/20"
+											disabled={isActing}
+										>
+											<UserMinus className="mr-2 h-4 w-4" />
+											Leave Group
+										</Button>
+									</AlertDialogTrigger>
+									<AlertDialogContent>
+										<AlertDialogHeader>
+											<AlertDialogTitle>Leave this group?</AlertDialogTitle>
+											<AlertDialogDescription>
+												You will be removed from this group. You can be re-added
+												by an admin later.
+											</AlertDialogDescription>
+										</AlertDialogHeader>
+										<AlertDialogFooter>
+											<AlertDialogCancel disabled={isActing}>
+												Cancel
+											</AlertDialogCancel>
+											<AlertDialogAction
+												onClick={async () => {
+													try {
+														setIsActing(true);
+														await leaveGroup({ groupId: group._id });
+														toast.success("You left the group");
+														setIsOpen(false);
+													} catch (e) {
+														toast.error(
+															e instanceof Error
+																? e.message
+																: "Failed to leave group",
+														);
+													} finally {
+														setIsActing(false);
+													}
+												}}
+												disabled={isActing}
+											>
+												Leave Group
+											</AlertDialogAction>
+										</AlertDialogFooter>
+									</AlertDialogContent>
+								</AlertDialog>
 							</div>
 						</TabsContent>
 
 						<TabsContent value="members" className="mt-4">
-							<div className="mb-4 flex flex-row-reverse">
-								<Button
-									variant="outline"
-									className="flex items-center space-x-2 bg-transparent"
-								>
-									<UserPlus className="h-4 w-4" />
-									<span>Add Members</span>
-								</Button>
-							</div>
 							<ScrollArea className="h-96">
 								<div className="space-y-2">
 									{members?.map((member) => (
@@ -293,49 +314,212 @@ export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 													Joined {formatDate(member.joinedAt)}
 												</p>
 											</div>
-											{isAdmin && member.userId !== loggedInUser?._id && (
+											{isAdmin && (
 												<div className="flex items-center space-x-1">
-													{member.role !== "admin" && (
+													{/* Promote non-admins */}
+													{member.userId !== loggedInUser?._id &&
+														member.role !== "admin" && (
+															<Button
+																size="sm"
+																variant="outline"
+																onClick={async () => {
+																	try {
+																		setIsActing(true);
+																		await setMemberRole({
+																			groupId: group._id,
+																			memberId: member.userId,
+																			role: "admin",
+																		});
+																		toast.success("Promoted to admin");
+																	} catch (e) {
+																		toast.error(
+																			e instanceof Error
+																				? e.message
+																				: "Failed to promote",
+																		);
+																	} finally {
+																		setIsActing(false);
+																	}
+																}}
+																className="text-xs"
+																disabled={isActing}
+															>
+																Make Admin
+															</Button>
+														)}
+
+													{/* Demote other admins */}
+													{member.userId !== loggedInUser?._id &&
+														member.role === "admin" && (
+															<AlertDialog>
+																<AlertDialogTrigger asChild>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		className="text-xs"
+																		disabled={isActing}
+																	>
+																		Remove Admin
+																	</Button>
+																</AlertDialogTrigger>
+																<AlertDialogContent>
+																	<AlertDialogHeader>
+																		<AlertDialogTitle>
+																			Remove admin privileges?
+																		</AlertDialogTitle>
+																		<AlertDialogDescription>
+																			{`This will demote ${member.user?.name ?? member.user?.email ?? "this user"} to a regular member.`}
+																		</AlertDialogDescription>
+																	</AlertDialogHeader>
+																	<AlertDialogFooter>
+																		<AlertDialogCancel disabled={isActing}>
+																			Cancel
+																		</AlertDialogCancel>
+																		<AlertDialogAction
+																			disabled={isActing}
+																			onClick={async () => {
+																				try {
+																					setIsActing(true);
+																					await setMemberRole({
+																						groupId: group._id,
+																						memberId: member.userId,
+																						role: "member",
+																					});
+																					toast.success("Admin removed");
+																				} catch (e) {
+																					toast.error(
+																						e instanceof Error
+																							? e.message
+																							: "Failed to remove admin",
+																					);
+																				} finally {
+																					setIsActing(false);
+																				}
+																			}}
+																		>
+																			Remove Admin
+																		</AlertDialogAction>
+																	</AlertDialogFooter>
+																</AlertDialogContent>
+															</AlertDialog>
+														)}
+
+													{/* Relinquish own admin role */}
+													{member.userId === loggedInUser?._id &&
+														member.role === "admin" && (
+															<AlertDialog>
+																<AlertDialogTrigger asChild>
+																	<Button
+																		size="sm"
+																		variant="outline"
+																		className="text-xs"
+																		disabled={isActing}
+																	>
+																		Relinquish Admin
+																	</Button>
+																</AlertDialogTrigger>
+																<AlertDialogContent>
+																	<AlertDialogHeader>
+																		<AlertDialogTitle>
+																			Relinquish admin?
+																		</AlertDialogTitle>
+																		<AlertDialogDescription>
+																			You will lose admin privileges in this
+																			group. Another admin can re-promote you
+																			later.
+																		</AlertDialogDescription>
+																	</AlertDialogHeader>
+																	<AlertDialogFooter>
+																		<AlertDialogCancel disabled={isActing}>
+																			Cancel
+																		</AlertDialogCancel>
+																		<AlertDialogAction
+																			disabled={isActing}
+																			onClick={async () => {
+																				try {
+																					setIsActing(true);
+																					await setMemberRole({
+																						groupId: group._id,
+																						memberId: member.userId,
+																						role: "member",
+																					});
+																					toast.success(
+																						"You are no longer an admin",
+																					);
+																				} catch (e) {
+																					toast.error(
+																						e instanceof Error
+																							? e.message
+																							: "Failed to relinquish admin",
+																					);
+																				} finally {
+																					setIsActing(false);
+																				}
+																			}}
+																		>
+																			Relinquish
+																		</AlertDialogAction>
+																	</AlertDialogFooter>
+																</AlertDialogContent>
+															</AlertDialog>
+														)}
+
+													{/* Remove member (any role) */}
+													{member.userId !== loggedInUser?._id && (
 														<Button
 															size="sm"
 															variant="outline"
-															onClick={() => {
-																// TODO: promote to admin
+															onClick={async () => {
+																try {
+																	setIsActing(true);
+																	await removeGroupMember({
+																		groupId: group._id,
+																		memberId: member.userId,
+																	});
+																	toast.success("Member removed");
+																} catch (e) {
+																	toast.error(
+																		e instanceof Error
+																			? e.message
+																			: "Failed to remove member",
+																	);
+																} finally {
+																	setIsActing(false);
+																}
 															}}
-															className="text-xs"
+															className="border-destructive text-destructive text-xs hover:bg-destructive/10"
+															disabled={isActing}
 														>
-															Make Admin
+															Remove
 														</Button>
 													)}
-													<Button
-														size="sm"
-														variant="outline"
-														onClick={() => {
-															// TODO: remove member
-														}}
-														className="border-destructive text-destructive text-xs hover:bg-destructive/10"
-													>
-														Remove
-													</Button>
 												</div>
 											)}
 										</div>
 									))}
 								</div>
 							</ScrollArea>
+							{isAdmin && (
+								<div className="mt-4">
+									<AddMembersDialog>
+										<Button variant="outline" className="w-full">
+											<UserPlus className="mr-2 h-4 w-4" />
+											<span>Add Members</span>
+										</Button>
+									</AddMembersDialog>
+								</div>
+							)}
 						</TabsContent>
 					</Tabs>
 				</ResponsiveDialogContent>
 			</ResponsiveDialog>
-			{isAdmin && (
-				<AvatarEditor
-					open={avatarEditorOpen}
-					onOpenChange={setAvatarEditorOpen}
-					entity={{ type: "group", id: group._id }}
-					currentAvatarUrl={groupAvatarUrl}
-					previewShape="circle"
-				/>
-			)}
+			<AvatarEditor
+				open={avatarEditorOpen}
+				onOpenChange={setAvatarEditorOpen}
+				entity={{ type: "group", id: group._id }}
+				currentAvatarUrl={groupAvatarUrl}
+				previewShape="circle"
+			/>
 		</>
 	);
 }

@@ -690,3 +690,61 @@ export const leaveGroup = mutation({
 		});
 	},
 });
+
+export const setMemberRole = mutation({
+	args: {
+		groupId: v.id("groups"),
+		memberId: v.id("users"),
+		role: v.union(v.literal("admin"), v.literal("member")),
+	},
+	handler: async (ctx, args) => {
+		const userId = await getAuthUserId(ctx);
+		if (!userId) throw new Error("Not authenticated");
+
+		// Only admins can change roles
+		const callerMembership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", args.groupId).eq("userId", userId),
+			)
+			.unique();
+		if (!callerMembership || callerMembership.role !== "admin") {
+			throw new Error("Only admins can change member roles");
+		}
+
+		const targetMembership = await ctx.db
+			.query("groupMembers")
+			.withIndex("by_group_and_user", (q) =>
+				q.eq("groupId", args.groupId).eq("userId", args.memberId),
+			)
+			.unique();
+		if (!targetMembership) throw new Error("Member not found in group");
+
+		// Prevent demoting the last admin
+		if (targetMembership.role === "admin" && args.role === "member") {
+			const adminCount = await ctx.db
+				.query("groupMembers")
+				.withIndex("by_group", (q) => q.eq("groupId", args.groupId))
+				.filter((q) => q.eq(q.field("role"), "admin"))
+				.collect();
+			if (adminCount.length <= 1) {
+				throw new Error("Cannot demote the last admin");
+			}
+		}
+
+		await ctx.db.patch(targetMembership._id, { role: args.role });
+
+		// System message
+		const adminUser = await ctx.db.get(userId);
+		const adminName = adminUser?.name || adminUser?.email || "Admin";
+		const targetUser = await ctx.db.get(args.memberId);
+		const targetName = targetUser?.name || targetUser?.email || "Member";
+		const action = args.role === "admin" ? "promoted" : "demoted";
+		await ctx.db.insert("groupMessages", {
+			senderId: userId,
+			groupId: args.groupId,
+			content: `${adminName} ${action} ${targetName} to ${args.role}`,
+			messageType: "system",
+		});
+	},
+});
