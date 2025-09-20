@@ -205,3 +205,63 @@ export function ContactSkeleton({ className }: { className?: string }) {
 		</motion.div>
 	);
 }
+
+// Chat messages skeleton: two of mine (right) and one from contact (left)
+export function ChatMessagesSkeleton({ className, variant = "dm" }: { className?: string; variant?: "dm" | "group" }) {
+	const showAvatars = variant === "group";
+	return (
+		<div className={cn("space-y-5 py-6", className)}>
+			{/* My message (right) */}
+			<div className="flex w-full justify-end">
+				{/* timestamp */}
+				<div className="mr-1 -mb-1 flex w-full justify-end">
+					<div className="h-3 w-12 rounded bg-muted/50 shimmer md:w-14" />
+				</div>
+			</div>
+			<div className="flex w-full justify-end">
+				<div className={cn("flex items-end gap-2", !showAvatars && "gap-0")}>
+					<div className="group relative">
+						<div className="rounded-2xl bg-muted/60 shimmer h-8 w-40 md:h-10 md:w-56" />
+					</div>
+					{showAvatars && (
+						<div className="h-8 w-8 rounded-full bg-muted shimmer md:h-10 md:w-10" />
+					)}
+				</div>
+			</div>
+
+			{/* Contact message (left) */}
+			<div className="flex w-full justify-start">
+				{/* timestamp */}
+				<div className="ml-1 -mb-1 flex w-full justify-start">
+					<div className="h-3 w-12 rounded bg-muted/50 shimmer md:w-14" />
+				</div>
+			</div>
+			<div className="flex w-full justify-start">
+				<div className={cn("flex items-end gap-2", !showAvatars && "gap-0")}>
+					{showAvatars && (
+						<div className="h-8 w-8 rounded-full bg-muted shimmer md:h-10 md:w-10" />
+					)}
+					<div className="rounded-2xl bg-muted/60 shimmer h-8 w-48 md:h-10 md:w-64" />
+				</div>
+			</div>
+
+			{/* My next message (right) */}
+			<div className="flex w-full justify-end">
+				{/* timestamp */}
+				<div className="mr-1 -mb-1 flex w-full justify-end">
+					<div className="h-3 w-10 rounded bg-muted/50 shimmer md:w-12" />
+				</div>
+			</div>
+			<div className="flex w-full justify-end">
+				<div className={cn("flex items-end gap-2", !showAvatars && "gap-0")}>
+					<div className="group relative">
+						<div className="rounded-2xl bg-muted/60 shimmer h-8 w-32 md:h-10 md:w-44" />
+					</div>
+					{showAvatars && (
+						<div className="h-8 w-8 rounded-full bg-muted shimmer md:h-10 md:w-10" />
+					)}
+				</div>
+			</div>
+		</div>
+	);
+}

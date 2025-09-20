@@ -272,6 +272,30 @@ export const getContacts = query({
 					actualStatus = "offline";
 				}
 
+				// Get last direct message between the users (both directions)
+				const [lastSent] = await ctx.db
+					.query("messages")
+					.withIndex("by_conversation", (q) =>
+						q.eq("senderId", userId).eq("receiverId", contact.contactUserId),
+					)
+					.order("desc")
+					.take(1);
+				const [lastReceived] = await ctx.db
+					.query("messages")
+					.withIndex("by_conversation", (q) =>
+						q.eq("senderId", contact.contactUserId).eq("receiverId", userId),
+					)
+					.order("desc")
+					.take(1);
+				let lastMessage = lastSent;
+				if (
+					lastReceived &&
+					(!lastMessage ||
+						lastReceived._creationTime > lastMessage._creationTime)
+				) {
+					lastMessage = lastReceived;
+				}
+
 				return {
 					...contact,
 					user,
@@ -279,6 +303,12 @@ export const getContacts = query({
 					statusMessage: status?.statusMessage,
 					lastSeen: status?.lastSeen,
 					unreadCount: unreadCount.length,
+					lastMessageTime: lastMessage?._creationTime,
+					lastMessageContent: lastMessage?.content,
+					lastMessageType: lastMessage?.messageType,
+					lastMessageFromMe: lastMessage
+						? lastMessage.senderId === userId
+						: false,
 				};
 			}),
 		);

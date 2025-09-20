@@ -282,6 +282,11 @@ export const getUserGroups = query({
 					(a, b) => b._creationTime - a._creationTime,
 				)[0];
 				const lastMessageTime = lastMessage?._creationTime;
+				const lastSender = lastMessage
+					? await ctx.db.get(lastMessage.senderId)
+					: null;
+				const lastMessageSenderName =
+					lastSender?.name || lastSender?.email || undefined;
 
 				return {
 					...group,
@@ -289,6 +294,12 @@ export const getUserGroups = query({
 					unreadCount: userUnreadCount,
 					userRole: membership.role,
 					lastMessageTime,
+					lastMessageContent: lastMessage?.content,
+					lastMessageType: lastMessage?.messageType,
+					lastMessageFromMe: lastMessage
+						? lastMessage.senderId === userId
+						: false,
+					lastMessageSenderName,
 				};
 			}),
 		);

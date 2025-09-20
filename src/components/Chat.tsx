@@ -38,6 +38,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
+import { ChatMessagesSkeleton } from "./ui/loading";
 import { ScrollArea } from "./ui/scroll-area";
 
 export function Chat() {
@@ -85,12 +86,16 @@ export function Chat() {
 	const currentUser = useQuery(api.auth.loggedInUser);
 
 	// Use optimistic messages hook
-	const { messages, addOptimisticMessage, markOptimisticMessageFailed } =
-		useOptimisticMessages({
-			otherUserId: selectedChat?.contact?.contactUserId,
-			groupId: selectedChat?.group?._id,
-			currentUserId: currentUser?._id,
-		});
+	const {
+		messages,
+		isLoading: isMessagesLoading,
+		addOptimisticMessage,
+		markOptimisticMessageFailed,
+	} = useOptimisticMessages({
+		otherUserId: selectedChat?.contact?.contactUserId,
+		groupId: selectedChat?.group?._id,
+		currentUserId: currentUser?._id,
+	});
 
 	// Get nudges for the current conversation with stable 'since' to avoid re-fetch loops
 	const [nudgesSince] = useState(() => Date.now() - 12 * 60 * 60 * 1000); // last 12 hours
@@ -301,9 +306,17 @@ export function Chat() {
 								</Button>
 								<div className="relative">
 									<Avatar className="h-8 w-8 md:h-10 md:w-10">
-										{selectedChat.contact ? (
+										{isMessagesLoading ? (
+											<div
+												className="shimmer h-full w-full rounded-full bg-muted"
+												aria-hidden
+											/>
+										) : selectedChat.contact ? (
 											selectedUserId && userAvatarMap.get(selectedUserId) ? (
-												<AvatarImage src={userAvatarMap.get(selectedUserId)} />
+												<AvatarImage
+													src={userAvatarMap.get(selectedUserId)}
+													alt="User avatar"
+												/>
 											) : (
 												<AvatarFallback delayMs={0}>
 													<User className="h-8 w-8 md:h-10 md:w-10" />
@@ -311,9 +324,14 @@ export function Chat() {
 											)
 										) : selectedGroupId &&
 											groupAvatarMap.get(selectedGroupId) ? (
-											<AvatarImage src={groupAvatarMap.get(selectedGroupId)} />
+											<AvatarImage
+												src={groupAvatarMap.get(selectedGroupId)}
+												alt="Group avatar"
+											/>
 										) : (
-											<Users className="h-8 w-8 md:h-10 md:w-10" />
+											<AvatarFallback delayMs={0}>
+												<Users className="h-8 w-8 md:h-10 md:w-10" />
+											</AvatarFallback>
 										)}
 									</Avatar>
 								</div>
@@ -373,7 +391,13 @@ export function Chat() {
 					<div className="chat-messages-container">
 						<ScrollArea className="h-full p-3 md:p-4">
 							<div className="space-y-1">
-								{(!messages || messages.length === 0) && (
+								{isMessagesLoading && (
+									<ChatMessagesSkeleton
+										variant={selectedChat?.group ? "group" : "dm"}
+									/>
+								)}
+
+								{!isMessagesLoading && (!messages || messages.length === 0) && (
 									<div className="py-8 text-center text-gray-500">
 										<MessageCircle className="mx-auto mb-2 h-8 w-8 text-gray-400 opacity-50 md:h-12 md:w-12 dark:text-gray-500" />
 										<p className="text-sm md:text-base">

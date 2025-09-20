@@ -89,6 +89,14 @@ function getStatusDisplayText(status: string, statusMessage?: string): string {
 	}
 }
 
+function previewText(messageType?: string, content?: string): string {
+	if (!content) return "No messages";
+	if (messageType === "file") return "Sent a file";
+	if (messageType === "emoji") return content;
+	if (messageType === "system") return content;
+	return content;
+}
+
 export function ContactList() {
 	const selectedChat = useStore($selectedChat);
 
@@ -183,14 +191,16 @@ export function ContactList() {
 											</div>
 											<div className="mt-1 flex items-center justify-between">
 												<p className="truncate text-muted-foreground text-xs md:text-sm">
-													{typeof group.memberCount === "number"
-														? `${group.memberCount} members`
-														: "Group chat"}
+													{group.lastMessageContent
+														? `${group.lastMessageFromMe ? "You" : (group.lastMessageSenderName ?? "Someone")}: ${previewText(group.lastMessageType, group.lastMessageContent)}`
+														: typeof group.memberCount === "number"
+															? `${group.memberCount} members`
+															: "Group chat"}
 												</p>
 												<span className="text-muted-foreground text-xs">
 													{group.lastMessageTime
 														? formatMessageTime(group.lastMessageTime)
-														: "No messages"}
+														: ""}
 												</span>
 											</div>
 										</div>
@@ -299,13 +309,17 @@ export function ContactList() {
 									</div>
 									<div className="mt-1 flex items-center justify-between">
 										<p className="truncate text-muted-foreground text-xs md:text-sm">
-											{getStatusDisplayText(
-												contact.status,
-												contact.statusMessage,
-											)}
+											{contact.lastMessageContent
+												? `${contact.lastMessageFromMe ? "You: " : ""}${previewText(contact.lastMessageType, contact.lastMessageContent)}`
+												: getStatusDisplayText(
+														contact.status,
+														contact.statusMessage,
+													)}
 										</p>
 										<span className="text-muted-foreground text-xs">
-											{formatLastSeen(contact.lastSeen, contact.status)}
+											{contact.lastMessageTime
+												? formatMessageTime(contact.lastMessageTime)
+												: formatLastSeen(contact.lastSeen, contact.status)}
 										</span>
 									</div>
 								</div>

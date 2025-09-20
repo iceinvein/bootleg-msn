@@ -57,6 +57,10 @@ export function useOptimisticMessages({
 		otherUserId ? { otherUserId } : groupId ? { groupId } : "skip",
 	);
 
+	// Loading state: undefined means the first query result hasn't arrived yet
+	const isLoading =
+		otherUserId || groupId ? serverMessages === undefined : false;
+
 	// Local optimistic messages state
 	const [optimisticMessages, setOptimisticMessages] = useState<
 		OptimisticMessage[]
@@ -285,6 +289,7 @@ export function useOptimisticMessages({
 
 	return {
 		messages: combinedMessages,
+		isLoading,
 		addOptimisticMessage,
 		markOptimisticMessageSent,
 		markOptimisticMessageFailed,
