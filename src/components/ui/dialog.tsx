@@ -9,10 +9,11 @@ function Dialog({
   children,
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const childrenArray = React.Children.toArray(children);
   return (
     <DialogPrimitive.Root data-slot="dialog" {...props}>
-      <AnimatePresence mode="wait">
-        {children}
+      <AnimatePresence mode="sync">
+        {childrenArray}
       </AnimatePresence>
     </DialogPrimitive.Root>
   )
