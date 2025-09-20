@@ -1,6 +1,6 @@
 /**
  * Service Worker for Browser Notifications
- * Handles notification clicks and background notification management
+ * Handles notification clicks, push events, and background notification management
  */
 
 const CACHE_NAME = 'msn-messenger-v1';
@@ -15,6 +15,30 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
 	console.log('Service Worker activating');
 	event.waitUntil(self.clients.claim());
+});
+
+// Handle push events (Web Push delivery path)
+self.addEventListener('push', (event) => {
+	let data = {};
+	try {
+		if (event.data) data = event.data.json();
+	} catch (e) {
+		// Fallback for non-JSON payloads
+		data = { title: 'Notification', body: event.data?.text() || '' };
+	}
+
+	const title = data.title || 'Notification';
+	const options = {
+		body: data.body || '',
+		icon: data.icon || '/icon-192.png',
+		badge: data.badge || '/badge-72.png',
+		data: data.data || {},
+		actions: data.actions || [],
+		requireInteraction: !!data.requireInteraction,
+		silent: !!data.silent,
+	};
+
+	event.waitUntil(self.registration.showNotification(title, options));
 });
 
 // Handle notification clicks
