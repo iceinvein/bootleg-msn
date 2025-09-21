@@ -96,7 +96,7 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 						<Users className="h-5 w-5 text-primary" />
 						<span>Create Group Chat</span>
 					</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription>
+					<ResponsiveDialogDescription className="mb-4">
 						Create a new group chat and invite your contacts to join.
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
