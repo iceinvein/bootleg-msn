@@ -1,28 +1,24 @@
+import { useStore } from "@nanostores/react";
 import { ArrowLeft, Info, User, Users, X } from "lucide-react";
-import type { Contact, Group } from "@/stores/contact";
+import {
+	$selectedGroupAvatarUrl,
+	$selectedUserAvatarUrl,
+} from "@/stores/avatars";
+import { $isMessagesLoading, $selectedChat } from "@/stores/contact";
 import { GroupInfoDialog } from "../GroupInfoDialog";
 import { InlineStatusEditor } from "../InlineStatusEditor";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 
 export interface ChatHeaderProps {
-	selectedChat: {
-		contact: Contact | null;
-		group: Group | null;
-	} | null;
-	isLoading: boolean;
-	userAvatarUrl?: string;
-	groupAvatarUrl?: string;
 	onClose: () => void;
 }
 
-export function ChatHeader({
-	selectedChat,
-	isLoading,
-	userAvatarUrl,
-	groupAvatarUrl,
-	onClose,
-}: ChatHeaderProps) {
+export function ChatHeader({ onClose }: ChatHeaderProps) {
+	const selectedChat = useStore($selectedChat);
+	const isLoading = useStore($isMessagesLoading);
+	const userAvatarUrl = useStore($selectedUserAvatarUrl);
+	const groupAvatarUrl = useStore($selectedGroupAvatarUrl);
 	const title = selectedChat?.group
 		? selectedChat.group.name
 		: selectedChat?.contact?.nickname ||

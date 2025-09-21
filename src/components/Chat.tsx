@@ -8,7 +8,13 @@ import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
 import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
-import { $selectedChat } from "@/stores/contact";
+import { setGroupAvatars, setUserAvatars } from "@/stores/avatars";
+import {
+	$contactIsTyping,
+	$groupIsTyping,
+	$isMessagesLoading,
+	$selectedChat,
+} from "@/stores/contact";
 import { ChatComposer } from "./chat/ChatComposer";
 import { ChatHeader } from "./chat/ChatHeader";
 import { ChatMessages } from "./chat/ChatMessages";
@@ -20,7 +26,7 @@ export function Chat() {
 	const [showChat, setShowChat] = useState(false);
 	const [messageInput, setMessageInput] = useState("");
 
-	// Resolve avatar URLs for selected chat
+	// Resolve avatar URLs for selected chat and update stores
 	const selectedUserId = selectedChat?.contact?.contactUserId;
 	const selectedGroupId = selectedChat?.group?._id;
 	const userAvatarMap = useUserAvatarUrls(
@@ -30,12 +36,14 @@ export function Chat() {
 		selectedGroupId ? [selectedGroupId] : undefined,
 	);
 
-	const userAvatarUrl = selectedUserId
-		? userAvatarMap.get(selectedUserId)
-		: undefined;
-	const groupAvatarUrl = selectedGroupId
-		? groupAvatarMap.get(selectedGroupId)
-		: undefined;
+	// Update avatar stores when data changes
+	useEffect(() => {
+		setUserAvatars(userAvatarMap);
+	}, [userAvatarMap]);
+
+	useEffect(() => {
+		setGroupAvatars(groupAvatarMap);
+	}, [groupAvatarMap]);
 
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -48,7 +56,8 @@ export function Chat() {
 	} = useNudge();
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
-	const contactIsTyping = useQuery(
+	// Update typing indicator stores
+	const contactIsTypingData = useQuery(
 		api.userStatus.getTypingIndicator,
 		selectedChat?.contact
 			? {
@@ -56,10 +65,19 @@ export function Chat() {
 				}
 			: "skip",
 	);
-	const groupIsTyping = useQuery(
+	const groupIsTypingData = useQuery(
 		api.userStatus.getGroupTypingIndicators,
 		selectedChat?.group?._id ? { groupId: selectedChat?.group?._id } : "skip",
 	);
+
+	// Update stores when data changes
+	useEffect(() => {
+		$contactIsTyping.set(contactIsTypingData || null);
+	}, [contactIsTypingData]);
+
+	useEffect(() => {
+		$groupIsTyping.set(groupIsTypingData || null);
+	}, [groupIsTypingData]);
 
 	// Get current user for optimistic messages
 	const currentUser = useQuery(api.auth.loggedInUser);
@@ -75,6 +93,11 @@ export function Chat() {
 		groupId: selectedChat?.group?._id,
 		currentUserId: currentUser?._id,
 	});
+
+	// Update loading state store
+	useEffect(() => {
+		$isMessagesLoading.set(isMessagesLoading);
+	}, [isMessagesLoading]);
 
 	// Get nudges for the current conversation with stable 'since' to avoid re-fetch loops
 	const [nudgesSince] = useState(() => Date.now() - 12 * 60 * 60 * 1000); // last 12 hours
@@ -260,22 +283,12 @@ export function Chat() {
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
 					{/* Chat Header - Fixed at top */}
-					<ChatHeader
-						selectedChat={selectedChat}
-						isLoading={isMessagesLoading}
-						userAvatarUrl={userAvatarUrl}
-						groupAvatarUrl={groupAvatarUrl}
-						onClose={handleCloseChat}
-					/>
+					<ChatHeader onClose={handleCloseChat} />
 
 					{/* Messages - Scrollable middle section */}
 					<ChatMessages
 						messages={messages}
-						isLoading={isMessagesLoading}
 						conversationNudges={conversationNudges}
-						selectedChat={selectedChat}
-						contactIsTyping={Boolean(contactIsTyping?.isTyping)}
-						groupIsTyping={groupIsTyping}
 					/>
 
 					{/* Message Input - Fixed at bottom */}
@@ -284,19 +297,9 @@ export function Chat() {
 						onChange={handleInputChange}
 						onSubmit={handleSendMessage}
 						onEmojiSelect={handleEmojiSelect}
-						canNudge={Boolean(selectedChat?.contact)}
 						onSendNudge={handleSendNudge}
 						isNudgeSending={isNudgeSending}
 						cooldownRemaining={cooldownRemaining}
-						receiverId={selectedChat?.contact?.contactUserId}
-						groupId={selectedChat?.group?._id}
-						placeholder={`Message ${
-							selectedChat.contact?.nickname ??
-							selectedChat.contact?.user?.name ??
-							selectedChat.contact?.user?.email ??
-							selectedChat.group?.name ??
-							"Unknown User"
-						}...`}
 					/>
 				</>
 			) : (

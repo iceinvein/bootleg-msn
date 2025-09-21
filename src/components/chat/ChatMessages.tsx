@@ -1,7 +1,14 @@
+import { useStore } from "@nanostores/react";
 import { MessageCircle } from "lucide-react";
 import { useEffect, useMemo, useRef } from "react";
 import type { CombinedMessage } from "@/hooks/useOptimisticMessages";
 import { cn } from "@/lib/utils";
+import {
+	$contactIsTyping,
+	$groupIsTyping,
+	$isMessagesLoading,
+	$selectedChat,
+} from "@/stores/contact";
 import { Message } from "../Message";
 import { NudgeMessage } from "../NudgeMessage";
 import { TypingIndicator } from "../TypingIndicator";
@@ -22,29 +29,17 @@ export type ConversationNudge = {
 
 export interface ChatMessagesProps {
 	messages: ChatMessage[] | undefined;
-	isLoading: boolean;
 	conversationNudges?: ConversationNudge[] | undefined;
-	selectedChat: {
-		contact: {
-			nickname?: string;
-			user?: { name?: string; email?: string } | null;
-		} | null;
-		group: { name: string } | null;
-	} | null;
-	contactIsTyping?: boolean;
-	groupIsTyping?:
-		| Array<{ _id: string; user?: { name?: string; email?: string } | null }>
-		| undefined;
 }
 
 export function ChatMessages({
 	messages,
-	isLoading,
 	conversationNudges,
-	selectedChat,
-	contactIsTyping,
-	groupIsTyping,
 }: ChatMessagesProps) {
+	const selectedChat = useStore($selectedChat);
+	const isLoading = useStore($isMessagesLoading);
+	const contactIsTyping = useStore($contactIsTyping);
+	const groupIsTyping = useStore($groupIsTyping);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 
 	const combined = useMemo(() => {

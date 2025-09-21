@@ -1,6 +1,11 @@
-import type { Id } from "@convex/_generated/dataModel";
+import { useStore } from "@nanostores/react";
 import { motion } from "framer-motion";
 import { Send, Smile, Zap } from "lucide-react";
+import {
+	$canNudge,
+	$chatDisplayName,
+	$fileUploadContext,
+} from "@/stores/contact";
 import { EmojiPicker } from "../EmojiPicker";
 import { FileUpload } from "../FileUpload";
 import { fadeInUp, hoverScale, tapScale } from "../ui/animated";
@@ -12,14 +17,9 @@ export interface ChatComposerProps {
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onSubmit: (e: React.FormEvent) => void;
 	onEmojiSelect: (emoji: string) => void;
-	canNudge: boolean;
 	onSendNudge: () => void;
 	isNudgeSending: boolean;
 	cooldownRemaining: number;
-	placeholder: string;
-	// New: file upload support
-	receiverId?: Id<"users">;
-	groupId?: Id<"groups">;
 	onFileUploaded?: () => void;
 }
 
@@ -28,15 +28,16 @@ export function ChatComposer({
 	onChange,
 	onSubmit,
 	onEmojiSelect,
-	canNudge,
 	onSendNudge,
 	isNudgeSending,
 	cooldownRemaining,
-	placeholder,
-	receiverId,
-	groupId,
 	onFileUploaded,
 }: ChatComposerProps) {
+	const canNudge = useStore($canNudge);
+	const chatDisplayName = useStore($chatDisplayName);
+	const fileUploadContext = useStore($fileUploadContext);
+
+	const placeholder = `Message ${chatDisplayName}...`;
 	return (
 		<div className="chat-input">
 			<motion.div
@@ -48,8 +49,8 @@ export function ChatComposer({
 				<form onSubmit={onSubmit} className="flex items-center space-x-2">
 					<motion.div whileHover={hoverScale} whileTap={tapScale}>
 						<FileUpload
-							receiverId={receiverId}
-							groupId={groupId}
+							receiverId={fileUploadContext.receiverId}
+							groupId={fileUploadContext.groupId}
 							onFileUploaded={onFileUploaded}
 						/>
 					</motion.div>
