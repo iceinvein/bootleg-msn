@@ -423,7 +423,7 @@ const MessageComponent = function Message({
 						)}
 
 						{/* Message actions - responsive: hover on desktop, tap on mobile */}
-						{!isEditing && (
+						{!isEditing && !message.isDeleted && (
 							<>
 								{/* Desktop: Hover actions */}
 								{!isMobile && (
