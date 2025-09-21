@@ -1,7 +1,3 @@
-// Web Push subscription helper
-// Subscribes the current browser to push using a VAPID public key and
-// posts the subscription to a Netlify Function endpoint.
-
 export type PushSubscriptionJSON = {
 	endpoint: string;
 	expirationTime: number | null;
@@ -44,9 +40,6 @@ export async function ensurePushSubscription(
 	}
 
 	const json = subscription.toJSON() as PushSubscriptionJSON;
-
-	// Persistence is handled via Convex (see usePushSubscription.ts)
-	// No direct network call here to avoid exposing unauthenticated endpoints.
 
 	return json;
 }

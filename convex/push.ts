@@ -77,8 +77,11 @@ export const upsertSubscription = mutation({
 			.unique();
 
 		if (existing) {
+			// Only allow updating if the subscription belongs to the current user
+			if (existing.userId !== userId) {
+				throw new Error("Cannot update subscription belonging to another user");
+			}
 			await ctx.db.patch(existing._id, {
-				userId,
 				p256dh: args.p256dh,
 				auth: args.auth,
 			});
