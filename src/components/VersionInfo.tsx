@@ -3,7 +3,7 @@ import { useQuery } from "convex/react";
 
 function formatTimeAgo(timestamp: number): string {
 	const now = Date.now();
-	const diff = now - timestamp * 1000;
+	const diff = now - timestamp;
 	const minutes = Math.floor(diff / 60000);
 	const hours = Math.floor(diff / 3600000);
 	const days = Math.floor(diff / 86400000);
@@ -16,32 +16,42 @@ function formatTimeAgo(timestamp: number): string {
 
 export function VersionInfo() {
 	const currentVersion = useQuery(api.deployment.getCurrentVersion);
-	const packageVersion = import.meta.env.PACKAGE_VERSION || "v0.0.0";
+	const rawPackageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
+	const appVersion = rawPackageVersion.startsWith("v")
+		? rawPackageVersion
+		: `v${rawPackageVersion}`;
 
-	if (!currentVersion) {
-		return <div className="text-gray-500 text-xs">v{packageVersion}</div>;
-	}
-
-	const timeAgo = formatTimeAgo(currentVersion.timestamp);
+	const timeAgo = currentVersion
+		? formatTimeAgo(currentVersion.timestamp)
+		: undefined;
 
 	return (
 		<div className="text-gray-500 text-xs">
-			<div>{currentVersion.version}</div>
-			<div className="text-xs opacity-75">Deployed {timeAgo}</div>
+			<div>
+				App: {appVersion}
+				{currentVersion?.version && currentVersion.version !== appVersion && (
+					<span className="ml-2 opacity-75">
+						(latest: {currentVersion.version})
+					</span>
+				)}
+			</div>
+			{currentVersion && (
+				<div className="text-xs opacity-75">Latest deployed {timeAgo}</div>
+			)}
 		</div>
 	);
 }
 
 // Compact version for status bar
 export function VersionBadge() {
-	const currentVersion = useQuery(api.deployment.getCurrentVersion);
-	const packageVersion = import.meta.env.PACKAGE_VERSION || "v0.0.0";
-
-	const version = currentVersion?.version || packageVersion;
+	const rawPackageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
+	const appVersion = rawPackageVersion.startsWith("v")
+		? rawPackageVersion
+		: `v${rawPackageVersion}`;
 
 	return (
 		<span className="rounded bg-muted px-2 py-1 text-muted-foreground text-xs">
-			{version}
+			{appVersion}
 		</span>
 	);
 }
