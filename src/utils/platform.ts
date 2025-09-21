@@ -60,10 +60,7 @@ export const Platform = {
 		}
 
 		// Check user agent for Tauri
-		if (
-			typeof navigator !== "undefined" &&
-			navigator.userAgent.includes("Tauri")
-		) {
+		if (navigator?.userAgent.includes("Tauri")) {
 			tauriDetectionCache = true;
 			return true;
 		}

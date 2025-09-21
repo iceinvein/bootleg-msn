@@ -114,7 +114,7 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 
 				<motion.form
 					onSubmit={handleSubmit}
-					className="flex flex-1 flex-col space-y-6 overflow-hidden"
+					className="mt-4 flex flex-1 flex-col space-y-6 overflow-hidden"
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ duration: 0.2, ease: cubicBezier(0, 0, 0.58, 1) }}
