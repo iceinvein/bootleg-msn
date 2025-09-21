@@ -173,7 +173,6 @@ function App() {
 								</Authenticated>
 							</>
 						)}
-
 						<Toaster />
 					</main>
 				</TauriIntegration>

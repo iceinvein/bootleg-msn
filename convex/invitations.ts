@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Resend } from "@convex-dev/resend";
 import { ConvexError, v } from "convex/values";
@@ -17,11 +18,7 @@ export const resend: Resend = new Resend(components.resend, {
 
 // Generate a random invitation token
 function generateInvitationToken(): string {
-	return (
-		Math.random().toString(36).substring(2, 15) +
-		Math.random().toString(36).substring(2, 15) +
-		Math.random().toString(36).substring(2, 15)
-	);
+	return randomBytes(32).toString("hex");
 }
 
 // Send invitation to someone who hasn't signed up yet
