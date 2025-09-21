@@ -89,37 +89,14 @@ const applicationTables = {
 		.index("by_user", ["userId"])
 		.index("by_group_and_user", ["groupId", "userId"]),
 
-	groupMessages: defineTable({
-		groupId: v.id("groups"),
-		senderId: v.id("users"),
-		content: v.string(),
-		messageType: v.union(
-			v.literal("text"),
-			v.literal("emoji"),
-			v.literal("file"),
-			v.literal("system"),
-		),
-		fileId: v.optional(v.id("_storage")),
-		fileName: v.optional(v.string()),
-		fileType: v.optional(v.string()),
-		fileSize: v.optional(v.number()),
-		isEdited: v.optional(v.boolean()),
-		editedAt: v.optional(v.number()),
-		isDeleted: v.optional(v.boolean()),
-		deletedAt: v.optional(v.number()),
-	})
-		.index("by_group", ["groupId"])
-		.index("by_sender", ["senderId"]),
-
-	groupMessageReads: defineTable({
-		groupId: v.id("groups"),
-		messageId: v.id("groupMessages"),
+	messageReads: defineTable({
+		messageId: v.id("messages"),
 		userId: v.id("users"),
 		readAt: v.number(),
 	})
-		.index("by_group_and_user", ["groupId", "userId"])
 		.index("by_message", ["messageId"])
-		.index("by_user", ["userId"]),
+		.index("by_user", ["userId"])
+		.index("by_message_and_user", ["messageId", "userId"]),
 
 	emailVerifications: defineTable({
 		email: v.string(),
@@ -190,28 +167,6 @@ const applicationTables = {
 		.index("by_reaction_type", ["reactionType"])
 		.index("by_created_at", ["createdAt"]),
 
-	// Group message reactions
-	groupMessageReactions: defineTable({
-		messageId: v.id("messages"),
-		userId: v.id("users"),
-		reactionType: v.union(
-			v.literal("thumbs_up"),
-			v.literal("heart"),
-			v.literal("laugh"),
-			v.literal("wow"),
-			v.literal("sad"),
-			v.literal("angry"),
-			v.literal("custom"),
-		),
-		customEmoji: v.optional(v.string()),
-		createdAt: v.number(),
-	})
-		.index("by_message", ["messageId"])
-		.index("by_user", ["userId"])
-		.index("by_message_and_user", ["messageId", "userId"])
-		.index("by_reaction_type", ["reactionType"])
-		.index("by_created_at", ["createdAt"]),
-
 	// Nudges and buzzes
 	nudges: defineTable({
 		fromUserId: v.id("users"),
@@ -230,19 +185,6 @@ const applicationTables = {
 	// Voice messages
 	voiceMessages: defineTable({
 		messageId: v.id("messages"),
-		audioFileId: v.id("_storage"),
-		duration: v.number(), // in seconds
-		waveformData: v.optional(v.string()), // JSON array of amplitude values
-		transcription: v.optional(v.string()),
-		fileSize: v.number(),
-		mimeType: v.string(),
-	})
-		.index("by_message", ["messageId"])
-		.index("by_duration", ["duration"]),
-
-	// Group voice messages
-	groupVoiceMessages: defineTable({
-		messageId: v.id("groupMessages"),
 		audioFileId: v.id("_storage"),
 		duration: v.number(), // in seconds
 		waveformData: v.optional(v.string()), // JSON array of amplitude values
@@ -420,7 +362,6 @@ const applicationTables = {
 	// Message search index (for full-text search)
 	messageSearchIndex: defineTable({
 		messageId: v.id("messages"),
-		groupMessageId: v.optional(v.id("groupMessages")),
 		content: v.string(),
 		senderId: v.id("users"),
 		receiverId: v.optional(v.id("users")),

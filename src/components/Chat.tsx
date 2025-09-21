@@ -119,10 +119,8 @@ export function Chat() {
 				: "skip",
 	);
 
-	const sendMessage = useMutation(api.unifiedMessages.sendMessage);
-	const markMessagesAsRead = useMutation(
-		api.unifiedMessages.markMessagesAsRead,
-	);
+	const sendMessage = useMutation(api.messages.sendMessage);
+	const markMessagesAsRead = useMutation(api.messages.markMessagesAsRead);
 	const setTyping = useMutation(api.userStatus.setTyping);
 
 	const handleTyping = useCallback(

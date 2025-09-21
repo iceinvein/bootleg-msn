@@ -17,12 +17,6 @@ export const addReactionValidator = v.object({
 	customEmoji: v.optional(v.string()),
 });
 
-export const addGroupReactionValidator = v.object({
-	messageId: v.id("messages"),
-	reactionType: reactionTypeValidator,
-	customEmoji: v.optional(v.string()),
-});
-
 // User status validation schemas
 export const userStatusValidator = v.union(
 	v.literal("online"),
@@ -54,16 +48,6 @@ export const sendNudgeValidator = v.object({
 // Voice message validation schemas
 export const voiceMessageValidator = v.object({
 	messageId: v.id("messages"),
-	audioFileId: v.id("_storage"),
-	duration: v.number(),
-	waveformData: v.optional(v.string()),
-	transcription: v.optional(v.string()),
-	fileSize: v.number(),
-	mimeType: v.string(),
-});
-
-export const groupVoiceMessageValidator = v.object({
-	messageId: v.id("groupMessages"),
 	audioFileId: v.id("_storage"),
 	duration: v.number(),
 	waveformData: v.optional(v.string()),

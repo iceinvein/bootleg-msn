@@ -36,7 +36,7 @@ type OptimisticMessage = {
 };
 
 type ServerMessage = FunctionReturnType<
-	typeof api.unifiedMessages.getMessages
+	typeof api.messages.getMessages
 >[number];
 export type CombinedMessage = ServerMessage | OptimisticMessage;
 
@@ -53,7 +53,7 @@ export function useOptimisticMessages({
 }: UseOptimisticMessagesProps) {
 	// Get server messages
 	const serverMessages = useQuery(
-		api.unifiedMessages.getMessages,
+		api.messages.getMessages,
 		otherUserId ? { otherUserId } : groupId ? { groupId } : "skip",
 	);
 

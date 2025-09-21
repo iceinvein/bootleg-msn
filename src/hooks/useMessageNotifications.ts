@@ -25,7 +25,7 @@ const createAudioContext = (): AudioContext | null => {
 
 // Type for messages returned from getAllUserMessages query - end-to-end type safe
 type AllUserMessagesReturn = ReturnType<
-	typeof useQuery<typeof api.unifiedMessages.getAllUserMessages>
+	typeof useQuery<typeof api.messages.getAllUserMessages>
 >;
 type MessageFromQuery = NonNullable<AllUserMessagesReturn>[number];
 
@@ -53,7 +53,7 @@ export function useMessageNotifications() {
 	const isInitialized = useRef(false);
 
 	// Get all messages for the current user (both direct and group messages)
-	const allMessages = useQuery(api.unifiedMessages.getAllUserMessages);
+	const allMessages = useQuery(api.messages.getAllUserMessages);
 
 	// Track window focus/visibility to decide when to notify even if chat is open
 	const [isWindowFocused, setIsWindowFocused] = useState<boolean>(

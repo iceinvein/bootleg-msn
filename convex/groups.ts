@@ -53,11 +53,12 @@ export const createGroup = mutation({
 		}
 
 		// Send system message
-		await ctx.db.insert("groupMessages", {
+		await ctx.db.insert("messages", {
 			senderId: userId,
 			groupId,
 			content: "Group created",
 			messageType: "system",
+			isRead: false,
 		});
 
 		return groupId;
@@ -137,11 +138,12 @@ export const addGroupMembers = mutation({
 			const adminUser = await ctx.db.get(userId);
 			const adminName = adminUser?.name || adminUser?.email || "Admin";
 
-			await ctx.db.insert("groupMessages", {
+			await ctx.db.insert("messages", {
 				senderId: userId,
 				groupId: args.groupId,
 				content: `${adminName} added ${addedMembers.join(", ")} to the group`,
 				messageType: "system",
+				isRead: false,
 			});
 		}
 
@@ -209,21 +211,23 @@ export const removeGroupMember = mutation({
 			removedUser?.name || removedUser?.email || "Unknown User";
 
 		if (userId === args.memberId) {
-			await ctx.db.insert("groupMessages", {
+			await ctx.db.insert("messages", {
 				senderId: userId,
 				groupId: args.groupId,
 				content: `${removedUserName} left the group`,
 				messageType: "system",
+				isRead: false,
 			});
 		} else {
 			const adminUser = await ctx.db.get(userId);
 			const adminName = adminUser?.name || adminUser?.email || "Admin";
 
-			await ctx.db.insert("groupMessages", {
+			await ctx.db.insert("messages", {
 				senderId: userId,
 				groupId: args.groupId,
 				content: `${adminName} removed ${removedUserName} from the group`,
 				messageType: "system",
+				isRead: false,
 			});
 		}
 	},
@@ -377,7 +381,7 @@ export const getGroupMessages = query({
 		}
 
 		const messages = await ctx.db
-			.query("groupMessages")
+			.query("messages")
 			.withIndex("by_group", (q) => q.eq("groupId", args.groupId))
 			.order("asc")
 			.collect();
@@ -427,11 +431,12 @@ export const sendGroupMessage = mutation({
 			throw new Error("You are not a member of this group");
 		}
 
-		await ctx.db.insert("groupMessages", {
+		await ctx.db.insert("messages", {
 			senderId: userId,
 			groupId: args.groupId,
 			content: args.content,
 			messageType: args.messageType || "text",
+			isRead: false,
 		});
 
 		// Update last seen for sender
@@ -471,15 +476,13 @@ export const markGroupMessagesAsRead = mutation({
 		}
 
 		const allMessages = await ctx.db
-			.query("groupMessages")
+			.query("messages")
 			.withIndex("by_group", (q) => q.eq("groupId", args.groupId))
 			.collect();
 
 		const existingReads = await ctx.db
-			.query("groupMessageReads")
-			.withIndex("by_group_and_user", (q) =>
-				q.eq("groupId", args.groupId).eq("userId", userId),
-			)
+			.query("messageReads")
+			.withIndex("by_user", (q) => q.eq("userId", userId))
 			.collect();
 
 		const readMessageIds = new Set(existingReads.map((read) => read.messageId));
@@ -502,8 +505,7 @@ export const markGroupMessagesAsRead = mutation({
 					message.content.includes(`added ${userEmail}`)
 				)
 			) {
-				await ctx.db.insert("groupMessageReads", {
-					groupId: args.groupId,
+				await ctx.db.insert("messageReads", {
 					messageId: message._id,
 					userId,
 					readAt: Date.now(),
@@ -515,7 +517,7 @@ export const markGroupMessagesAsRead = mutation({
 
 export const editGroupMessage = mutation({
 	args: {
-		messageId: v.id("groupMessages"),
+		messageId: v.id("messages"),
 		newContent: v.string(),
 	},
 	handler: async (ctx, args) => {
@@ -550,10 +552,15 @@ export const editGroupMessage = mutation({
 		}
 
 		// Check if user is still a member of the group
+		if (!message.groupId) {
+			throw new Error("Message is not a group message");
+		}
+
+		const groupId = message.groupId; // TypeScript now knows this is not undefined
 		const membership = await ctx.db
 			.query("groupMembers")
 			.withIndex("by_group_and_user", (q) =>
-				q.eq("groupId", message.groupId).eq("userId", userId),
+				q.eq("groupId", groupId).eq("userId", userId),
 			)
 			.unique();
 
@@ -571,7 +578,7 @@ export const editGroupMessage = mutation({
 
 export const deleteGroupMessage = mutation({
 	args: {
-		messageId: v.id("groupMessages"),
+		messageId: v.id("messages"),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -590,10 +597,15 @@ export const deleteGroupMessage = mutation({
 		}
 
 		// Check if user is still a member of the group
+		if (!message.groupId) {
+			throw new Error("Message is not a group message");
+		}
+
+		const groupId = message.groupId; // TypeScript now knows this is not undefined
 		const membership = await ctx.db
 			.query("groupMembers")
 			.withIndex("by_group_and_user", (q) =>
-				q.eq("groupId", message.groupId).eq("userId", userId),
+				q.eq("groupId", groupId).eq("userId", userId),
 			)
 			.unique();
 
@@ -693,11 +705,12 @@ export const leaveGroup = mutation({
 		const user = await ctx.db.get(userId);
 		const userName = user?.name || user?.email || "Unknown User";
 
-		await ctx.db.insert("groupMessages", {
+		await ctx.db.insert("messages", {
 			senderId: userId,
 			groupId: args.groupId,
 			content: `${userName} left the group`,
 			messageType: "system",
+			isRead: false,
 		});
 	},
 });
@@ -751,11 +764,12 @@ export const setMemberRole = mutation({
 		const targetUser = await ctx.db.get(args.memberId);
 		const targetName = targetUser?.name || targetUser?.email || "Member";
 		const action = args.role === "admin" ? "promoted" : "demoted";
-		await ctx.db.insert("groupMessages", {
+		await ctx.db.insert("messages", {
 			senderId: userId,
 			groupId: args.groupId,
 			content: `${adminName} ${action} ${targetName} to ${args.role}`,
 			messageType: "system",
+			isRead: false,
 		});
 	},
 });

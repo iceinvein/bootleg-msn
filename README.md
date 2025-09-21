@@ -410,11 +410,10 @@ The app uses Convex with the following main tables:
 - **users** - User profiles and authentication (from Convex Auth)
 - **contacts** - Contact relationships with nicknames
 - **contactRequests** - Contact request management (pending/accepted/rejected)
-- **messages** - Direct messages between users with file support
+- **messages** - Unified messages for both direct and group chats with file support
 - **groups** - Group chat information and settings
 - **groupMembers** - Group membership with roles (admin/member)
-- **groupMessages** - Messages in group chats
-- **groupMessageReads** - Read receipts for group messages
+- **messageReads** - Read receipts for all messages (direct and group)
 - **userStatus** - Online status and custom status messages
 - **emailVerifications** - Email verification tokens and status
 - **typingIndicators** - Real-time typing indicators

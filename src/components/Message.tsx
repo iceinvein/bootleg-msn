@@ -39,29 +39,16 @@ const MessageComponent = function Message({
 	// Suppress entrance/layout animation when a server message is reusing an optimistic key
 	const isReconciledServer = !isOptimistic && "clientKey" in message;
 
-	// Determine if this is a group message or direct message
-	const isGroupMessage = !!message.groupId;
-
 	const reactionSummary = useQuery(
-		isGroupMessage
-			? api.reactions.getGroupMessageReactionSummary
-			: api.reactions.getMessageReactionSummary,
+		api.reactions.getMessageReactionSummary,
 		isServerMessage(message) ? { messageId: message._id } : "skip",
 	);
 
-	const addReaction = useMutation(
-		isGroupMessage
-			? api.reactions.addGroupMessageReaction
-			: api.reactions.addMessageReaction,
-	);
-	const removeReaction = useMutation(
-		isGroupMessage
-			? api.reactions.removeGroupMessageReaction
-			: api.reactions.removeMessageReaction,
-	);
+	const addReaction = useMutation(api.reactions.addMessageReaction);
+	const removeReaction = useMutation(api.reactions.removeMessageReaction);
 
-	const deleteMessageMutation = useMutation(api.unifiedMessages.deleteMessage);
-	const editMessageMutation = useMutation(api.unifiedMessages.editMessage);
+	const deleteMessageMutation = useMutation(api.messages.deleteMessage);
+	const editMessageMutation = useMutation(api.messages.editMessage);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);

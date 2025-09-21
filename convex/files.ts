@@ -84,7 +84,7 @@ export const sendFileMessage = mutation({
 
 		// Create the file message
 		if (args.groupId) {
-			await ctx.db.insert("groupMessages", {
+			await ctx.db.insert("messages", {
 				senderId: userId,
 				groupId: args.groupId,
 				content: args.fileName,
@@ -93,6 +93,7 @@ export const sendFileMessage = mutation({
 				fileName: args.fileName,
 				fileType: args.fileType,
 				fileSize: args.fileSize,
+				isRead: false,
 			});
 		} else if (args.receiverId) {
 			await ctx.db.insert("messages", {
