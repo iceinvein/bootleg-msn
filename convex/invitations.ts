@@ -1,8 +1,7 @@
-import { randomBytes } from "node:crypto";
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { Resend } from "@convex-dev/resend";
 import { ConvexError, v } from "convex/values";
-import { components, internal } from "./_generated/api";
+import { api, components, internal } from "./_generated/api";
 import {
 	action,
 	internalMutation,
@@ -16,10 +15,7 @@ export const resend: Resend = new Resend(components.resend, {
 	testMode: process.env.VITE_RESEND_TEST_MODE === "true",
 });
 
-// Generate a random invitation token
-function generateInvitationToken(): string {
-	return randomBytes(32).toString("hex");
-}
+// Token generation is now handled by tokenActions.generateSecureToken
 
 // Send invitation to someone who hasn't signed up yet
 export const sendInvitation = action({
@@ -80,7 +76,7 @@ export const sendInvitation = action({
 
 		if (existingInvitation && existingInvitation.status === "pending") {
 			// Update existing pending invitation
-			token = generateInvitationToken();
+			token = await ctx.runAction(api.tokenActions.generateSecureToken, {});
 			const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
 
 			invitationId = await ctx.runMutation(
@@ -95,7 +91,7 @@ export const sendInvitation = action({
 			);
 		} else {
 			// Create new invitation
-			token = generateInvitationToken();
+			token = await ctx.runAction(api.tokenActions.generateSecureToken, {});
 			const expiresAt = Date.now() + 7 * 24 * 60 * 60 * 1000; // 7 days
 
 			invitationId = await ctx.runMutation(
