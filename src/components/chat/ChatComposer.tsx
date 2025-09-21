@@ -1,6 +1,8 @@
+import type { Id } from "@convex/_generated/dataModel";
 import { motion } from "framer-motion";
-import { Paperclip, Send, Smile, Zap } from "lucide-react";
+import { Send, Smile, Zap } from "lucide-react";
 import { EmojiPicker } from "../EmojiPicker";
+import { FileUpload } from "../FileUpload";
 import { fadeInUp, hoverScale, tapScale } from "../ui/animated";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
@@ -15,6 +17,10 @@ export interface ChatComposerProps {
 	isNudgeSending: boolean;
 	cooldownRemaining: number;
 	placeholder: string;
+	// New: file upload support
+	receiverId?: Id<"users">;
+	groupId?: Id<"groups">;
+	onFileUploaded?: () => void;
 }
 
 export function ChatComposer({
@@ -27,6 +33,9 @@ export function ChatComposer({
 	isNudgeSending,
 	cooldownRemaining,
 	placeholder,
+	receiverId,
+	groupId,
+	onFileUploaded,
 }: ChatComposerProps) {
 	return (
 		<div className="chat-input">
@@ -38,14 +47,11 @@ export function ChatComposer({
 			>
 				<form onSubmit={onSubmit} className="flex items-center space-x-2">
 					<motion.div whileHover={hoverScale} whileTap={tapScale}>
-						<Button
-							type="button"
-							variant="ghost"
-							size="sm"
-							className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
-						>
-							<Paperclip className="h-3 w-3 md:h-4 md:w-4" />
-						</Button>
+						<FileUpload
+							receiverId={receiverId}
+							groupId={groupId}
+							onFileUploaded={onFileUploaded}
+						/>
 					</motion.div>
 					<EmojiPicker onEmojiSelect={onEmojiSelect}>
 						<motion.div whileHover={hoverScale} whileTap={tapScale}>

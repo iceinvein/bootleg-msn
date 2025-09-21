@@ -288,6 +288,8 @@ export function Chat() {
 						onSendNudge={handleSendNudge}
 						isNudgeSending={isNudgeSending}
 						cooldownRemaining={cooldownRemaining}
+						receiverId={selectedChat?.contact?.contactUserId}
+						groupId={selectedChat?.group?._id}
 						placeholder={`Message ${
 							selectedChat.contact?.nickname ??
 							selectedChat.contact?.user?.name ??
