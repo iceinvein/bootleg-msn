@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, mutation, query } from "./_generated/server";
 
 export const updateDeploymentInfo = internalMutation({
 	args: {
@@ -12,6 +12,38 @@ export const updateDeploymentInfo = internalMutation({
 		await ctx.db.insert("deploymentInfo", {
 			version: args.version,
 			timestamp: args.timestamp,
+		});
+
+		// Keep only the last 10 deployment records to avoid clutter
+		const allDeployments = await ctx.db
+			.query("deploymentInfo")
+			.withIndex("by_timestamp")
+			.order("desc")
+			.collect();
+
+		if (allDeployments.length > 10) {
+			const deploymentsToDelete = allDeployments.slice(10);
+			for (const deployment of deploymentsToDelete) {
+				await ctx.db.delete(deployment._id);
+			}
+		}
+	},
+});
+
+// Client-side mutation for development/testing purposes
+export const updateDeploymentInfoClient = mutation({
+	args: {
+		version: v.string(),
+		timestamp: v.optional(v.number()),
+	},
+	returns: v.null(),
+	handler: async (ctx, args) => {
+		const timestamp = args.timestamp ?? Date.now();
+
+		// Insert new deployment info
+		await ctx.db.insert("deploymentInfo", {
+			version: args.version,
+			timestamp: timestamp,
 		});
 
 		// Keep only the last 10 deployment records to avoid clutter
