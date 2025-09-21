@@ -136,8 +136,31 @@ export const checkForUpdates = query({
 			return null;
 		}
 
-		// Check if there's a newer version available
-		const hasUpdate = latestDeployment.timestamp > args.clientTimestamp;
+		// Compare versions semantically, not just timestamps
+		// Remove 'v' prefix for comparison
+		const latestVersion = latestDeployment.version.replace(/^v/, "");
+		const clientVersion = args.clientVersion.replace(/^v/, "");
+
+		// Split versions into parts and compare
+		const latestParts = latestVersion.split(".").map(Number);
+		const clientParts = clientVersion.split(".").map(Number);
+
+		let hasUpdate = false;
+		const maxLength = Math.max(latestParts.length, clientParts.length);
+
+		for (let i = 0; i < maxLength; i++) {
+			const latestPart = latestParts[i] || 0;
+			const clientPart = clientParts[i] || 0;
+
+			if (latestPart > clientPart) {
+				hasUpdate = true;
+				break;
+			} else if (latestPart < clientPart) {
+				hasUpdate = false;
+				break;
+			}
+			// If equal, continue to next part
+		}
 
 		return {
 			hasUpdate,
