@@ -18,7 +18,7 @@ export const addReactionValidator = v.object({
 });
 
 export const addGroupReactionValidator = v.object({
-	messageId: v.id("groupMessages"),
+	messageId: v.id("messages"),
 	reactionType: reactionTypeValidator,
 	customEmoji: v.optional(v.string()),
 });

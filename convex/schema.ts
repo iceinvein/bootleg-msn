@@ -192,7 +192,7 @@ const applicationTables = {
 
 	// Group message reactions
 	groupMessageReactions: defineTable({
-		messageId: v.id("groupMessages"),
+		messageId: v.id("messages"),
 		userId: v.id("users"),
 		reactionType: v.union(
 			v.literal("thumbs_up"),

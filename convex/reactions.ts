@@ -100,10 +100,15 @@ export const addGroupMessageReaction = mutation({
 		}
 
 		// Check if user is a member of the group
+		if (!message.groupId) {
+			throw new Error("Message is not a group message");
+		}
+
+		const groupId = message.groupId; // TypeScript now knows this is not undefined
 		const membership = await ctx.db
 			.query("groupMembers")
 			.withIndex("by_group_and_user", (q) =>
-				q.eq("groupId", message.groupId).eq("userId", user._id),
+				q.eq("groupId", groupId).eq("userId", user._id),
 			)
 			.unique();
 
@@ -223,7 +228,7 @@ export const removeMessageReaction = mutation({
 // FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Remove reaction from a group message
 export const removeGroupMessageReaction = mutation({
-	args: { messageId: v.id("groupMessages") },
+	args: { messageId: v.id("messages") },
 	returns: v.null(),
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
@@ -235,10 +240,15 @@ export const removeGroupMessageReaction = mutation({
 		}
 
 		// Check if user is a member of the group
+		if (!message.groupId) {
+			throw new Error("Message is not a group message");
+		}
+
+		const groupId = message.groupId; // TypeScript now knows this is not undefined
 		const membership = await ctx.db
 			.query("groupMembers")
 			.withIndex("by_group_and_user", (q) =>
-				q.eq("groupId", message.groupId).eq("userId", user._id),
+				q.eq("groupId", groupId).eq("userId", user._id),
 			)
 			.unique();
 
@@ -319,7 +329,7 @@ export const getMessageReactions = query({
 // FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Get reactions for a group message
 export const getGroupMessageReactions = query({
-	args: { messageId: v.id("groupMessages") },
+	args: { messageId: v.id("messages") },
 	returns: v.array(
 		v.object({
 			_id: v.id("groupMessageReactions"),
@@ -440,7 +450,7 @@ export const getMessageReactionSummary = query({
 // FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Get reaction summary for a group message (grouped by reaction type with counts)
 export const getGroupMessageReactionSummary = query({
-	args: { messageId: v.id("groupMessages") },
+	args: { messageId: v.id("messages") },
 	returns: v.array(
 		v.object({
 			reactionType: reactionTypeValidator,
@@ -534,7 +544,7 @@ export const hasUserReactedToMessage = query({
 // FUTURE: GROUP_CHAT_REACTIONS - Group message reactions system
 // Check if current user has reacted to a group message
 export const hasUserReactedToGroupMessage = query({
-	args: { messageId: v.id("groupMessages") },
+	args: { messageId: v.id("messages") },
 	returns: v.union(reactionTypeValidator, v.null()),
 	handler: async (ctx, args) => {
 		const user = await getCurrentUser(ctx);
