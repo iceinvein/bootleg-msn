@@ -1,5 +1,10 @@
 import { v } from "convex/values";
-import { internalMutation, mutation, query } from "./_generated/server";
+import {
+	internalMutation,
+	mutation,
+	type QueryCtx,
+	query,
+} from "./_generated/server";
 
 export const updateDeploymentInfo = internalMutation({
 	args: {
@@ -64,13 +69,10 @@ export const updateDeploymentInfoClient = mutation({
 
 export const getCurrentVersion = query({
 	args: {},
-	returns: v.union(
-		v.object({
-			version: v.string(),
-			timestamp: v.number(),
-		}),
-		v.null(),
-	),
+	returns: v.object({
+		version: v.string(),
+		timestamp: v.number(),
+	}),
 	handler: async (ctx) => {
 		const latestDeployment = await ctx.db
 			.query("deploymentInfo")
@@ -79,7 +81,7 @@ export const getCurrentVersion = query({
 			.first();
 
 		if (!latestDeployment) {
-			return null;
+			return { version: "unknown", timestamp: 0 };
 		}
 
 		return {
@@ -112,60 +114,95 @@ export const getDeploymentHistory = query({
 			.take(limit);
 	},
 });
+
+// Helper to fetch the latest deployment record
+async function getLatestDeployment(ctx: QueryCtx) {
+	return await ctx.db
+		.query("deploymentInfo")
+		.withIndex("by_timestamp")
+		.order("desc")
+		.first();
+}
+
+// Robust semantic version comparison
+// Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
+function compareSemanticVersions(v1: string, v2: string): number {
+	// Normalize versions by removing 'v' prefix and handling edge cases
+	const normalize = (version: string): string => {
+		return version.replace(/^v/, "").trim();
+	};
+
+	const version1 = normalize(v1);
+	const version2 = normalize(v2);
+
+	// Handle exact matches
+	if (version1 === version2) {
+		return 0;
+	}
+
+	// Split into parts and convert to numbers
+	const parts1 = version1.split(".").map((part) => {
+		const num = parseInt(part, 10);
+		return Number.isNaN(num) ? 0 : num;
+	});
+	const parts2 = version2.split(".").map((part) => {
+		const num = parseInt(part, 10);
+		return Number.isNaN(num) ? 0 : num;
+	});
+
+	// Compare each part
+	const maxLength = Math.max(parts1.length, parts2.length);
+	for (let i = 0; i < maxLength; i++) {
+		const part1 = parts1[i] || 0;
+		const part2 = parts2[i] || 0;
+
+		if (part1 > part2) return 1;
+		if (part1 < part2) return -1;
+	}
+
+	return 0;
+}
+
 export const checkForUpdates = query({
 	args: {
 		clientVersion: v.string(),
-		clientTimestamp: v.number(),
 	},
-	returns: v.union(
-		v.object({
-			hasUpdate: v.boolean(),
-			latestVersion: v.string(),
-			latestTimestamp: v.number(),
-		}),
-		v.null(),
-	),
+	returns: v.object({
+		hasUpdate: v.boolean(),
+		latestVersion: v.string(),
+		debugInfo: v.string(),
+	}),
 	handler: async (ctx, args) => {
-		const latestDeployment = await ctx.db
-			.query("deploymentInfo")
-			.withIndex("by_timestamp")
-			.order("desc")
-			.first();
+		try {
+			const latestDeployment = await getLatestDeployment(ctx);
 
-		if (!latestDeployment) {
-			return null;
-		}
-
-		// Compare versions semantically, not just timestamps
-		// Remove 'v' prefix for comparison
-		const latestVersion = latestDeployment.version.replace(/^v/, "");
-		const clientVersion = args.clientVersion.replace(/^v/, "");
-
-		// Split versions into parts and compare
-		const latestParts = latestVersion.split(".").map(Number);
-		const clientParts = clientVersion.split(".").map(Number);
-
-		let hasUpdate = false;
-		const maxLength = Math.max(latestParts.length, clientParts.length);
-
-		for (let i = 0; i < maxLength; i++) {
-			const latestPart = latestParts[i] || 0;
-			const clientPart = clientParts[i] || 0;
-
-			if (latestPart > clientPart) {
-				hasUpdate = true;
-				break;
-			} else if (latestPart < clientPart) {
-				hasUpdate = false;
-				break;
+			if (!latestDeployment) {
+				return {
+					hasUpdate: false,
+					latestVersion: "unknown",
+					debugInfo: "No deployment info found in database",
+				};
 			}
-			// If equal, continue to next part
-		}
 
-		return {
-			hasUpdate,
-			latestVersion: latestDeployment.version,
-			latestTimestamp: latestDeployment.timestamp,
-		};
+			const comparisonResult = compareSemanticVersions(
+				latestDeployment.version,
+				args.clientVersion,
+			);
+
+			const hasUpdate = comparisonResult > 0;
+
+			return {
+				hasUpdate,
+				latestVersion: latestDeployment.version,
+				debugInfo: `Compared ${latestDeployment.version} vs ${args.clientVersion} = ${comparisonResult} (${hasUpdate ? "update available" : "up to date"})`,
+			};
+		} catch (error) {
+			// Fail safe - don't show updates if there's an error
+			return {
+				hasUpdate: false,
+				latestVersion: "error",
+				debugInfo: `Error checking for updates: ${error}`,
+			};
+		}
 	},
 });
