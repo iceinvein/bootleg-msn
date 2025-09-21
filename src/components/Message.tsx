@@ -21,6 +21,12 @@ type MessageProps = {
 	isConsecutive?: boolean;
 };
 
+// Helper function to check if a message is a server message (not optimistic)
+const isServerMessage = (
+	m: CombinedMessage,
+): m is Exclude<CombinedMessage, { isOptimistic: true }> =>
+	!("isOptimistic" in m);
+
 const MessageComponent = function Message({
 	message,
 	isConsecutive = false,
@@ -35,11 +41,13 @@ const MessageComponent = function Message({
 
 	const reactionSummary = useQuery(
 		api.reactions.getMessageReactionSummary,
-		isOptimistic ? "skip" : { messageId: message._id },
+		isServerMessage(message) ? { messageId: message._id } : "skip",
 	);
 
 	const addReaction = useMutation(api.reactions.addMessageReaction);
 	const removeReaction = useMutation(api.reactions.removeMessageReaction);
+
+	const deleteMessageMutation = useMutation(api.unifiedMessages.deleteMessage);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
@@ -140,8 +148,18 @@ const MessageComponent = function Message({
 		}
 	};
 
-	const handleDelete = () => {
-		// TODO: delete message
+	const handleDelete = async () => {
+		try {
+			// Only allow deleting confirmed (non-optimistic) messages
+			const isServerMessage = (
+				m: CombinedMessage,
+			): m is Exclude<CombinedMessage, { isOptimistic: true }> =>
+				!("isOptimistic" in m);
+			if (!isServerMessage(message)) return;
+			await deleteMessageMutation({ messageId: message._id });
+		} catch (error) {
+			console.error("Failed to delete message:", error);
+		}
 	};
 
 	// Reaction handling
@@ -160,11 +178,13 @@ const MessageComponent = function Message({
 						r.hasCurrentUserReacted,
 				);
 
-				if (existingReaction) {
-					// Remove existing reaction
+				if (isOptimistic) return;
+
+				if (existingReaction && isServerMessage(message)) {
+					// Remove existing reaction - only for server messages
 					await removeReaction({ messageId: message._id });
-				} else {
-					// Add new reaction
+				} else if (!existingReaction && isServerMessage(message)) {
+					// Add new reaction - only for server messages
 					await addReaction({
 						messageId: message._id,
 						reactionType,
@@ -177,7 +197,14 @@ const MessageComponent = function Message({
 				setIsReactionLoading(false);
 			}
 		},
-		[loggedInUser, reactionSummary, addReaction, removeReaction, message._id],
+		[
+			loggedInUser,
+			reactionSummary,
+			addReaction,
+			removeReaction,
+			isOptimistic,
+			message,
+		],
 	);
 
 	const handleQuickReaction = useCallback(
@@ -300,26 +327,34 @@ const MessageComponent = function Message({
 							>
 								<div className="flex items-center gap-2">
 									<p className="flex-1 break-words text-sm md:text-base">
-										{message.content}
-										{message.isEdited && (
-											<motion.span
-												className="ml-2 text-xs opacity-70"
-												initial={
-													isReconciledServer
-														? false
-														: { opacity: 0, scale: 0.8 }
-												}
-												animate={
-													isReconciledServer
-														? undefined
-														: { opacity: 0.7, scale: 1 }
-												}
-												transition={
-													isReconciledServer ? undefined : { delay: 0.2 }
-												}
-											>
-												(edited)
-											</motion.span>
+										{message.isDeleted ? (
+											<span className="text-muted-foreground italic">
+												This message was deleted
+											</span>
+										) : (
+											<>
+												{message.content}
+												{message.isEdited && (
+													<motion.span
+														className="ml-2 text-xs opacity-70"
+														initial={
+															isReconciledServer
+																? false
+																: { opacity: 0, scale: 0.8 }
+														}
+														animate={
+															isReconciledServer
+																? undefined
+																: { opacity: 0.7, scale: 1 }
+														}
+														transition={
+															isReconciledServer ? undefined : { delay: 0.2 }
+														}
+													>
+														(edited)
+													</motion.span>
+												)}
+											</>
 										)}
 									</p>
 
@@ -405,12 +440,12 @@ const MessageComponent = function Message({
 											</Button>
 
 											{/* Separator only if there are edit/delete actions for user messages */}
-											{ownsMessage && (
+											{ownsMessage && !message.isDeleted && (
 												<div className="mx-1 h-6 w-px bg-border" />
 											)}
 
 											{/* Edit Button (only for user messages) */}
-											{ownsMessage && (
+											{ownsMessage && !message.isDeleted && (
 												<Button
 													size="sm"
 													variant="ghost"
@@ -422,7 +457,7 @@ const MessageComponent = function Message({
 											)}
 
 											{/* Delete Button (only for user messages) */}
-											{ownsMessage && (
+											{ownsMessage && !message.isDeleted && (
 												<Button
 													size="sm"
 													variant="ghost"
@@ -439,7 +474,7 @@ const MessageComponent = function Message({
 								{/* Mobile: Long press triggered drawer */}
 								{isMobile && (
 									<QuickMessageActions
-										ownsMessage={ownsMessage}
+										ownsMessage={ownsMessage && !message.isDeleted}
 										isReactionLoading={isReactionLoading}
 										onQuickReaction={handleQuickReaction}
 										onEdit={handleEdit}
@@ -452,23 +487,25 @@ const MessageComponent = function Message({
 						)}
 					</div>
 					{/* Message reactions */}
-					{reactionSummary && reactionSummary.length > 0 && (
-						<div
-							className={cn(
-								"-bottom-5 absolute",
-								ownsMessage
-									? "left-2 flex justify-end"
-									: "right-2 flex justify-start",
-							)}
-						>
-							<MessageReactions
-								reactions={reactionSummary}
-								onReactionClick={handleReactionSelect}
-								isLoading={isReactionLoading}
-								className={cn(ownsMessage ? "mr-8" : "ml-8")}
-							/>
-						</div>
-					)}
+					{!message.isDeleted &&
+						reactionSummary &&
+						reactionSummary.length > 0 && (
+							<div
+								className={cn(
+									"-bottom-5 absolute",
+									ownsMessage
+										? "left-2 flex justify-end"
+										: "right-2 flex justify-start",
+								)}
+							>
+								<MessageReactions
+									reactions={reactionSummary}
+									onReactionClick={handleReactionSelect}
+									isLoading={isReactionLoading}
+									className={cn(ownsMessage ? "mr-8" : "ml-8")}
+								/>
+							</div>
+						)}
 				</div>
 			</div>
 		</motion.div>
