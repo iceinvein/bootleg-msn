@@ -101,11 +101,16 @@ class BrowserNotificationService {
 		}
 
 		if (this.permission === "granted") {
+			// Attempt to ensure push subscription if configured
+			await this.trySubscribeForPush();
 			return "granted";
 		}
 
 		try {
 			const permission = await Notification.requestPermission();
+			if (permission === "granted") {
+				await this.trySubscribeForPush();
+			}
 			return permission;
 		} catch (error) {
 			console.error("Failed to request notification permission:", error);
@@ -135,6 +140,18 @@ class BrowserNotificationService {
 		} catch (error) {
 			console.warn("Service worker registration failed:", error);
 			// Continue without service worker
+		}
+	}
+
+	private async trySubscribeForPush() {
+		try {
+			// Only attempt if a VAPID public key is provided at build-time
+			const vapidKey = import.meta.env?.VITE_VAPID_PUBLIC_KEY;
+			if (!vapidKey) return;
+			const { ensurePushSubscription } = await import("./push-subscription");
+			await ensurePushSubscription(vapidKey);
+		} catch (e) {
+			console.warn("Push subscription attempt failed:", e);
 		}
 	}
 
