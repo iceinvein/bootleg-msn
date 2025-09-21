@@ -48,13 +48,23 @@ export function SignInForm() {
 	const [resendCooldown, setResendCooldown] = useState(0);
 	const [canResend, setCanResend] = useState(true);
 	const [showPassword, setShowPassword] = useState(false);
+	const [invitationToken, setInvitationToken] = useState<string | null>(null);
 
-	// Check for verification token in URL
+	// Check for verification token and invitation token in URL
 	useEffect(() => {
 		const urlParams = new URLSearchParams(window.location.search);
 		const token = urlParams.get("token");
+		const invitation = urlParams.get("invitation");
+
 		if (token) {
 			setVerificationToken(token);
+			// Clean up URL
+			window.history.replaceState({}, document.title, window.location.pathname);
+		}
+
+		if (invitation) {
+			setInvitationToken(invitation);
+			setShowSignUp(true); // Automatically show signup form for invitations
 			// Clean up URL
 			window.history.replaceState({}, document.title, window.location.pathname);
 		}
@@ -217,7 +227,15 @@ export function SignInForm() {
 	}
 
 	if (showSignUp) {
-		return <SignUpForm onBackToSignIn={() => setShowSignUp(false)} />;
+		return (
+			<SignUpForm
+				onBackToSignIn={() => {
+					setShowSignUp(false);
+					setInvitationToken(null);
+				}}
+				invitationToken={invitationToken}
+			/>
+		);
 	}
 
 	return (

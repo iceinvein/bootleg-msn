@@ -1,5 +1,5 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Id } from "./_generated/dataModel";
 import { type MutationCtx, mutation, query } from "./_generated/server";
 
@@ -11,7 +11,7 @@ export const sendContactRequest = mutation({
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) {
-			throw new Error("Not authenticated");
+			throw new ConvexError("Not authenticated");
 		}
 
 		// Find user by email
@@ -21,11 +21,11 @@ export const sendContactRequest = mutation({
 			.unique();
 
 		if (!contactUser) {
-			throw new Error("User has not signed up yet");
+			throw new ConvexError("User has not signed up yet");
 		}
 
 		if (contactUser._id === userId) {
-			throw new Error("Cannot add yourself as a contact");
+			throw new ConvexError("Cannot add yourself as a contact");
 		}
 
 		// Check if any relationship already exists
@@ -38,11 +38,11 @@ export const sendContactRequest = mutation({
 
 		if (existingContact) {
 			if (existingContact.status === "pending") {
-				throw new Error("Contact request already sent");
+				throw new ConvexError("Contact request already sent");
 			} else if (existingContact.status === "accepted") {
-				throw new Error("Contact already exists");
+				throw new ConvexError("Contact already exists");
 			} else if (existingContact.status === "blocked") {
-				throw new Error("Cannot send request to blocked user");
+				throw new ConvexError("Cannot send request to blocked user");
 			}
 		}
 
@@ -93,16 +93,16 @@ export const acceptContactRequest = mutation({
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) {
-			throw new Error("Not authenticated");
+			throw new ConvexError("Not authenticated");
 		}
 
 		const contactRequest = await ctx.db.get(args.contactId);
 		if (!contactRequest || contactRequest.contactUserId !== userId) {
-			throw new Error("Contact request not found or unauthorized");
+			throw new ConvexError("Contact request not found or unauthorized");
 		}
 
 		if (contactRequest.status !== "pending") {
-			throw new Error("Contact request is not pending");
+			throw new ConvexError("Contact request is not pending");
 		}
 
 		// Accept the request
@@ -129,16 +129,16 @@ export const rejectContactRequest = mutation({
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) {
-			throw new Error("Not authenticated");
+			throw new ConvexError("Not authenticated");
 		}
 
 		const contactRequest = await ctx.db.get(args.contactId);
 		if (!contactRequest || contactRequest.contactUserId !== userId) {
-			throw new Error("Contact request not found or unauthorized");
+			throw new ConvexError("Contact request not found or unauthorized");
 		}
 
 		if (contactRequest.status !== "pending") {
-			throw new Error("Contact request is not pending");
+			throw new ConvexError("Contact request is not pending");
 		}
 
 		// Delete the request
@@ -153,16 +153,16 @@ export const cancelSentRequest = mutation({
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) {
-			throw new Error("Not authenticated");
+			throw new ConvexError("Not authenticated");
 		}
 
 		const contactRequest = await ctx.db.get(args.contactId);
 		if (!contactRequest || contactRequest.userId !== userId) {
-			throw new Error("Contact request not found or unauthorized");
+			throw new ConvexError("Contact request not found or unauthorized");
 		}
 
 		if (contactRequest.status !== "pending") {
-			throw new Error("Contact request is not pending");
+			throw new ConvexError("Contact request is not pending");
 		}
 
 		// Delete the sent request
@@ -324,12 +324,12 @@ export const removeContact = mutation({
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
 		if (!userId) {
-			throw new Error("Not authenticated");
+			throw new ConvexError("Not authenticated");
 		}
 
 		const contact = await ctx.db.get(args.contactId);
 		if (!contact || contact.userId !== userId) {
-			throw new Error("Contact not found or unauthorized");
+			throw new ConvexError("Contact not found or unauthorized");
 		}
 
 		await ctx.db.delete(args.contactId);

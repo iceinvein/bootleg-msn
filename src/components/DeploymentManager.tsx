@@ -4,7 +4,9 @@ import { useCallback, useEffect } from "react";
 
 // This component should only be used in development/admin contexts
 export function DeploymentManager() {
-	const updateDeploymentInfo = useMutation(api.deployment.updateDeploymentInfo);
+	const updateDeploymentInfo = useMutation(
+		api.deployment.updateDeploymentInfoClient,
+	);
 
 	const handleNewDeployment = useCallback(async () => {
 		const version = `1.0.${Date.now()}`;

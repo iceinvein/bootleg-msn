@@ -1,7 +1,7 @@
 import { api } from "@convex/_generated/api";
-import { useAction } from "convex/react";
-import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { useState } from "react";
+import { useAction, useQuery } from "convex/react";
+import { EyeIcon, EyeOffIcon, UserPlus } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 import { Button } from "./ui/button";
@@ -18,11 +18,19 @@ import { Label } from "./ui/label";
 
 interface SignUpFormProps {
 	onBackToSignIn: () => void;
+	invitationToken?: string | null;
 }
 
-export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
+export function SignUpForm({
+	onBackToSignIn,
+	invitationToken,
+}: SignUpFormProps) {
 	const sendVerificationEmail = useAction(
 		api.emailVerification.sendVerificationEmail,
+	);
+	const invitationDetails = useQuery(
+		api.invitations.getInvitationByToken,
+		invitationToken ? { token: invitationToken } : "skip",
 	);
 	const [email, setEmail] = useState("");
 	const [password, setPassword] = useState("");
@@ -30,6 +38,16 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 	const [isLoading, setIsLoading] = useState(false);
 	const [emailSent, setEmailSent] = useState(false);
 	const [showPassword, setShowPassword] = useState(false);
+
+	// Pre-fill form with invitation details
+	useEffect(() => {
+		if (invitationDetails) {
+			setEmail(invitationDetails.inviteeEmail);
+			if (invitationDetails.inviteeName) {
+				setName(invitationDetails.inviteeName);
+			}
+		}
+	}, [invitationDetails]);
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault();
@@ -44,6 +62,7 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 					email: email.trim(),
 					password: password.trim(),
 					name: name.trim(),
+					invitationToken: invitationToken || null,
 				}),
 			);
 
@@ -135,12 +154,38 @@ export function SignUpForm({ onBackToSignIn }: SignUpFormProps) {
 			<Card className="w-full max-w-md" glass={true}>
 				<CardHeader className="text-center">
 					<CardTitle className="font-bold text-2xl">
-						Join bootleg MSN Messenger
+						{invitationDetails
+							? "Accept Invitation"
+							: "Join bootleg MSN Messenger"}
 					</CardTitle>
 					<CardDescription>
-						Create your account to start chatting
+						{invitationDetails
+							? `${invitationDetails.inviter?.name} invited you to join MSN Messenger`
+							: "Create your account to start chatting"}
 					</CardDescription>
 				</CardHeader>
+				{invitationDetails && (
+					<div className="mx-6 mb-4 rounded-lg border border-primary/20 bg-primary/10 p-4">
+						<div className="flex items-center space-x-3">
+							<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/20">
+								<UserPlus className="h-5 w-5 text-primary" />
+							</div>
+							<div className="flex-1">
+								<p className="font-medium text-sm">
+									Invitation from {invitationDetails.inviter?.name}
+								</p>
+								<p className="text-muted-foreground text-xs">
+									{invitationDetails.inviter?.email}
+								</p>
+								{invitationDetails.message && (
+									<p className="mt-1 text-muted-foreground text-xs italic">
+										"{invitationDetails.message}"
+									</p>
+								)}
+							</div>
+						</div>
+					</div>
+				)}
 				<CardContent>
 					<form>
 						<div className="flex flex-col gap-6">

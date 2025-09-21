@@ -2,20 +2,19 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { cubicBezier, motion } from "framer-motion";
-import { Search, User, Users } from "lucide-react";
+import { Search, User, Users, X } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Avatar } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
 	ResponsiveDialog,
 	ResponsiveDialogContent,
-	ResponsiveDialogDescription,
 	ResponsiveDialogFooter,
 	ResponsiveDialogHeader,
 	ResponsiveDialogTitle,
@@ -23,6 +22,7 @@ import {
 } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { getStatusColor } from "@/utils/style";
 
 interface CreateGroupDialogProps {
 	children: React.ReactNode;
@@ -60,6 +60,8 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 			});
 
 			toast.success("Group created successfully!");
+			setIsOpen(false);
+			handleReset();
 		} catch (error) {
 			toast.error(
 				error instanceof Error ? error.message : "Failed to create group",
@@ -69,12 +71,16 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 		}
 	};
 
-	const toggleContact = (userId: Id<"users">) => {
+	const toggleContact = (contactUserId: Id<"users">) => {
 		setSelectedMembers((prev) =>
-			prev.includes(userId)
-				? prev.filter((id) => id !== userId)
-				: [...prev, userId],
+			prev.includes(contactUserId)
+				? prev.filter((id) => id !== contactUserId)
+				: [...prev, contactUserId],
 		);
+	};
+
+	const removeSelectedMember = (contactUserId: Id<"users">) => {
+		setSelectedMembers((prev) => prev.filter((id) => id !== contactUserId));
 	};
 
 	const handleReset = () => {
@@ -90,20 +96,25 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 			<ResponsiveDialogContent
 				className="max-h-[90vh] sm:max-w-2xl"
 				animationType="fade"
+				glass={true}
 			>
 				<ResponsiveDialogHeader>
 					<ResponsiveDialogTitle className="flex items-center space-x-2">
-						<Users className="h-5 w-5 text-primary" />
-						<span>Create Group Chat</span>
+						<div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+							<Users className="h-5 w-5 text-primary" />
+						</div>
+						<div>
+							<span className="font-semibold text-lg">Create Group Chat</span>
+							<p className="font-normal text-muted-foreground text-sm">
+								Start a conversation with your contacts
+							</p>
+						</div>
 					</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription>
-						Create a new group chat and invite your contacts to join.
-					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
 
 				<motion.form
 					onSubmit={handleSubmit}
-					className="flex flex-1 flex-col space-y-6 overflow-hidden"
+					className="mt-4 flex flex-1 flex-col space-y-6 overflow-hidden"
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
 					transition={{ duration: 0.2, ease: cubicBezier(0, 0, 0.58, 1) }}
@@ -119,62 +130,42 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 							ease: cubicBezier(0, 0, 0.58, 1),
 						}}
 					>
-						<div className="flex items-center space-x-4">
-							<div className="relative">
-								<Avatar className="h-16 w-16 border-2 border-gray-200">
-									<Users className="h-16 w-16" />
-								</Avatar>
-								{/* <Button
-									type="button"
-									size="sm"
-									variant="outline"
-									className="-bottom-1 -right-1 absolute h-6 w-6 rounded-full bg-transparent p-0"
-								>
-									<Camera className="h-3 w-3" />
-								</Button> */}
+						<div className="space-y-4">
+							<div className="space-y-2">
+								<Label htmlFor="groupName" className="font-medium text-sm">
+									Group Name <span className="text-destructive">*</span>
+								</Label>
+								<Input
+									id="groupName"
+									placeholder="This is group"
+									value={groupName}
+									onChange={(e) => setGroupName(e.target.value)}
+									required
+									maxLength={50}
+									className="h-11"
+								/>
 							</div>
-							<div className="flex-1 space-y-3">
-								<div className="space-y-2">
-									<Label
-										htmlFor="groupName"
-										className="text-gray-700 dark:text-gray-300"
-									>
-										Group Name *
-									</Label>
-									<Input
-										id="groupName"
-										placeholder="Enter group name..."
-										value={groupName}
-										onChange={(e) => setGroupName(e.target.value)}
-										required
-										maxLength={50}
-										className="border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-									/>
-								</div>
-								<div className="space-y-2">
-									<Label
-										htmlFor="description"
-										className="text-gray-700 dark:text-gray-300"
-									>
-										Description (Optional)
-									</Label>
-									<Textarea
-										id="description"
-										placeholder="What's this group about?"
-										value={description}
-										onChange={(e) => setDescription(e.target.value)}
-										rows={2}
-										className="resize-none border-gray-300 bg-white text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
-										maxLength={200}
-									/>
-								</div>
+							<div className="space-y-2">
+								<Label htmlFor="description" className="font-medium text-sm">
+									Description{" "}
+									<span className="text-muted-foreground">(Optional)</span>
+								</Label>
+								<Textarea
+									id="description"
+									placeholder="What's this group about?"
+									value={description}
+									onChange={(e) => setDescription(e.target.value)}
+									rows={3}
+									className="resize-none"
+									maxLength={200}
+								/>
 							</div>
 						</div>
 					</motion.div>
 
 					{/* Members Selection */}
 					<motion.div
-						className="flex min-h-0 flex-1 flex-col space-y-3"
+						className="flex min-h-0 flex-1 flex-col space-y-4"
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{
@@ -183,69 +174,139 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 							ease: cubicBezier(0, 0, 0.58, 1),
 						}}
 					>
-						<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-							<Label className="font-semibold text-base text-gray-700 dark:text-gray-300">
-								Add Members ({selectedMembers.length} selected)
-							</Label>
+						<div className="space-y-3">
+							<div className="flex items-center justify-between">
+								<Label className="font-medium text-sm">Add Members</Label>
+								{selectedMembers.length > 0 && (
+									<Badge variant="secondary" className="text-xs">
+										{selectedMembers.length} selected
+									</Badge>
+								)}
+							</div>
+
+							{/* Selected Members Chips */}
+							{selectedMembers.length > 0 && (
+								<div className="flex flex-wrap gap-2">
+									{selectedMembers.map((contactUserId) => {
+										const contact = contacts?.find(
+											(c) => c.contactUserId === contactUserId,
+										);
+										if (!contact) return null;
+
+										return (
+											<Badge
+												key={contactUserId}
+												variant="outline"
+												className="flex items-center gap-1 px-2 py-1"
+											>
+												<span className="text-xs">
+													{contact.nickname ?? contact.user?.name ?? "Unknown"}
+												</span>
+												<button
+													type="button"
+													onClick={() => removeSelectedMember(contactUserId)}
+													className="ml-1 rounded-full p-0.5 hover:bg-muted"
+													aria-label={`Remove ${contact.nickname ?? contact.user?.name ?? "contact"} from selection`}
+												>
+													<X className="h-3 w-3" />
+												</button>
+											</Badge>
+										);
+									})}
+								</div>
+							)}
+
 							<div className="relative">
-								<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-gray-400" />
+								<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
 								<Input
 									placeholder="Search contacts..."
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-full border-gray-300 bg-white pl-10 text-gray-900 sm:w-64 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+									className="h-11 pl-10"
 								/>
 							</div>
 						</div>
 
-						<ScrollArea className="max-h-64 min-h-[200px] flex-1 rounded-lg border bg-white p-2 dark:border-gray-600 dark:bg-gray-700">
+						<ScrollArea className="max-h-64 min-h-[200px] flex-1 rounded-lg border p-2">
 							{filteredContacts?.length === 0 ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
+								<div className="py-8 text-center text-muted-foreground">
 									<Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
 									<p className="text-sm">No contacts found</p>
 								</div>
 							) : (
-								<div className="space-y-2">
+								<div className="space-y-1">
 									{filteredContacts?.map((contact) => {
-										if (!contact.user || !contact.user._id) return null;
+										if (!contact.user || !contact.contactUserId) return null;
+
+										const isSelected = selectedMembers.includes(
+											contact.contactUserId,
+										);
 
 										return (
 											<button
 												type="button"
-												key={contact?._id}
-												className={`flex cursor-pointer items-center space-x-3 rounded-lg p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-600 ${
-													selectedMembers.includes(contact.user._id)
-														? "border border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+												key={contact._id}
+												className={`flex w-full cursor-pointer items-center space-x-3 rounded-lg p-3 text-left transition-all hover:bg-accent/50 ${
+													isSelected
+														? "bg-primary/10 ring-1 ring-primary/20"
 														: ""
 												}`}
-												onClick={() => toggleContact(contact.userId)}
+												onClick={() => toggleContact(contact.contactUserId)}
 											>
-												<Checkbox
-													checked={selectedMembers.includes(contact.userId)}
-													onChange={() => toggleContact(contact.userId)}
-												/>
-												<Avatar className="h-10 w-10">
-													<User className="h-10 w-10" />
-												</Avatar>
+												<div
+													className={`flex h-4 w-4 items-center justify-center rounded border-2 transition-colors ${
+														isSelected
+															? "border-primary bg-primary text-primary-foreground"
+															: "border-input bg-background"
+													}`}
+												>
+													{isSelected && (
+														<svg
+															className="h-3 w-3"
+															fill="currentColor"
+															viewBox="0 0 20 20"
+															aria-label="Checked"
+														>
+															<title>Checked</title>
+															<path
+																fillRule="evenodd"
+																d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
+																clipRule="evenodd"
+															/>
+														</svg>
+													)}
+												</div>
+												<div className="relative">
+													<Avatar className="h-10 w-10">
+														{contact.user.image ? (
+															<AvatarImage src={contact.user.image} />
+														) : (
+															<AvatarFallback>
+																<User className="h-5 w-5" />
+															</AvatarFallback>
+														)}
+													</Avatar>
+													<div
+														className={`-bottom-0.5 -right-0.5 absolute h-3 w-3 rounded-full border-2 border-background ${getStatusColor(contact.status)}`}
+													/>
+												</div>
 												<div className="min-w-0 flex-1">
-													<p className="truncate font-medium text-gray-900 text-sm dark:text-gray-100">
-														{contact.user.name}
+													<p className="truncate font-medium text-sm">
+														{contact.nickname ??
+															contact.user.name ??
+															contact.user.email ??
+															"Unknown User"}
 													</p>
-													<p className="truncate text-gray-500 text-xs dark:text-gray-400">
-														{contact.statusMessage}
+													<p className="truncate text-muted-foreground text-xs">
+														{contact.status === "online"
+															? "Online"
+															: contact.status === "away"
+																? "Away"
+																: contact.status === "busy"
+																	? "Busy"
+																	: "Offline"}
 													</p>
 												</div>
-												<div
-													className={`h-3 w-3 rounded-full ${
-														contact.status === "online"
-															? "bg-green-500"
-															: contact.status === "away"
-																? "bg-yellow-500"
-																: contact.status === "busy"
-																	? "bg-red-500"
-																	: "bg-gray-400"
-													}`}
-												/>
 											</button>
 										);
 									})}
@@ -254,9 +315,9 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 						</ScrollArea>
 					</motion.div>
 
-					<ResponsiveDialogFooter className="flex flex-col gap-3 sm:flex-row sm:justify-between">
+					<ResponsiveDialogFooter className="flex flex-col gap-3 pt-6 sm:flex-row sm:justify-between">
 						<motion.div
-							className="w-full"
+							className="flex w-full flex-col gap-3 sm:flex-row sm:justify-between"
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							transition={{
@@ -269,30 +330,31 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 								type="button"
 								variant="outline"
 								onClick={handleReset}
-								className="w-full sm:w-auto"
+								className="order-1 sm:order-none"
+								disabled={isLoading}
 							>
 								Reset
 							</Button>
-							<div className="flex flex-col gap-2 sm:flex-row sm:space-x-2">
+							<div className="flex gap-3 sm:gap-2">
 								<Button
 									type="button"
 									variant="outline"
 									onClick={() => setIsOpen(false)}
 									disabled={isLoading}
-									className="w-full sm:w-auto"
+									className="flex-1 sm:flex-none"
 								>
 									Cancel
 								</Button>
 								<Button
 									type="submit"
-									className="msn-gradient w-full text-white hover:opacity-90 sm:w-auto"
+									className="msn-gradient flex-1 text-white hover:opacity-90 sm:flex-none"
 									disabled={
 										!groupName.trim() ||
 										selectedMembers.length === 0 ||
 										isLoading
 									}
 								>
-									Create Group ({selectedMembers.length})
+									Create ({selectedMembers.length})
 								</Button>
 							</div>
 						</motion.div>

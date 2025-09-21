@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 import { mutation, query } from "./_generated/server";
 
 export const sendMessage = mutation({
@@ -36,6 +37,13 @@ export const sendMessage = mutation({
 			content: args.content,
 			messageType: args.messageType || "text",
 			isRead: false,
+		});
+
+		// Fire-and-forget push notification to receiver
+		await ctx.scheduler.runAfter(0, api.push.notifyNewDirectMessage, {
+			senderId: userId,
+			receiverId: args.receiverId,
+			content: args.content,
 		});
 
 		// Update last seen for sender

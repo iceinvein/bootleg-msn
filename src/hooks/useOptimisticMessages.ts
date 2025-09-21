@@ -38,7 +38,7 @@ type OptimisticMessage = {
 type ServerMessage = FunctionReturnType<
 	typeof api.unifiedMessages.getMessages
 >[number];
-type CombinedMessage = ServerMessage | OptimisticMessage;
+export type CombinedMessage = ServerMessage | OptimisticMessage;
 
 interface UseOptimisticMessagesProps {
 	otherUserId?: Id<"users">;

@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useMutation, useQuery } from "convex/react";
-import { Clock, Inbox, Send, User, UserCheck, UserX } from "lucide-react";
+import { Clock, Inbox, Mail, Send, User, UserCheck, UserX } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -48,6 +48,7 @@ export default function ContactRequestsDialog({
 	const currentUser = useQuery(api.auth.loggedInUser);
 	const pendingRequests = useQuery(api.contacts.getPendingRequests);
 	const sentRequests = useQuery(api.contacts.getSentRequests);
+	const sentInvitations = useQuery(api.invitations.getSentInvitations);
 	const pendingUserIds: Id<"users">[] | undefined = pendingRequests?.map(
 		(r) => r.userId as Id<"users">,
 	);
@@ -59,6 +60,7 @@ export default function ContactRequestsDialog({
 	const acceptContactRequest = useMutation(api.contacts.acceptContactRequest);
 	const rejectContactRequest = useMutation(api.contacts.rejectContactRequest);
 	const cancelSentRequest = useMutation(api.contacts.cancelSentRequest);
+	const cancelInvitation = useMutation(api.invitations.cancelInvitation);
 
 	const handleAccept = async (contactId: Id<"contacts">) => {
 		try {
@@ -123,6 +125,24 @@ export default function ContactRequestsDialog({
 		}
 	};
 
+	const handleCancelInvitation = async (invitationId: Id<"invitations">) => {
+		if (confirm("Are you sure you want to cancel this invitation?")) {
+			try {
+				setIsLoading(true);
+				await cancelInvitation({ invitationId });
+				toast.success("Invitation cancelled");
+			} catch (error) {
+				toast.error(
+					error instanceof Error
+						? error.message
+						: "Failed to cancel invitation",
+				);
+			} finally {
+				setIsLoading(false);
+			}
+		}
+	};
+
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
 			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
@@ -132,13 +152,13 @@ export default function ContactRequestsDialog({
 						<UserCheck className="h-5 w-5 text-primary" />
 						<span>Contact Requests</span>
 					</ResponsiveDialogTitle>
-					<ResponsiveDialogDescription>
+					<ResponsiveDialogDescription className="mb-4">
 						Manage your incoming and outgoing contact requests.
 					</ResponsiveDialogDescription>
 				</ResponsiveDialogHeader>
 
 				<Tabs defaultValue="incoming" className="w-full">
-					<TabsList className="grid w-full grid-cols-2">
+					<TabsList className="grid w-full grid-cols-3">
 						<TabsTrigger
 							value="incoming"
 							className="flex items-center space-x-2"
@@ -152,6 +172,13 @@ export default function ContactRequestsDialog({
 						>
 							<Send className="h-4 w-4" />
 							<span>Outgoing ({sentRequests?.length ?? 0})</span>
+						</TabsTrigger>
+						<TabsTrigger
+							value="invitations"
+							className="flex items-center space-x-2"
+						>
+							<Mail className="h-4 w-4" />
+							<span>Invitations ({sentInvitations?.length ?? 0})</span>
 						</TabsTrigger>
 					</TabsList>
 
@@ -306,6 +333,88 @@ export default function ContactRequestsDialog({
 								<div className="py-8 text-center text-muted-foreground">
 									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
 									<p>Please sign in to view sent requests</p>
+								</div>
+							)}
+						</ScrollArea>
+					</TabsContent>
+
+					<TabsContent value="invitations" className="mt-4">
+						<ScrollArea className="h-[400px] pr-4">
+							{currentUser ? (
+								sentInvitations && sentInvitations.length > 0 ? (
+									<div className="space-y-3">
+										{sentInvitations.map((invitation) => (
+											<div
+												key={invitation._id}
+												className="flex items-center justify-between rounded-lg border p-4"
+											>
+												<div className="flex items-center space-x-3">
+													<div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+														<Mail className="h-5 w-5 text-primary" />
+													</div>
+													<div className="flex-1">
+														<div className="flex items-center space-x-2">
+															<p className="font-medium">
+																{invitation.inviteeName ||
+																	invitation.inviteeEmail}
+															</p>
+															<Badge
+																variant={
+																	invitation.status === "pending"
+																		? "secondary"
+																		: invitation.status === "accepted"
+																			? "default"
+																			: "destructive"
+																}
+															>
+																{invitation.status}
+															</Badge>
+														</div>
+														<p className="text-muted-foreground text-sm">
+															{invitation.inviteeEmail}
+														</p>
+														{invitation.message && (
+															<p className="mt-1 text-muted-foreground text-sm italic">
+																"{invitation.message}"
+															</p>
+														)}
+														<p className="text-muted-foreground text-xs">
+															<Clock className="mr-1 inline h-3 w-3" />
+															{formatTime(invitation.createdAt)}
+														</p>
+													</div>
+												</div>
+												<div className="flex space-x-2">
+													{invitation.status === "pending" && (
+														<Button
+															variant="outline"
+															size="sm"
+															onClick={() =>
+																handleCancelInvitation(invitation._id)
+															}
+															disabled={isLoading || !currentUser}
+														>
+															<UserX className="mr-1 h-3 w-3" />
+															Cancel
+														</Button>
+													)}
+												</div>
+											</div>
+										))}
+									</div>
+								) : (
+									<div className="py-8 text-center text-muted-foreground">
+										<Mail className="mx-auto mb-2 h-12 w-12 opacity-50" />
+										<p>No invitations sent yet</p>
+										<p className="text-sm">
+											Invite friends who haven't joined MSN Messenger yet!
+										</p>
+									</div>
+								)
+							) : (
+								<div className="py-8 text-center text-muted-foreground">
+									<User className="mx-auto mb-2 h-12 w-12 opacity-50" />
+									<p>Please sign in to view sent invitations</p>
 								</div>
 							)}
 						</ScrollArea>

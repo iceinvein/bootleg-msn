@@ -130,6 +130,29 @@ const applicationTables = {
 		.index("by_email", ["email"])
 		.index("by_token", ["token"]),
 
+	invitations: defineTable({
+		inviterUserId: v.id("users"),
+		inviteeEmail: v.string(),
+		inviteeName: v.optional(v.string()),
+		token: v.string(),
+		status: v.union(
+			v.literal("pending"),
+			v.literal("accepted"),
+			v.literal("expired"),
+			v.literal("cancelled"),
+		),
+		message: v.optional(v.string()),
+		expiresAt: v.number(),
+		createdAt: v.number(),
+		acceptedAt: v.optional(v.number()),
+	})
+		.index("by_inviter", ["inviterUserId"])
+		.index("by_email", ["inviteeEmail"])
+		.index("by_token", ["token"])
+		.index("by_status", ["status"])
+		.index("by_inviter_and_email", ["inviterUserId", "inviteeEmail"])
+		.index("by_expiration", ["expiresAt"]),
+
 	typingIndicators: defineTable({
 		userId: v.id("users"),
 		chatWithUserId: v.optional(v.id("users")),
@@ -382,6 +405,17 @@ const applicationTables = {
 	})
 		.index("by_user", ["userId"])
 		.index("by_focus_mode", ["focusModeEnabled"]),
+
+	// Web Push subscriptions per user
+	pushSubscriptions: defineTable({
+		userId: v.id("users"),
+		endpoint: v.string(),
+		p256dh: v.string(),
+		auth: v.string(),
+		createdAt: v.number(),
+	})
+		.index("by_user", ["userId"])
+		.index("by_endpoint", ["endpoint"]),
 
 	// Message search index (for full-text search)
 	messageSearchIndex: defineTable({

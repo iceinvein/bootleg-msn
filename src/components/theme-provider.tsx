@@ -1,4 +1,11 @@
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+	createContext,
+	useContext,
+	useEffect,
+	useLayoutEffect,
+	useMemo,
+	useState,
+} from "react";
 
 type Theme = "dark" | "light" | "system";
 
@@ -26,35 +33,63 @@ export function ThemeProvider({
 	storageKey = "vite-ui-theme",
 	...props
 }: ThemeProviderProps) {
-	const [theme, setTheme] = useState<Theme>(
+	const [theme, _setTheme] = useState<Theme>(
 		() => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
 	);
 
-	useEffect(() => {
-		const root = window.document.documentElement;
-
-		root.classList.remove("light", "dark");
-
+	// Compute the effective theme (resolves "system" to light/dark)
+	const effectiveTheme = useMemo<Exclude<Theme, "system">>(() => {
+		if (typeof window === "undefined") return "light";
 		if (theme === "system") {
-			const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-				.matches
+			return window.matchMedia("(prefers-color-scheme: dark)").matches
 				? "dark"
 				: "light";
-
-			root.classList.add(systemTheme);
-			return;
 		}
-
-		root.classList.add(theme);
+		return theme;
 	}, [theme]);
 
-	const value = {
-		theme,
-		setTheme: (theme: Theme) => {
-			localStorage.setItem(storageKey, theme);
-			setTheme(theme);
-		},
-	};
+	// Apply theme before paint to avoid visual lag
+	useLayoutEffect(() => {
+		const root = window.document.documentElement;
+		// Clear both classes to avoid accumulation
+		root.classList.remove("light", "dark");
+		document.body.classList.remove("light", "dark");
+		root.classList.add(effectiveTheme);
+		document.body.classList.add(effectiveTheme);
+		// Keep a data attribute for any CSS selectors that prefer attributes
+		root.setAttribute("data-theme", effectiveTheme);
+		document.body.setAttribute("data-theme", effectiveTheme);
+		// Hint to the UA for native control theming and force recalculation
+		root.style.colorScheme = effectiveTheme;
+		document.body.style.colorScheme = effectiveTheme;
+		// Bump a tick to force repaint in some browsers with backdrop-filter
+		root.style.setProperty("--theme-tick", String(Date.now()));
+		document.body.style.setProperty("--theme-tick", String(Date.now()));
+	}, [effectiveTheme]);
+
+	// Update when system theme changes while in "system" mode
+	useEffect(() => {
+		if (theme !== "system") return;
+		const mql = window.matchMedia("(prefers-color-scheme: dark)");
+		const handler = () => {
+			// Trigger re-evaluation of effectiveTheme by updating a state noop
+			// We toggle between "system" twice to re-run the memo without changing storage
+			_setTheme((prev) => prev);
+		};
+		mql.addEventListener?.("change", handler);
+		return () => mql.removeEventListener?.("change", handler);
+	}, [theme]);
+
+	const value = useMemo(
+		() => ({
+			theme,
+			setTheme: (next: Theme) => {
+				localStorage.setItem(storageKey, next);
+				_setTheme(next);
+			},
+		}),
+		[theme, storageKey],
+	);
 
 	return (
 		<ThemeProviderContext.Provider {...props} value={value}>

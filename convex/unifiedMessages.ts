@@ -1,5 +1,6 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import { v } from "convex/values";
+import { api } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { mutation, query } from "./_generated/server";
 
@@ -144,6 +145,25 @@ export const sendMessage = mutation({
 			fileSize: args.fileSize,
 			isRead: false,
 		});
+
+		// Schedule push notifications depending on conversation type
+		// Suppress for system messages (only send for text/emoji/file)
+		const isSystem = args.messageType === "system";
+		if (!isSystem) {
+			if (args.receiverId) {
+				await ctx.scheduler.runAfter(0, api.push.notifyNewDirectMessage, {
+					senderId: userId,
+					receiverId: args.receiverId,
+					content: args.content,
+				});
+			} else if (args.groupId) {
+				await ctx.scheduler.runAfter(0, api.push.notifyNewGroupMessage, {
+					senderId: userId,
+					groupId: args.groupId,
+					content: args.content,
+				});
+			}
+		}
 	},
 });
 

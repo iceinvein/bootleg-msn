@@ -20,6 +20,7 @@ export function EmailVerificationPage({
 	const { signIn } = useAuthActions();
 	const verifyEmail = useMutation(api.emailVerification.verifyEmail);
 	const updateUserName = useMutation(api.auth.updateUserName);
+	const acceptInvitation = useMutation(api.invitations.acceptInvitation);
 	const [isVerifying, setIsVerifying] = useState(true);
 	const [verificationStatus, setVerificationStatus] = useState<
 		"loading" | "success" | "error"
@@ -58,11 +59,34 @@ export function EmailVerificationPage({
 								// Don't fail the entire signup process for this
 							}
 
+							// Handle invitation acceptance if there's an invitation token
+							if (userData.invitationToken) {
+								try {
+									// Wait a bit for the auth to settle
+									await new Promise((resolve) => setTimeout(resolve, 1000));
+
+									await acceptInvitation({
+										token: userData.invitationToken,
+									});
+
+									toast.success(
+										"Account created and invitation accepted! You're now connected with your friend.",
+									);
+								} catch (invitationError) {
+									console.warn("Failed to accept invitation:", invitationError);
+									// Don't fail the signup process for this
+									toast.success(
+										"Account created successfully! You can manually add your friend as a contact.",
+									);
+								}
+							} else {
+								toast.success(
+									"Account created successfully! Welcome to MSN Messenger!",
+								);
+							}
+
 							// Clear stored data
 							localStorage.removeItem("pendingSignUp");
-							toast.success(
-								"Account created successfully! Welcome to MSN Messenger!",
-							);
 
 							// Call success callback after a brief delay to show success message
 							setTimeout(() => {
@@ -93,7 +117,14 @@ export function EmailVerificationPage({
 		if (token) {
 			handleVerification();
 		}
-	}, [token, verifyEmail, signIn, updateUserName, onVerificationSuccess]);
+	}, [
+		token,
+		verifyEmail,
+		signIn,
+		updateUserName,
+		acceptInvitation,
+		onVerificationSuccess,
+	]);
 
 	if (isVerifying) {
 		return (
