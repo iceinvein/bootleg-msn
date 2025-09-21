@@ -48,14 +48,24 @@ const MessageComponent = function Message({
 	const removeReaction = useMutation(api.reactions.removeMessageReaction);
 
 	const deleteMessageMutation = useMutation(api.unifiedMessages.deleteMessage);
+	const editMessageMutation = useMutation(api.unifiedMessages.editMessage);
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [editContent, setEditContent] = useState(message.content);
+	const [isEditLoading, setIsEditLoading] = useState(false);
 	const [isReactionLoading, setIsReactionLoading] = useState(false);
 	const [isLongPressOpen, setIsLongPressOpen] = useState(false);
 	const inputRef = useRef<HTMLInputElement>(null);
 	const ownsMessage = message.senderId === loggedInUser?._id;
 	const hasReactions = reactionSummary && reactionSummary.length > 0;
+
+	// Helper function to determine if a message can be edited
+	const canEditMessage =
+		ownsMessage &&
+		!message.isDeleted &&
+		isServerMessage(message) &&
+		message.messageType !== "file" &&
+		message.messageType !== "system";
 
 	// Format timestamp
 	const formatTimestamp = (timestamp: number) => {
@@ -121,15 +131,54 @@ const MessageComponent = function Message({
 	}, []);
 
 	const handleEdit = () => {
+		// Only allow editing server messages (not optimistic)
+		if (!isServerMessage(message)) return;
+
+		// Don't allow editing deleted messages
+		if (message.isDeleted) return;
+
+		// Don't allow editing file messages
+		if (message.messageType === "file") return;
+
+		// Don't allow editing system messages
+		if (message.messageType === "system") return;
+
 		setEditContent(message.content);
 		setIsEditing(true);
 	};
 
-	const handleSave = () => {
+	const handleSave = async () => {
 		const trimmedContent = editContent.trim();
-		if (trimmedContent && trimmedContent !== message.content) {
-			// TODO: update message
+
+		// Don't save if content is empty
+		if (!trimmedContent) {
+			setEditContent(message.content);
+			setIsEditing(false);
+			return;
 		}
+
+		// Don't save if content hasn't changed
+		if (trimmedContent === message.content) {
+			setIsEditing(false);
+			return;
+		}
+
+		try {
+			setIsEditLoading(true);
+			// Only allow editing confirmed (non-optimistic) messages
+			if (!isServerMessage(message)) return;
+			await editMessageMutation({
+				messageId: message._id,
+				newContent: trimmedContent,
+			});
+		} catch (error) {
+			console.error("Failed to edit message:", error);
+			// Reset content on error
+			setEditContent(message.content);
+		} finally {
+			setIsEditLoading(false);
+		}
+
 		setIsEditing(false);
 	};
 
@@ -283,12 +332,14 @@ const MessageComponent = function Message({
 									value={editContent}
 									onChange={(e) => setEditContent(e.target.value)}
 									onKeyDown={handleKeyDown}
+									disabled={isEditLoading}
 									className="h-auto border-none bg-transparent p-0 text-foreground text-sm focus:ring-0 md:text-base"
 								/>
 								<Button
 									size="sm"
 									variant="ghost"
 									onClick={handleSave}
+									disabled={isEditLoading}
 									className="h-6 w-6 p-0"
 								>
 									<Check className="h-3 w-3" />
@@ -297,6 +348,7 @@ const MessageComponent = function Message({
 									size="sm"
 									variant="ghost"
 									onClick={handleCancel}
+									disabled={isEditLoading}
 									className="h-6 w-6 p-0"
 								>
 									<X className="h-3 w-3" />
@@ -440,12 +492,13 @@ const MessageComponent = function Message({
 											</Button>
 
 											{/* Separator only if there are edit/delete actions for user messages */}
-											{ownsMessage && !message.isDeleted && (
+											{(canEditMessage ||
+												(ownsMessage && !message.isDeleted)) && (
 												<div className="mx-1 h-6 w-px bg-border" />
 											)}
 
-											{/* Edit Button (only for user messages) */}
-											{ownsMessage && !message.isDeleted && (
+											{/* Edit Button (only for editable user messages) */}
+											{canEditMessage && (
 												<Button
 													size="sm"
 													variant="ghost"
@@ -475,6 +528,7 @@ const MessageComponent = function Message({
 								{isMobile && (
 									<QuickMessageActions
 										ownsMessage={ownsMessage && !message.isDeleted}
+										canEdit={canEditMessage}
 										isReactionLoading={isReactionLoading}
 										onQuickReaction={handleQuickReaction}
 										onEdit={handleEdit}

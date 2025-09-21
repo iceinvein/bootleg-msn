@@ -12,6 +12,7 @@ import type { ReactionType } from "./ReactionPicker";
 interface QuickMessageActionsProps {
 	children?: React.ReactNode;
 	ownsMessage: boolean;
+	canEdit?: boolean; // Optional prop to control edit button visibility separately
 	isReactionLoading: boolean;
 	onQuickReaction: (reactionType: ReactionType) => void;
 	onEdit: () => void;
@@ -25,6 +26,7 @@ interface QuickMessageActionsProps {
 export function QuickMessageActions({
 	children,
 	ownsMessage,
+	canEdit,
 	isReactionLoading,
 	onQuickReaction,
 	onEdit,
@@ -118,10 +120,12 @@ export function QuickMessageActions({
 					</Button>
 
 					{/* Separator only if there are edit/delete actions for user messages */}
-					{ownsMessage && <div className="mx-1 h-6 w-px bg-border" />}
+					{((canEdit !== undefined ? canEdit : ownsMessage) || ownsMessage) && (
+						<div className="mx-1 h-6 w-px bg-border" />
+					)}
 
-					{/* Edit Button (only for user messages) */}
-					{ownsMessage && (
+					{/* Edit Button (only for editable user messages) */}
+					{(canEdit !== undefined ? canEdit : ownsMessage) && (
 						<Button
 							size="sm"
 							variant="ghost"
