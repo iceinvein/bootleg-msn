@@ -1,6 +1,5 @@
 import { api } from "@convex/_generated/api";
 import { useMutation, useQuery } from "convex/react";
-import type { FunctionReturnType } from "convex/server";
 import { motion } from "framer-motion";
 import { AlertCircle, Check, Edit3, Trash2, User, X } from "lucide-react";
 import type React from "react";
@@ -9,24 +8,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
+import type { CombinedMessage } from "@/hooks/useOptimisticMessages";
 import { cn } from "@/lib/utils";
 import { MessageReactions } from "./MessageReactions";
 import { QuickMessageActions } from "./QuickMessageActions";
 import type { ReactionType } from "./ReactionPicker";
 import { hoverScale, messageBubble, tapScale } from "./ui/animated";
 
-// Support both server messages and optimistic messages
-type ServerMessage = FunctionReturnType<
-	typeof api.unifiedMessages.getMessages
->[number];
-type OptimisticMessage = ServerMessage & {
-	isOptimistic: true;
-	isSending: boolean;
-	sendError?: string;
-};
-
+// Use the CombinedMessage type from useOptimisticMessages for consistency
 type MessageProps = {
-	message: ServerMessage | OptimisticMessage;
+	message: CombinedMessage;
 	isConsecutive?: boolean;
 };
 
