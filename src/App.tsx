@@ -5,6 +5,7 @@ import { CapacitorIntegration } from "./components/CapacitorIntegration";
 import { MessengerApp } from "./components/MessengerApp";
 import { MobileProvider } from "./components/MobileProvider";
 import { OAuthCallback } from "./components/OAuthCallback";
+import { PushSubscriptionInitializer } from "./components/PushSubscriptionInitializer";
 import { SignInForm } from "./components/SignInForm";
 import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
 import { ThemeProvider } from "./components/theme-provider";
@@ -167,6 +168,8 @@ function App() {
 								<Authenticated>
 									<MessengerApp />
 									<UpdateNotification />
+									{/* Initialize Web Push subscription & persistence when logged in */}
+									<PushSubscriptionInitializer />
 								</Authenticated>
 							</>
 						)}

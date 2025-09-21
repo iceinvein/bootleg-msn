@@ -45,16 +45,8 @@ export async function ensurePushSubscription(
 
 	const json = subscription.toJSON() as PushSubscriptionJSON;
 
-	// POST to Netlify function to register (placeholder; add persistence later)
-	try {
-		await fetch("/.netlify/functions/subscribe", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ subscription: json }),
-		});
-	} catch (e) {
-		console.warn("Failed to notify backend about push subscription", e);
-	}
+	// Persistence is handled via Convex (see usePushSubscription.ts)
+	// No direct network call here to avoid exposing unauthenticated endpoints.
 
 	return json;
 }

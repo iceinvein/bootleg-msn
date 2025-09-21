@@ -31,8 +31,9 @@
 		"test:migration": "node scripts/test-migration-integration.js",
 		"prepare": "husky"
 	},
-"dependencies": {
+	"dependencies": {
 		"web-push": "^3.6.6",
+		"jose": "^5.9.6",
 		"@auth/core": "0.40.0",
 		"@capacitor/android": "^7.4.3",
 		"@capacitor/app": "^7.1.0",
