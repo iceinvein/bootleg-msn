@@ -195,15 +195,22 @@ export function useNudge(): UseNudgeReturn {
 				playNudgeSound();
 
 				// Show toast notification
+				const senderDisplayName =
+					latestNudge.fromUser.name ||
+					latestNudge.fromUser.email ||
+					"Unknown User";
 				toast.info(
-					`${latestNudge.fromUser.name} sent you a ${latestNudge.nudgeType}!`,
+					`${senderDisplayName} sent you a ${latestNudge.nudgeType}!`,
 					{
 						duration: 3000,
 					},
 				);
 
 				// Show browser notification
-				const senderName = latestNudge.fromUser.name ?? "Unknown User";
+				const senderName =
+					latestNudge.fromUser.name ||
+					latestNudge.fromUser.email ||
+					"Unknown User";
 				const chatIdString =
 					latestNudge.conversationId ??
 					(latestNudge.fromUserId as unknown as string);

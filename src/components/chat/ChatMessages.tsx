@@ -94,7 +94,9 @@ export function ChatMessages({
 							return (
 								<div key={`nudge-${n._id}`} className="mt-6 md:mt-8">
 									<NudgeMessage
-										senderName={n.fromUser?.name ?? "Unknown User"}
+										senderName={
+											n.fromUser?.name || n.fromUser?.email || "Unknown User"
+										}
 										nudgeType={n.nudgeType}
 										timestamp={n.createdAt}
 										isOwn={Boolean(n.isFromMe)}

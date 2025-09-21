@@ -82,6 +82,7 @@ export const getReceivedNudges = query({
 			fromUser: v.object({
 				_id: v.id("users"),
 				name: v.optional(v.string()),
+				email: v.optional(v.string()),
 				image: v.optional(v.string()),
 			}),
 		}),
@@ -116,6 +117,7 @@ export const getReceivedNudges = query({
 					fromUser: {
 						_id: fromUser._id,
 						name: fromUser.name,
+						email: fromUser.email,
 						image: fromUser.image,
 					},
 				};
@@ -143,6 +145,7 @@ export const getSentNudges = query({
 			toUser: v.object({
 				_id: v.id("users"),
 				name: v.optional(v.string()),
+				email: v.optional(v.string()),
 				image: v.optional(v.string()),
 			}),
 		}),
@@ -177,6 +180,7 @@ export const getSentNudges = query({
 					toUser: {
 						_id: toUser._id,
 						name: toUser.name,
+						email: toUser.email,
 						image: toUser.image,
 					},
 				};
@@ -207,11 +211,13 @@ export const getConversationNudges = query({
 			fromUser: v.object({
 				_id: v.id("users"),
 				name: v.optional(v.string()),
+				email: v.optional(v.string()),
 				image: v.optional(v.string()),
 			}),
 			toUser: v.object({
 				_id: v.id("users"),
 				name: v.optional(v.string()),
+				email: v.optional(v.string()),
 				image: v.optional(v.string()),
 			}),
 			isFromMe: v.boolean(),
@@ -284,11 +290,13 @@ export const getConversationNudges = query({
 					fromUser: {
 						_id: fromUser._id,
 						name: fromUser.name,
+						email: fromUser.email,
 						image: fromUser.image,
 					},
 					toUser: {
 						_id: toUser._id,
 						name: toUser.name,
+						email: toUser.email,
 						image: toUser.image,
 					},
 					isFromMe: nudge.fromUserId === user._id,
