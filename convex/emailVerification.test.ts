@@ -18,13 +18,6 @@ import schema from "./schema";
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
 
 describe('Email Verification System', () => {
-  describe('sendVerificationEmail action', () => {
-    it.skip('should create verification record when sending email (requires API key)', async () => {
-      // This test requires a Resend API key to be configured
-      // Skipping in test environment
-    });
-  });
-
   describe('verifyEmail mutation', () => {
     it('should verify email with valid token', async () => {
       const t = convexTest(schema, modules);
@@ -164,11 +157,6 @@ describe('Email Verification System', () => {
   });
 
   describe('resendVerificationEmail action', () => {
-    it.skip('should resend verification email for existing record (requires API key)', async () => {
-      // This test requires a Resend API key to be configured
-      // Skipping in test environment
-    });
-
     it('should handle resend for already verified email', async () => {
       const t = convexTest(schema, modules);
       const email = "verified@example.com";
@@ -187,11 +175,6 @@ describe('Email Verification System', () => {
       await expect(
         t.action(api.emailVerification.resendVerificationEmail, { email })
       ).rejects.toThrow("Email is already verified");
-    });
-
-    it.skip('should create new record if none exists (requires API key)', async () => {
-      // This test requires a Resend API key to be configured
-      // Skipping in test environment
     });
   });
 });
