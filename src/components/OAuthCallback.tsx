@@ -2,6 +2,8 @@
  * OAuth callback handler - now simplified since deep link handling is in useOAuth hook
  */
 
+import { api } from "@convex/_generated/api";
+import { ConvexHttpClient } from "convex/browser";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
@@ -47,9 +49,6 @@ export function OAuthCallback({ onComplete, oauthData }: OAuthCallbackProps) {
 
 			try {
 				// Process the OAuth code from GitHub
-				const { ConvexHttpClient } = await import("convex/browser");
-				const { api } = await import("@convex/_generated/api");
-
 				const convexUrl = import.meta.env.VITE_CONVEX_URL;
 				if (!convexUrl) {
 					throw new Error("VITE_CONVEX_URL not configured");

@@ -86,7 +86,18 @@ window.addEventListener('message', async (message) => {
 		minify: !process.env.TAURI_DEBUG ? "esbuild" : false,
 		sourcemap: !!process.env.TAURI_DEBUG,
 		rollupOptions: {
-			external: [], // ensure nothing is wrongly externalized
+			output: {
+				manualChunks: (path) => {
+					const reversedPath = path.split("/").reverse();
+					return reversedPath[reversedPath.indexOf("node_modules") - 1];
+				},
+			},
+			onwarn(warning, warn) {
+				if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+				warn(warning);
+			},
 		},
+		chunkSizeWarningLimit: 1600,
+		external: [], // ensure nothing is wrongly externalized
 	},
 };});
