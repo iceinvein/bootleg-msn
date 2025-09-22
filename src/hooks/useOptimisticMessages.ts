@@ -40,11 +40,11 @@ type ServerMessage = FunctionReturnType<
 >[number];
 export type CombinedMessage = ServerMessage | OptimisticMessage;
 
-interface UseOptimisticMessagesProps {
+type UseOptimisticMessagesProps = {
 	otherUserId?: Id<"users">;
 	groupId?: Id<"groups">;
 	currentUserId?: Id<"users">;
-}
+};
 
 export function useOptimisticMessages({
 	otherUserId,

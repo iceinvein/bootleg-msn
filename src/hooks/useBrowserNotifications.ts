@@ -4,7 +4,7 @@ import {
 	browserNotifications,
 } from "../lib/browser-notifications";
 
-export interface UseBrowserNotificationsReturn {
+export type UseBrowserNotificationsReturn = {
 	// Permission management
 	permission: NotificationPermission;
 	requestPermission: () => Promise<NotificationPermission>;
@@ -37,7 +37,7 @@ export interface UseBrowserNotificationsReturn {
 	isSupported: boolean;
 	canNotify: boolean;
 	isBrowserEnvironment: boolean;
-}
+};
 
 export function useBrowserNotifications(): UseBrowserNotificationsReturn {
 	const [permission, setPermission] = useState<NotificationPermission>(

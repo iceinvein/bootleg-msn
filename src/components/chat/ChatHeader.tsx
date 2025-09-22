@@ -10,9 +10,9 @@ import { InlineStatusEditor } from "../InlineStatusEditor";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
 
-export interface ChatHeaderProps {
+export type ChatHeaderProps = {
 	onClose: () => void;
-}
+};
 
 export function ChatHeader({ onClose }: ChatHeaderProps) {
 	const selectedChat = useStore($selectedChat);

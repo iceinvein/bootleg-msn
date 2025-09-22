@@ -6,11 +6,11 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Button } from "./ui/button";
 
-interface FileUploadProps {
+type FileUploadProps = {
 	receiverId?: Id<"users">;
 	groupId?: Id<"groups">;
 	onFileUploaded?: () => void;
-}
+};
 
 export function FileUpload({
 	receiverId,

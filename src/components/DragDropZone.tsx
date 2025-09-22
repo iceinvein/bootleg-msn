@@ -4,12 +4,12 @@ import { useMutation } from "convex/react";
 import { type DragEvent, type ReactNode, useRef, useState } from "react";
 import { toast } from "sonner";
 
-interface DragDropZoneProps {
+type DragDropZoneProps = {
 	children: ReactNode;
 	receiverId?: Id<"users">;
 	groupId?: Id<"groups">;
 	onFileUploaded?: () => void;
-}
+};
 
 export function DragDropZone({
 	children,

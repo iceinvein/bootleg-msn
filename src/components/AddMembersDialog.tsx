@@ -28,9 +28,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { $selectedChat } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
 
-interface AddMembersDialogProps {
+type AddMembersDialogProps = {
 	children: React.ReactNode;
-}
+};
 
 export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 	const selectedChat = useStore($selectedChat);

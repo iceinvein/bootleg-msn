@@ -12,7 +12,7 @@ import { fadeInUp, hoverScale, tapScale } from "../ui/animated";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 
-export interface ChatComposerProps {
+export type ChatComposerProps = {
 	value: string;
 	onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 	onSubmit: (e: React.FormEvent) => void;
@@ -21,7 +21,7 @@ export interface ChatComposerProps {
 	isNudgeSending: boolean;
 	cooldownRemaining: number;
 	onFileUploaded?: () => void;
-}
+};
 
 export function ChatComposer({
 	value,

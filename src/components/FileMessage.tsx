@@ -2,12 +2,12 @@ import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import { useQuery } from "convex/react";
 
-interface FileMessageProps {
+type FileMessageProps = {
 	fileId: Id<"_storage">;
 	fileName: string;
 	fileType: string;
 	fileSize: number;
-}
+};
 
 export function FileMessage({
 	fileId,

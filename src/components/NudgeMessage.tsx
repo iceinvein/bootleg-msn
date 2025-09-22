@@ -3,12 +3,12 @@ import { Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { bounceIn } from "./ui/animated";
 
-interface NudgeMessageProps {
+type NudgeMessageProps = {
 	senderName: string;
 	nudgeType: "nudge" | "buzz";
 	timestamp: number;
 	isOwn?: boolean;
-}
+};
 
 export function NudgeMessage({
 	senderName,

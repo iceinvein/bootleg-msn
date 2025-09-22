@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { getAuthErrorMessage, logAuthError } from "@/utils/authErrorHandler";
 import { Button } from "./ui/button";
 
-interface EmailVerificationPageProps {
+type EmailVerificationPageProps = {
 	token: string;
 	onBackToSignIn: () => void;
 	onVerificationSuccess?: () => void;
-}
+};
 
 export function EmailVerificationPage({
 	token,

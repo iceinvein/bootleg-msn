@@ -1,10 +1,10 @@
 import { cubicBezier, motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
-interface TypingIndicatorProps {
+type TypingIndicatorProps = {
 	className?: string;
 	userName?: string;
-}
+};
 
 const containerVariants = {
 	initial: {

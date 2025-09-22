@@ -1,11 +1,11 @@
 // YouTube URL detection and parsing utilities
 
-export interface YouTubeVideoInfo {
+export type YouTubeVideoInfo = {
 	videoId: string;
 	url: string;
 	thumbnailUrl: string;
 	embedUrl: string;
-}
+};
 
 /**
  * Extracts YouTube video ID from various YouTube URL formats

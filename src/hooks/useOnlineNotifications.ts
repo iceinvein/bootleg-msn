@@ -4,12 +4,12 @@ import { useCallback, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { browserNotifications } from "@/lib/browser-notifications";
 
-interface ContactStatus {
+type ContactStatus = {
 	contactId: string;
 	status: string;
 	name: string;
 	lastSeen: number;
-}
+};
 
 export function useOnlineNotifications() {
 	// Get current contacts with their status

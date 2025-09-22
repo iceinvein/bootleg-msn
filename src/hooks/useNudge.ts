@@ -11,7 +11,7 @@ type ReceivedNudge = FunctionReturnType<
 	typeof api.nudges.getReceivedNudges
 >[number];
 
-export interface UseNudgeReturn {
+export type UseNudgeReturn = {
 	// Send nudge
 	sendNudge: (
 		toUserId: Id<"users">,
@@ -29,7 +29,7 @@ export interface UseNudgeReturn {
 
 	// Recent nudges
 	recentNudges: ReceivedNudge[];
-}
+};
 
 export function useNudge(): UseNudgeReturn {
 	const [isSending, setIsSending] = useState(false);

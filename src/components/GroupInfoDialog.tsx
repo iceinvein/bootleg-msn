@@ -43,10 +43,10 @@ import AddMembersDialog from "./AddMembersDialog";
 import { AvatarEditor } from "./AvatarEditor";
 import { InlineStatusEditor } from "./InlineStatusEditor";
 
-interface GroupInfoDialogProps {
+type GroupInfoDialogProps = {
 	group: Group | null;
 	children: React.ReactNode;
-}
+};
 
 export function GroupInfoDialog({ group, children }: GroupInfoDialogProps) {
 	const [isOpen, setIsOpen] = useState(false);

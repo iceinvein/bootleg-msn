@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/responsive-popover";
 import type { ReactionType } from "./ReactionPicker";
 
-interface QuickMessageActionsProps {
+type QuickMessageActionsProps = {
 	children?: React.ReactNode;
 	ownsMessage: boolean;
 	canEdit?: boolean; // Optional prop to control edit button visibility separately
@@ -21,7 +21,7 @@ interface QuickMessageActionsProps {
 	// Controlled state props for long press
 	open?: boolean;
 	onOpenChange?: (open: boolean) => void;
-}
+};
 
 export function QuickMessageActions({
 	children,

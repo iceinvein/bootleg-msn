@@ -5,13 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-interface InlineStatusEditorProps {
+type InlineStatusEditorProps = {
 	initialStatus: string;
 	onSave: (newStatus: string) => void;
 	maxLength?: number;
 	placeholder?: string;
 	className?: string;
-}
+};
 
 export function StatusMessage({
 	initialStatus,

@@ -23,9 +23,9 @@ type StatusValue = Infer<typeof userStatusValidator>;
 // End-to-end type safe user type
 type UserType = NonNullable<FunctionReturnType<typeof api.auth.loggedInUser>>;
 
-interface StatusBarProps {
+type StatusBarProps = {
 	user: UserType;
-}
+};
 
 export function StatusBar({ user }: StatusBarProps) {
 	const [currentStatus, setCurrentStatus] = useState<StatusValue>("online");

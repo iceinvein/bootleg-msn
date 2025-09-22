@@ -3,11 +3,11 @@ import { useAction } from "convex/react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-interface EmailVerificationModalProps {
+type EmailVerificationModalProps = {
 	email: string;
 	onClose: () => void;
 	onVerified: () => void;
-}
+};
 
 export function EmailVerificationModal({
 	email,

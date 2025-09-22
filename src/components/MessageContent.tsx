@@ -7,12 +7,12 @@ import { YouTubeEmbed } from "./YouTubeEmbed";
 // End-to-end type safe message type (includes "system" which is in schema but not validator)
 type MessageType = Infer<typeof messageTypeValidator> | "system";
 
-interface MessageContentProps {
+type MessageContentProps = {
 	content: string;
 	messageType: MessageType;
 	isEmojiOnly?: boolean;
 	className?: string;
-}
+};
 
 export function MessageContent({
 	content,

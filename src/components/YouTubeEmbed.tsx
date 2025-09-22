@@ -2,10 +2,10 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import type { YouTubeVideoInfo } from "../utils/youtubeUtils";
 
-interface YouTubeEmbedProps {
+type YouTubeEmbedProps = {
 	video: YouTubeVideoInfo;
 	className?: string;
-}
+};
 
 export function YouTubeEmbed({ video, className = "" }: YouTubeEmbedProps) {
 	const [isLoaded, setIsLoaded] = useState(false);

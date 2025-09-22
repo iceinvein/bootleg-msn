@@ -27,9 +27,9 @@ import { Separator } from "./ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { VersionInfo } from "./VersionInfo";
 
-interface SettingsDialogProps {
+type SettingsDialogProps = {
 	children: React.ReactNode;
-}
+};
 
 // Animation configurations
 const tabTransition = {

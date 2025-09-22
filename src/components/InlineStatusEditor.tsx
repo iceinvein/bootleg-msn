@@ -3,14 +3,14 @@ import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-interface InlineStatusEditorProps {
+type InlineStatusEditorProps = {
 	initialStatus: string;
 	onSave: (newStatus: string) => void;
 	maxLength?: number;
 	placeholder?: string;
 	className?: string;
 	textColor?: string;
-}
+};
 
 export function InlineStatusEditor({
 	initialStatus,

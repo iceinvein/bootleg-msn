@@ -27,10 +27,10 @@ export type ConversationNudge = {
 	isFromMe?: boolean;
 };
 
-export interface ChatMessagesProps {
+export type ChatMessagesProps = {
 	messages: ChatMessage[] | undefined;
 	conversationNudges?: ConversationNudge[] | undefined;
-}
+};
 
 export function ChatMessages({
 	messages,

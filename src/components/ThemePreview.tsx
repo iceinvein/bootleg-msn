@@ -2,10 +2,10 @@ import { MessageCircle, User } from "lucide-react";
 import type { CustomThemeConfig } from "@/hooks/useThemeCustomization";
 import { cn } from "@/lib/utils";
 
-interface ThemePreviewProps {
+type ThemePreviewProps = {
 	config: CustomThemeConfig;
 	className?: string;
-}
+};
 
 export function ThemePreview({ config, className }: ThemePreviewProps) {
 	const previewStyle = {

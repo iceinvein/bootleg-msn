@@ -16,10 +16,10 @@ import {
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 
-interface SignUpFormProps {
+type SignUpFormProps = {
 	onBackToSignIn: () => void;
 	invitationToken?: string | null;
-}
+};
 
 export function SignUpForm({
 	onBackToSignIn,

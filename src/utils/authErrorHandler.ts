@@ -15,12 +15,12 @@ export type AuthErrorType =
 	| "provider"
 	| "unknown";
 
-export interface ParsedAuthError {
+export type ParsedAuthError = {
 	type: AuthErrorType;
 	message: string;
 	originalError: unknown;
 	code?: string;
-}
+};
 
 /**
  * Common authentication error patterns and their user-friendly messages

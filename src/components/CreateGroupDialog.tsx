@@ -24,9 +24,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { getStatusColor } from "@/utils/style";
 
-interface CreateGroupDialogProps {
+type CreateGroupDialogProps = {
 	children: React.ReactNode;
-}
+};
 
 export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 	const [isLoading, setIsLoading] = useState(false);

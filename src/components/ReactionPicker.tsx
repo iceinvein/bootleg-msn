@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 // End-to-end type safe reaction type
 export type ReactionType = Infer<typeof reactionTypeValidator>;
 
-interface ReactionPickerProps {
+type ReactionPickerProps = {
 	onReactionSelect: (
 		reactionType: ReactionType,
 		customEmoji?: string,
@@ -27,7 +27,7 @@ interface ReactionPickerProps {
 	disabled?: boolean;
 	currentUserReaction?: ReactionType | null;
 	className?: string;
-}
+};
 
 // Common reaction emojis with their types
 const commonReactions = [

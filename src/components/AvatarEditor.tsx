@@ -22,13 +22,13 @@ import {
 	ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
 
-interface AvatarEditorProps {
+type AvatarEditorProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	entity: { type: "group"; id: Id<"groups"> } | { type: "user" };
 	currentAvatarUrl?: string | undefined;
 	previewShape?: "circle" | "rounded" | "square"; // visual only; export stays square
-}
+};
 
 export function AvatarEditor({
 	open,

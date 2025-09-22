@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Tooltip, TooltipContent, TooltipTrigger } from "./ui/tooltip";
 
-interface ReactionSummary {
+type ReactionSummary = {
 	reactionType: ReactionType;
 	customEmoji?: string;
 	count: number;
@@ -19,9 +19,9 @@ interface ReactionSummary {
 		image?: string;
 	}>;
 	hasCurrentUserReacted: boolean;
-}
+};
 
-interface MessageReactionsProps {
+type MessageReactionsProps = {
 	reactions: ReactionSummary[];
 	onReactionClick?: (
 		reactionType: ReactionType,
@@ -30,7 +30,7 @@ interface MessageReactionsProps {
 	isLoading?: boolean;
 	disabled?: boolean;
 	className?: string;
-}
+};
 
 // Map reaction types to their emoji representations
 const reactionEmojis: Record<ReactionType, string> = {

@@ -3,10 +3,10 @@ import { useMutation } from "convex/react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-interface SetNameModalProps {
+type SetNameModalProps = {
 	onClose: () => void;
 	currentName?: string;
-}
+};
 
 export function SetNameModal({ onClose, currentName }: SetNameModalProps) {
 	const [name, setName] = useState(currentName || "");

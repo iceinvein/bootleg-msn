@@ -14,12 +14,12 @@ import {
 	ResponsiveDialogTitle,
 } from "@/components/ui/responsive-dialog";
 
-interface GroupAvatarEditorProps {
+type GroupAvatarEditorProps = {
 	open: boolean;
 	onOpenChange: (open: boolean) => void;
 	groupId: Id<"groups">;
 	currentAvatarUrl?: string | undefined;
-}
+};
 
 export function GroupAvatarEditor({
 	open,

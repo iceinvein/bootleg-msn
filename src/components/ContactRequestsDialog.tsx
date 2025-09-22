@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { formatTime } from "@/utils/data";
 
-export interface ContactRequest {
+export type ContactRequest = {
 	id: string;
 	email: string;
 	name: string;
@@ -31,11 +31,11 @@ export interface ContactRequest {
 	timestamp: Date;
 	type: "incoming" | "outgoing";
 	status: "pending" | "accepted" | "declined";
-}
+};
 
-interface ContactRequestsProps {
+type ContactRequestsProps = {
 	children: React.ReactNode;
-}
+};
 
 export default function ContactRequestsDialog({
 	children,

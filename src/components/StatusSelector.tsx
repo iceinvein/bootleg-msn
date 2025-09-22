@@ -45,11 +45,11 @@ const statusOptions = [
 
 type StatusValue = "online" | "away" | "busy" | "invisible";
 
-interface StatusSelectorProps {
+type StatusSelectorProps = {
 	currentStatus: StatusValue;
 	onStatusChange: (status: StatusValue) => void;
 	className?: string;
-}
+};
 
 export function StatusSelector({
 	currentStatus,

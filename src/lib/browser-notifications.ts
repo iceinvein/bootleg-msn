@@ -4,7 +4,7 @@
  * Works alongside existing toast notifications
  */
 
-export interface BrowserNotificationData {
+export type BrowserNotificationData = {
 	action?: string;
 	messageId?: string;
 	chatId?: string;
@@ -14,9 +14,9 @@ export interface BrowserNotificationData {
 	inviteId?: string;
 	groupName?: string;
 	[key: string]: unknown;
-}
+};
 
-export interface BrowserNotificationOptions {
+export type BrowserNotificationOptions = {
 	title: string;
 	body: string;
 	icon?: string;
@@ -30,9 +30,9 @@ export interface BrowserNotificationOptions {
 		title: string;
 		icon?: string;
 	}>;
-}
+};
 
-export interface BrowserNotificationSettings {
+export type BrowserNotificationSettings = {
 	enabled: boolean;
 	showPreview: boolean;
 	suppressWhenFocused: boolean;
@@ -40,7 +40,7 @@ export interface BrowserNotificationSettings {
 	quietHoursEnabled: boolean;
 	quietHoursStart?: string;
 	quietHoursEnd?: string;
-}
+};
 
 class BrowserNotificationService {
 	private settings: BrowserNotificationSettings = {

@@ -8,14 +8,14 @@ import { ConvexError, v } from "convex/values";
 import { action, mutation, query } from "./_generated/server";
 
 // GitHub API types
-interface GitHubEmail {
+type GitHubEmail = {
 	email: string;
 	primary: boolean;
 	verified: boolean;
 	visibility?: string;
-}
+};
 
-interface OAuthExchangeResult {
+type OAuthExchangeResult = {
 	success: true;
 	user: {
 		id: number;
@@ -26,7 +26,7 @@ interface OAuthExchangeResult {
 	};
 	githubId: string;
 	accessToken: string;
-}
+};
 
 /**
  * Custom ConvexCredentials provider for GitHub Desktop OAuth

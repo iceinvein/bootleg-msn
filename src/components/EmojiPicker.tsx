@@ -11,24 +11,24 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-interface EmojiPickerProps {
+type EmojiPickerProps = {
 	onEmojiSelect: (emoji: string) => void;
 	children: React.ReactNode;
-}
+};
 
 // Improved typing for emojibase entries
-interface CompactEmojiRecord {
+type CompactEmojiRecord = {
 	unicode?: string; // the unicode emoji character
 	label?: string;
 	group?: number; // numeric index that maps to groups.json
 	tags?: string[];
-}
+};
 
 // Emojibase groups metadata structure
-interface EmojibaseGroups {
+type EmojibaseGroups = {
 	groups: Record<string, string>;
 	subgroups: Record<string, string>;
-}
+};
 
 const CATEGORY_META = {
 	recent: { icon: Heart, label: "Recent" }, // Using Heart as a placeholder, could use a clock icon
