@@ -1,9 +1,10 @@
 import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
 import { MessageCircle } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
@@ -35,15 +36,6 @@ export function Chat() {
 	const groupAvatarMap = useGroupAvatarUrls(
 		selectedGroupId ? [selectedGroupId] : undefined,
 	);
-
-	// Update avatar stores when data changes
-	useEffect(() => {
-		setUserAvatars(userAvatarMap);
-	}, [userAvatarMap]);
-
-	useEffect(() => {
-		setGroupAvatars(groupAvatarMap);
-	}, [groupAvatarMap]);
 
 	const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -98,6 +90,34 @@ export function Chat() {
 	useEffect(() => {
 		$isMessagesLoading.set(isMessagesLoading);
 	}, [isMessagesLoading]);
+
+	// Extract all unique sender IDs from messages for avatar fetching
+	const messageSenderIds = useMemo(() => {
+		if (!messages) return undefined;
+		const senderIds = new Set<Id<"users">>();
+		for (const message of messages) {
+			if (message.senderId) {
+				senderIds.add(message.senderId);
+			}
+		}
+		return Array.from(senderIds);
+	}, [messages]);
+
+	// Fetch avatars for all message senders
+	const messageSenderAvatarMap = useUserAvatarUrls(messageSenderIds);
+
+	// Combine all avatar maps and update stores
+	useEffect(() => {
+		const combinedUserAvatarMap = new Map([
+			...userAvatarMap,
+			...messageSenderAvatarMap,
+		]);
+		setUserAvatars(combinedUserAvatarMap);
+	}, [userAvatarMap, messageSenderAvatarMap]);
+
+	useEffect(() => {
+		setGroupAvatars(groupAvatarMap);
+	}, [groupAvatarMap]);
 
 	// Get nudges for the current conversation with stable 'since' to avoid re-fetch loops
 	const [nudgesSince] = useState(() => Date.now() - 12 * 60 * 60 * 1000); // last 12 hours

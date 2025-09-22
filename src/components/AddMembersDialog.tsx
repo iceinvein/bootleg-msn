@@ -25,6 +25,7 @@ import {
 	ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { $selectedChat } from "@/stores/contact";
 import { getStatusColor } from "@/utils/style";
 
@@ -63,6 +64,10 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 				contact.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
 				contact.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()),
 		) ?? [];
+
+	// Fetch avatars for all available contacts
+	const contactUserIds = availableContacts?.map((c) => c.contactUserId);
+	const avatarUrls = useUserAvatarUrls(contactUserIds);
 
 	const handleMemberToggle = (contactUserId: Id<"users">) => {
 		setSelectedMembers((prev) =>
@@ -166,8 +171,10 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 											)}
 											<div className="relative">
 												<Avatar className="h-10 w-10">
-													{contact.user?.image ? (
-														<AvatarImage src={contact.user.image} />
+													{avatarUrls.get(contact.contactUserId) ? (
+														<AvatarImage
+															src={avatarUrls.get(contact.contactUserId)}
+														/>
 													) : (
 														<AvatarFallback delayMs={0}>
 															<User className="h-10 w-10" />
