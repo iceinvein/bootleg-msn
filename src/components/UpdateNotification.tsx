@@ -2,9 +2,9 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useBuildInfo } from "../hooks";
 
 // Build metadata
-const BUILD_ID = import.meta.env.VITE_BUILD_ID as string;
 const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
 
 // Constants for config
@@ -51,15 +51,23 @@ export function UpdateNotification() {
 	const [hasShownInitialCheck, setHasShownInitialCheck] = useState(false);
 	const [lastNotificationTime, setLastNotificationTime] = useState(0);
 
-	// Build-based update check via Convex
-	const buildUpdate = useQuery(api.deployment.checkForUpdatesByBuild, {
-		clientBuildId: BUILD_ID,
-		channel: CHANNEL,
-	});
+	// Get current build info from deployed build.json
+	const { buildInfo } = useBuildInfo();
+
+	// Build-based update check via Convex - only run when we have buildInfo
+	const buildUpdate = useQuery(
+		api.deployment.checkForUpdatesByBuild,
+		buildInfo
+			? {
+					clientBuildId: buildInfo.buildId,
+					channel: CHANNEL,
+				}
+			: "skip",
+	);
 
 	// Debug logging
 	debugLog("🔄 Update Check Debug:", {
-		buildId: BUILD_ID,
+		buildId: buildInfo?.buildId,
 		channel: CHANNEL,
 		buildUpdate,
 		isDev: import.meta.env.DEV,
@@ -124,8 +132,8 @@ export function UpdateNotification() {
 	}, [buildUpdate]);
 
 	useEffect(() => {
-		// Skip if Convex unavailable yet
-		if (!buildUpdate) {
+		// Skip if build info or Convex unavailable yet
+		if (!buildInfo || !buildUpdate) {
 			return;
 		}
 
@@ -165,7 +173,7 @@ export function UpdateNotification() {
 			duration: Infinity,
 			description: () => (
 				<UpdateToastDetails
-					fromBuildId={BUILD_ID}
+					fromBuildId={buildInfo?.buildId || "unknown"}
 					toBuildId={buildUpdate.latestBuildId}
 					debugInfo={buildUpdate.debugInfo}
 					showDebug={DEBUG_UPDATES}
@@ -184,6 +192,7 @@ export function UpdateNotification() {
 
 		setLastNotificationTime(now);
 	}, [
+		buildInfo,
 		buildUpdate,
 		hasShownInitialCheck,
 		handleRefresh,

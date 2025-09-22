@@ -1,8 +1,8 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
+import { useBuildInfo } from "../hooks";
 
 // Build metadata
-const BUILD_ID = import.meta.env.VITE_BUILD_ID as string;
 const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
 
 function formatTimeAgo(timestamp: number): string {
@@ -19,6 +19,9 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export function VersionInfo() {
+	// Get current build info from deployed build.json
+	const { buildInfo } = useBuildInfo();
+
 	// Get latest live release (server-side filtered)
 	const liveReleases = useQuery(api.deployment.listReleases, {
 		channel: CHANNEL,
@@ -32,10 +35,11 @@ export function VersionInfo() {
 		limit: 1,
 	});
 
-	const rawPackageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
-	const appVersion = rawPackageVersion.startsWith("v")
-		? rawPackageVersion
-		: `v${rawPackageVersion}`;
+	const appVersion = buildInfo?.version
+		? buildInfo.version.startsWith("v")
+			? buildInfo.version
+			: `v${buildInfo.version}`
+		: "v0.0.0";
 
 	const latestLive = liveReleases?.[0];
 	const newestRelease = allReleases?.[0];
@@ -53,10 +57,12 @@ export function VersionInfo() {
 				)}
 			</div>
 			<div className="text-xs opacity-75">
-				Build: {BUILD_ID || "unknown"}
-				{latestLive && latestLive.buildId !== BUILD_ID && (
-					<span className="ml-2 text-orange-400">(update available)</span>
-				)}
+				Build: {buildInfo?.buildId || "unknown"}
+				{latestLive &&
+					buildInfo &&
+					latestLive.buildId !== buildInfo.buildId && (
+						<span className="ml-2 text-orange-400">(update available)</span>
+					)}
 			</div>
 			{latestLive && (
 				<div className="text-xs opacity-75">Latest deployed {timeAgo}</div>
