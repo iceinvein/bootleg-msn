@@ -120,12 +120,6 @@ describe("Messages System", () => {
 			});
 		});
 
-		it.skip("should send a file message", async () => {
-			// Skip file message test for now due to storage ID validation complexity
-			// In real app, file IDs come from actual file uploads which generate proper storage IDs
-			// This test would require mocking the file upload system
-		});
-
 		it("should send an emoji message", async () => {
 			// Create users
 			const senderId = await t.run(async (ctx) => {
