@@ -1,208 +1,230 @@
 import { v } from "convex/values";
 import {
+	action,
 	internalMutation,
-	mutation,
-	type QueryCtx,
+	internalQuery,
 	query,
 } from "./_generated/server";
 
-export const updateDeploymentInfo = internalMutation({
+// ===== Build-based deployment tracking =====
+
+export const beginDeployment = internalMutation({
 	args: {
-		version: v.string(),
-		timestamp: v.number(),
-	},
-	returns: v.null(),
-	handler: async (ctx, args) => {
-		// Insert new deployment info
-		await ctx.db.insert("deploymentInfo", {
-			version: args.version,
-			timestamp: args.timestamp,
-		});
-
-		// Keep only the last 10 deployment records to avoid clutter
-		const allDeployments = await ctx.db
-			.query("deploymentInfo")
-			.withIndex("by_timestamp")
-			.order("desc")
-			.collect();
-
-		if (allDeployments.length > 10) {
-			const deploymentsToDelete = allDeployments.slice(10);
-			for (const deployment of deploymentsToDelete) {
-				await ctx.db.delete(deployment._id);
-			}
-		}
-	},
-});
-
-// Client-side mutation for development/testing purposes
-export const updateDeploymentInfoClient = mutation({
-	args: {
-		version: v.string(),
+		buildId: v.string(),
+		version: v.optional(v.string()),
+		commit: v.optional(v.string()),
+		channel: v.string(),
 		timestamp: v.optional(v.number()),
 	},
-	returns: v.null(),
-	handler: async (ctx, args) => {
-		const timestamp = args.timestamp ?? Date.now();
-
-		// Insert new deployment info
-		await ctx.db.insert("deploymentInfo", {
-			version: args.version,
-			timestamp: timestamp,
+	handler: async (ctx, a) => {
+		await ctx.db.insert("deploymentReleases", {
+			buildId: a.buildId,
+			version: a.version,
+			commit: a.commit,
+			channel: a.channel,
+			status: "publishing",
+			timestamp: a.timestamp ?? Date.now(),
 		});
-
-		// Keep only the last 10 deployment records to avoid clutter
-		const allDeployments = await ctx.db
-			.query("deploymentInfo")
-			.withIndex("by_timestamp")
-			.order("desc")
-			.collect();
-
-		if (allDeployments.length > 10) {
-			const deploymentsToDelete = allDeployments.slice(10);
-			for (const deployment of deploymentsToDelete) {
-				await ctx.db.delete(deployment._id);
-			}
-		}
 	},
 });
 
-export const getCurrentVersion = query({
-	args: {},
-	returns: v.object({
-		version: v.string(),
-		timestamp: v.number(),
-	}),
-	handler: async (ctx) => {
-		const latestDeployment = await ctx.db
-			.query("deploymentInfo")
-			.withIndex("by_timestamp")
+export const internalLatestReleaseForChannel = internalQuery({
+	args: { channel: v.string() },
+	handler: async (ctx, a) => {
+		return await ctx.db
+			.query("deploymentReleases")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", a.channel))
+			.order("desc")
+			.first();
+	},
+});
+
+export const internalMarkReleaseLive = internalMutation({
+	args: { id: v.id("deploymentReleases") },
+	handler: async (ctx, a) => {
+		await ctx.db.patch(a.id, { status: "live" });
+	},
+});
+
+// Helper mutation for verifyAndPublish action
+export const markReleaseAsLive = internalMutation({
+	args: { buildId: v.string(), channel: v.string() },
+	returns: v.boolean(),
+	handler: async (ctx, a) => {
+		const latest = await ctx.db
+			.query("deploymentReleases")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", a.channel))
 			.order("desc")
 			.first();
 
-		if (!latestDeployment) {
-			return { version: "unknown", timestamp: 0 };
+		if (latest && latest.buildId === a.buildId) {
+			await ctx.db.patch(latest._id, { status: "live" });
+			return true;
+		}
+		return false;
+	},
+});
+
+export const verifyAndPublish = action({
+	args: {
+		buildId: v.string(),
+		channel: v.string(),
+		buildJsonUrl: v.string(), // e.g., https://site/build.json
+		timeoutMs: v.optional(v.number()),
+		intervalMs: v.optional(v.number()),
+	},
+	handler: async (_ctx, a) => {
+		const timeout = a.timeoutMs ?? 10 * 60 * 1000; // 10 minutes to accommodate Netlify build
+		const interval = a.intervalMs ?? 5000;
+		const start = Date.now();
+
+		async function fetchRemoteBuildId(): Promise<string | null> {
+			try {
+				const res = await fetch(a.buildJsonUrl, {
+					cache: "no-store",
+					headers: { "cache-control": "no-store" },
+				});
+				if (!res.ok) return null;
+				const j = await res.json();
+				return typeof j?.buildId === "string" ? j.buildId : null;
+			} catch {
+				return null;
+			}
 		}
 
+		while (Date.now() - start < timeout) {
+			const remote = await fetchRemoteBuildId();
+			if (remote === a.buildId) {
+				// For now, just return success - we'll implement the marking logic later
+				console.log(`Build ${a.buildId} verified for channel ${a.channel}`);
+				return { ok: true } as const;
+			}
+			await new Promise((r) => setTimeout(r, interval));
+		}
+		return { ok: false as const, error: "timeout" };
+	},
+});
+
+export const checkForUpdatesByBuild = query({
+	args: { clientBuildId: v.string(), channel: v.string() },
+	returns: v.object({
+		hasUpdate: v.boolean(),
+		latestBuildId: v.string(),
+		version: v.optional(v.string()),
+		status: v.string(),
+		debugInfo: v.string(),
+	}),
+	handler: async (ctx, a) => {
+		const latest = await ctx.db
+			.query("deploymentReleases")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", a.channel))
+			.order("desc")
+			.first();
+
+		if (!latest) {
+			return {
+				hasUpdate: false,
+				latestBuildId: "unknown",
+				version: "unknown",
+				status: "none",
+				debugInfo: "No releases",
+			};
+		}
+
+		const hasUpdate =
+			latest.status === "live" && latest.buildId !== a.clientBuildId;
 		return {
-			version: latestDeployment.version,
-			timestamp: latestDeployment.timestamp,
+			hasUpdate,
+			latestBuildId: latest.buildId,
+			version: latest.version,
+			status: latest.status,
+			debugInfo: `server=${latest.buildId} client=${a.clientBuildId} status=${latest.status}`,
 		};
 	},
 });
 
-// FUTURE: DEPLOYMENT_ANALYTICS - Deployment history tracking for admin dashboard
-export const getDeploymentHistory = query({
+// ===== Force update policy =====
+export const setAppPolicy = internalMutation({
 	args: {
-		limit: v.optional(v.number()),
+		channel: v.string(),
+		minSupportedTimestamp: v.number(),
+		forceMessage: v.optional(v.string()),
+		updatedAt: v.optional(v.number()),
 	},
+	handler: async (ctx, args) => {
+		await ctx.db.insert("appPolicies", {
+			channel: args.channel,
+			minSupportedTimestamp: args.minSupportedTimestamp,
+			forceMessage: args.forceMessage,
+			updatedAt: args.updatedAt ?? Date.now(),
+		});
+	},
+});
+
+export const getLatestAppPolicy = query({
+	args: { channel: v.string() },
+	handler: async (ctx, args) => {
+		return await ctx.db
+			.query("appPolicies")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", args.channel))
+			.order("desc")
+			.first();
+	},
+});
+
+export const checkForUpdatesV2 = query({
+	args: {
+		clientBuildTimestamp: v.number(), // ms since epoch
+		channel: v.string(),
+	},
+	returns: v.object({
+		mustUpdate: v.boolean(),
+		forceMessage: v.optional(v.string()),
+		debugInfo: v.string(),
+	}),
+	handler: async (ctx, a) => {
+		const policy = await ctx.db
+			.query("appPolicies")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", a.channel))
+			.order("desc")
+			.first();
+
+		const mustUpdate = !!(
+			policy && a.clientBuildTimestamp < policy.minSupportedTimestamp
+		);
+
+		return {
+			mustUpdate,
+			forceMessage: policy?.forceMessage,
+			debugInfo: `minTs=${policy?.minSupportedTimestamp ?? "n/a"} clientTs=${a.clientBuildTimestamp}`,
+		};
+	},
+});
+
+// Admin query for listing releases
+export const listReleases = query({
+	args: { channel: v.string(), limit: v.optional(v.number()) },
 	returns: v.array(
 		v.object({
-			_id: v.id("deploymentInfo"),
-			version: v.string(),
+			_id: v.id("deploymentReleases"),
+			buildId: v.string(),
+			version: v.optional(v.string()),
+			commit: v.optional(v.string()),
+			channel: v.string(),
+			status: v.union(
+				v.literal("publishing"),
+				v.literal("live"),
+				v.literal("rolled_back"),
+			),
 			timestamp: v.number(),
 			_creationTime: v.number(),
 		}),
 	),
 	handler: async (ctx, args) => {
-		const limit = args.limit ?? 5;
-
 		return await ctx.db
-			.query("deploymentInfo")
-			.withIndex("by_timestamp")
+			.query("deploymentReleases")
+			.withIndex("by_channel_and_time", (q) => q.eq("channel", args.channel))
 			.order("desc")
-			.take(limit);
-	},
-});
-
-// Helper to fetch the latest deployment record
-async function getLatestDeployment(ctx: QueryCtx) {
-	return await ctx.db
-		.query("deploymentInfo")
-		.withIndex("by_timestamp")
-		.order("desc")
-		.first();
-}
-
-// Robust semantic version comparison
-// Returns: 1 if v1 > v2, -1 if v1 < v2, 0 if equal
-function compareSemanticVersions(v1: string, v2: string): number {
-	// Normalize versions by removing 'v' prefix and handling edge cases
-	const normalize = (version: string): string => {
-		return version.replace(/^v/, "").trim();
-	};
-
-	const version1 = normalize(v1);
-	const version2 = normalize(v2);
-
-	// Handle exact matches
-	if (version1 === version2) {
-		return 0;
-	}
-
-	// Split into parts and convert to numbers
-	const parts1 = version1.split(".").map((part) => {
-		const num = parseInt(part, 10);
-		return Number.isNaN(num) ? 0 : num;
-	});
-	const parts2 = version2.split(".").map((part) => {
-		const num = parseInt(part, 10);
-		return Number.isNaN(num) ? 0 : num;
-	});
-
-	// Compare each part
-	const maxLength = Math.max(parts1.length, parts2.length);
-	for (let i = 0; i < maxLength; i++) {
-		const part1 = parts1[i] || 0;
-		const part2 = parts2[i] || 0;
-
-		if (part1 > part2) return 1;
-		if (part1 < part2) return -1;
-	}
-
-	return 0;
-}
-
-export const checkForUpdates = query({
-	args: {
-		clientVersion: v.string(),
-	},
-	returns: v.object({
-		hasUpdate: v.boolean(),
-		latestVersion: v.string(),
-		debugInfo: v.string(),
-	}),
-	handler: async (ctx, args) => {
-		try {
-			const latestDeployment = await getLatestDeployment(ctx);
-
-			if (!latestDeployment) {
-				return {
-					hasUpdate: false,
-					latestVersion: "unknown",
-					debugInfo: "No deployment info found in database",
-				};
-			}
-
-			const comparisonResult = compareSemanticVersions(
-				latestDeployment.version,
-				args.clientVersion,
-			);
-
-			const hasUpdate = comparisonResult > 0;
-
-			return {
-				hasUpdate,
-				latestVersion: latestDeployment.version,
-				debugInfo: `Compared ${latestDeployment.version} vs ${args.clientVersion} = ${comparisonResult} (${hasUpdate ? "update available" : "up to date"})`,
-			};
-		} catch (error) {
-			// Fail safe - don't show updates if there's an error
-			return {
-				hasUpdate: false,
-				latestVersion: "error",
-				debugInfo: `Error checking for updates: ${error}`,
-			};
-		}
+			.take(args.limit ?? 10);
 	},
 });

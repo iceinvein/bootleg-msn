@@ -3,13 +3,9 @@ import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-// Get the app version from package.json at build time
-const APP_VERSION = import.meta.env.PACKAGE_VERSION || "0.1.0";
-
-// Ensure version has 'v' prefix to match database format
-const APP_VERSION_WITH_PREFIX = APP_VERSION.startsWith("v")
-	? APP_VERSION
-	: `v${APP_VERSION}`;
+// Build metadata
+const BUILD_ID = import.meta.env.VITE_BUILD_ID as string;
+const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
 
 // Constants for config
 const LS_DEBUG = "debugUpdates";
@@ -32,15 +28,15 @@ const debugLog = (message: string, data?: unknown) => {
 
 // Small subcomponent for toast details
 function UpdateToastDetails(props: {
-	fromVersion: string;
-	toVersion: string;
+	fromBuildId: string;
+	toBuildId: string;
 	debugInfo?: string;
 	showDebug: boolean;
 }) {
 	return (
 		<div className="text-sm text-white/80">
 			<p className="mt-1 text-white/60 text-xs">
-				Update from {props.fromVersion} to {props.toVersion}
+				Update from {props.fromBuildId} to {props.toBuildId}
 			</p>
 			{props.showDebug && props.debugInfo && (
 				<p className="mt-1 font-mono text-white/40 text-xs">
@@ -55,15 +51,17 @@ export function UpdateNotification() {
 	const [hasShownInitialCheck, setHasShownInitialCheck] = useState(false);
 	const [lastNotificationTime, setLastNotificationTime] = useState(0);
 
-	// Check for updates - simplified API, only needs client version
-	const updateCheck = useQuery(api.deployment.checkForUpdates, {
-		clientVersion: APP_VERSION_WITH_PREFIX,
+	// Build-based update check via Convex
+	const buildUpdate = useQuery(api.deployment.checkForUpdatesByBuild, {
+		clientBuildId: BUILD_ID,
+		channel: CHANNEL,
 	});
 
 	// Debug logging
 	debugLog("🔄 Update Check Debug:", {
-		appVersion: APP_VERSION_WITH_PREFIX,
-		updateCheck,
+		buildId: BUILD_ID,
+		channel: CHANNEL,
+		buildUpdate,
 		isDev: import.meta.env.DEV,
 	});
 
@@ -82,30 +80,30 @@ export function UpdateNotification() {
 		// Show again after 10 minutes if still outdated
 		setTimeout(
 			() => {
-				if (updateCheck?.hasUpdate) {
+				if (buildUpdate?.hasUpdate) {
 					setLastNotificationTime(0); // Reset to allow showing again
 				}
 			},
 			10 * 60 * 1000,
 		);
-	}, [updateCheck]);
+	}, [buildUpdate]);
 
 	useEffect(() => {
-		// Skip if no update check result yet
-		if (!updateCheck) {
+		// Skip if Convex unavailable yet
+		if (!buildUpdate) {
 			return;
 		}
 
 		// Mark that we've done the initial check
 		if (!hasShownInitialCheck) {
 			setHasShownInitialCheck(true);
-			debugLog("✅ Initial update check completed:", updateCheck);
+			debugLog("✅ Initial update check completed:", buildUpdate);
 			return; // Don't show notification on initial load
 		}
 
-		// Skip if no update available
-		if (!updateCheck.hasUpdate) {
-			debugLog("✅ No update needed:", updateCheck.debugInfo);
+		// Check if update is needed
+		if (!buildUpdate.hasUpdate) {
+			debugLog("✅ No update needed:", buildUpdate.debugInfo);
 			return;
 		}
 
@@ -126,15 +124,15 @@ export function UpdateNotification() {
 		}
 
 		// Show the update notification
-		debugLog("🔔 Showing update notification:", updateCheck);
+		debugLog("🔔 Showing update notification:", buildUpdate);
 
 		toast.info("New version available!", {
 			duration: Infinity,
 			description: () => (
 				<UpdateToastDetails
-					fromVersion={APP_VERSION_WITH_PREFIX}
-					toVersion={updateCheck.latestVersion}
-					debugInfo={updateCheck.debugInfo}
+					fromBuildId={BUILD_ID}
+					toBuildId={buildUpdate.latestBuildId}
+					debugInfo={buildUpdate.debugInfo}
 					showDebug={DEBUG_UPDATES}
 				/>
 			),
@@ -151,7 +149,7 @@ export function UpdateNotification() {
 
 		setLastNotificationTime(now);
 	}, [
-		updateCheck,
+		buildUpdate,
 		hasShownInitialCheck,
 		handleRefresh,
 		handleDismiss,

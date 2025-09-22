@@ -1,6 +1,10 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 
+// Build metadata
+const BUILD_ID = import.meta.env.VITE_BUILD_ID as string;
+const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
+
 function formatTimeAgo(timestamp: number): string {
 	const now = Date.now();
 	const diff = now - timestamp;
@@ -15,27 +19,35 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export function VersionInfo() {
-	const currentVersion = useQuery(api.deployment.getCurrentVersion);
+	// Get latest release info for this channel
+	const latestRelease = useQuery(api.deployment.listReleases, {
+		channel: CHANNEL,
+		limit: 1,
+	});
+
 	const rawPackageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
 	const appVersion = rawPackageVersion.startsWith("v")
 		? rawPackageVersion
 		: `v${rawPackageVersion}`;
 
-	const timeAgo = currentVersion
-		? formatTimeAgo(currentVersion.timestamp)
-		: undefined;
+	const latest = latestRelease?.[0];
+	const timeAgo = latest ? formatTimeAgo(latest.timestamp) : undefined;
 
 	return (
 		<div className="text-gray-500 text-xs">
 			<div>
 				App: {appVersion}
-				{currentVersion?.version && currentVersion.version !== appVersion && (
-					<span className="ml-2 opacity-75">
-						(latest: {currentVersion.version})
-					</span>
+				{latest?.version && latest.version !== appVersion && (
+					<span className="ml-2 opacity-75">(latest: {latest.version})</span>
 				)}
 			</div>
-			{currentVersion && (
+			<div className="text-xs opacity-75">
+				Build: {BUILD_ID || "unknown"}
+				{latest?.status === "live" && latest.buildId !== BUILD_ID && (
+					<span className="ml-2 text-orange-400">(update available)</span>
+				)}
+			</div>
+			{latest && (
 				<div className="text-xs opacity-75">Latest deployed {timeAgo}</div>
 			)}
 		</div>

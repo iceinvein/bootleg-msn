@@ -14,7 +14,22 @@ self.addEventListener('install', (event) => {
 // Activate event
 self.addEventListener('activate', (event) => {
 	console.log('Service Worker activating');
-	event.waitUntil(self.clients.claim());
+	event.waitUntil((async () => {
+		await self.clients.claim();
+		try {
+			const res = await fetch('/build.json', { cache: 'no-store', headers: { 'cache-control': 'no-store' } });
+			if (res.ok) {
+				const j = await res.json();
+				const buildId = j?.buildId;
+				const clients = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
+				for (const client of clients) {
+					client.postMessage({ type: 'SW_BUILD_ID', buildId });
+				}
+			}
+		} catch (e) {
+			// ignore
+		}
+	})());
 });
 
 // Handle push events (Web Push delivery path)
@@ -39,6 +54,11 @@ self.addEventListener('push', (event) => {
 	};
 
 	event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Listen for messages from clients
+self.addEventListener('message', (event) => {
+	if (event.data?.type === 'SKIP_WAITING') self.skipWaiting();
 });
 
 // Handle notification clicks

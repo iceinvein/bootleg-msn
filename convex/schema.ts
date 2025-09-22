@@ -140,10 +140,31 @@ const applicationTables = {
 		.index("by_chat", ["userId", "chatWithUserId"])
 		.index("by_group_chat", ["userId", "groupId"]),
 
-	deploymentInfo: defineTable({
-		version: v.string(),
+	// Deployment releases per channel (build-based tracking)
+	deploymentReleases: defineTable({
+		buildId: v.string(), // e.g., gitSha.timestamp
+		version: v.optional(v.string()),
+		commit: v.optional(v.string()),
+		channel: v.string(), // 'prod' | 'staging' | ...
+		status: v.union(
+			v.literal("publishing"),
+			v.literal("live"),
+			v.literal("rolled_back"),
+		),
 		timestamp: v.number(),
-	}).index("by_timestamp", ["timestamp"]),
+	})
+		.index("by_channel", ["channel"])
+		.index("by_channel_and_time", ["channel", "timestamp"]),
+
+	// App-wide update policy (force update)
+	appPolicies: defineTable({
+		channel: v.string(), // e.g., 'prod', 'staging'
+		minSupportedTimestamp: v.number(), // ms since epoch; clients older than this must update
+		forceMessage: v.optional(v.string()), // optional message to show in overlay
+		updatedAt: v.number(),
+	})
+		.index("by_channel", ["channel"])
+		.index("by_channel_and_time", ["channel", "updatedAt"]),
 
 	// Message reactions and emotions
 	messageReactions: defineTable({

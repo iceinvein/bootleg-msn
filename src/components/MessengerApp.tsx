@@ -9,6 +9,7 @@ import { $selectedChat } from "@/stores/contact";
 import { AccountLinkingNotification } from "./AccountLinkingNotification";
 import { Chat } from "./Chat";
 import { ContactList } from "./ContactList";
+import { ForceUpdateOverlay } from "./ForceUpdateOverlay";
 import { StatusBar } from "./StatusBar";
 import {
 	ResizableHandle,
@@ -95,6 +96,8 @@ export function MessengerApp() {
 
 	return (
 		<div className="flex h-screen flex-col">
+			{/* Force update overlay */}
+			<ForceUpdateOverlay />
 			{/* Account linking notification */}
 			<AccountLinkingNotification />
 
