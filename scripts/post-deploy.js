@@ -29,24 +29,65 @@ const siteUrl = process.env.DEPLOY_PRIME_URL || process.env.URL || 'https://your
 const buildJsonUrl = `${siteUrl}/build.json`;
 
 // Check if this is a force deployment by looking at commit message
-// Netlify provides commit message in different env vars depending on trigger
-const commitMessage = process.env.HEAD_COMMIT_MESSAGE ||
-                     process.env.COMMIT_MESSAGE ||
-                     process.env.CACHED_COMMIT_REF ||
-                     '';
-const isForceDeployment = commitMessage.toLowerCase().includes('[force]');
-
-// Debug: Log all commit-related env vars
-console.log('🔍 Commit environment variables:');
-console.log('  HEAD_COMMIT_MESSAGE:', process.env.HEAD_COMMIT_MESSAGE);
-console.log('  COMMIT_MESSAGE:', process.env.COMMIT_MESSAGE);
-console.log('  CACHED_COMMIT_REF:', process.env.CACHED_COMMIT_REF);
+// Netlify doesn't provide commit message environment variables, so we use git directly
+console.log('🔍 Netlify Git environment variables:');
 console.log('  COMMIT_REF:', process.env.COMMIT_REF);
+console.log('  CACHED_COMMIT_REF:', process.env.CACHED_COMMIT_REF);
+console.log('  HEAD:', process.env.HEAD);
+console.log('  BRANCH:', process.env.BRANCH);
+
+// Get commit messages for this release (Netlify doesn't provide commit message env vars)
+let commitMessages = [];
+let isForceDeployment = false;
+
+try {
+  // Get all commit messages since the last cached commit (i.e., this release)
+  const cachedCommitRef = process.env.CACHED_COMMIT_REF;
+  const currentCommitRef = process.env.COMMIT_REF;
+
+  if (cachedCommitRef && currentCommitRef && cachedCommitRef !== currentCommitRef) {
+    // Get all commits in this release: from cached (exclusive) to current (inclusive)
+    const commitRange = `${cachedCommitRef}..${currentCommitRef}`;
+    const allMessages = execSync(`git log ${commitRange} --pretty=%B`, { encoding: 'utf8' }).trim();
+    commitMessages = allMessages.split('\n').filter(line => line.trim());
+    console.log('📝 Commit messages in this release:', commitMessages);
+  } else {
+    // Fallback: just get the latest commit message
+    const latestMessage = execSync('git log -1 --pretty=%B', { encoding: 'utf8' }).trim();
+    commitMessages = [latestMessage];
+    console.log('📝 Latest commit message:', latestMessage);
+  }
+
+  // Check if any commit message contains [force]
+  isForceDeployment = commitMessages.some(msg =>
+    msg.toLowerCase().includes('[force]')
+  );
+
+  if (isForceDeployment) {
+    const forceCommits = commitMessages.filter(msg =>
+      msg.toLowerCase().includes('[force]')
+    );
+    console.log('⚡ Force deployment commits found:', forceCommits);
+  }
+
+} catch (error) {
+  console.log('❌ Failed to get commit messages via git:', error.message);
+  // Fallback: try just the latest commit
+  try {
+    const latestMessage = execSync('git log -1 --pretty=%B', { encoding: 'utf8' }).trim();
+    commitMessages = [latestMessage];
+    isForceDeployment = latestMessage.toLowerCase().includes('[force]');
+    console.log('📝 Fallback to latest commit:', latestMessage);
+  } catch (fallbackError) {
+    console.log('❌ Fallback also failed:', fallbackError.message);
+  }
+}
+
+console.log('⚡ Force deployment detected:', isForceDeployment);
 
 console.log('🚀 Starting deployment tracking...');
 console.log(`📍 Site URL: ${siteUrl}`);
 console.log(`🔗 Build JSON URL: ${buildJsonUrl}`);
-console.log(`📝 Commit message: ${commitMessage}`);
 if (isForceDeployment) {
   console.log('⚡ Force deployment detected!');
 }
