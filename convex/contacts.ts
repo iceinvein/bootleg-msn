@@ -296,6 +296,61 @@ export const getContacts = query({
 					lastMessage = lastReceived;
 				}
 
+				// Get last nudge between the users (both directions)
+				const nudges = await ctx.db
+					.query("nudges")
+					.filter((q) =>
+						q.and(
+							q.or(
+								q.and(
+									q.eq(q.field("fromUserId"), userId),
+									q.eq(q.field("toUserId"), contact.contactUserId),
+								),
+								q.and(
+									q.eq(q.field("fromUserId"), contact.contactUserId),
+									q.eq(q.field("toUserId"), userId),
+								),
+							),
+							q.eq(q.field("conversationType"), "direct"),
+						),
+					)
+					.order("desc")
+					.take(1);
+				const lastNudge = nudges[0];
+
+				// Determine which is more recent: message or nudge
+				let lastInteractionTime: number | undefined;
+				let lastInteractionContent: string | undefined;
+				let lastInteractionType: string | undefined;
+				let lastInteractionFromMe: boolean = false;
+
+				const messageTime = lastMessage?._creationTime;
+				const nudgeTime = lastNudge?.createdAt;
+
+				if (nudgeTime && (!messageTime || nudgeTime > messageTime)) {
+					// Nudge is more recent
+					lastInteractionTime = nudgeTime;
+					const nudgeTypeText =
+						lastNudge.nudgeType === "buzz" ? "buzz" : "nudge";
+					if (lastNudge.fromUserId === userId) {
+						lastInteractionContent = `You sent a ${nudgeTypeText} 👋`;
+					} else {
+						// Get sender name for received nudge
+						const nudgeSender = await ctx.db.get(lastNudge.fromUserId);
+						const senderName =
+							nudgeSender?.name || nudgeSender?.email || "Someone";
+						lastInteractionContent = `${senderName} sent you a ${nudgeTypeText}! 👋`;
+					}
+					lastInteractionType = "nudge";
+					lastInteractionFromMe = lastNudge.fromUserId === userId;
+				} else if (lastMessage) {
+					// Message is more recent (or no nudge exists)
+					lastInteractionTime = lastMessage._creationTime;
+					lastInteractionContent = lastMessage.content;
+					lastInteractionType = lastMessage.messageType;
+					lastInteractionFromMe = lastMessage.senderId === userId;
+				}
+
 				return {
 					...contact,
 					user,
@@ -303,12 +358,10 @@ export const getContacts = query({
 					statusMessage: status?.statusMessage,
 					lastSeen: status?.lastSeen,
 					unreadCount: unreadCount.length,
-					lastMessageTime: lastMessage?._creationTime,
-					lastMessageContent: lastMessage?.content,
-					lastMessageType: lastMessage?.messageType,
-					lastMessageFromMe: lastMessage
-						? lastMessage.senderId === userId
-						: false,
+					lastMessageTime: lastInteractionTime,
+					lastMessageContent: lastInteractionContent,
+					lastMessageType: lastInteractionType,
+					lastMessageFromMe: lastInteractionFromMe,
 				};
 			}),
 		);

@@ -94,6 +94,7 @@ function previewText(messageType?: string, content?: string): string {
 	if (messageType === "file") return "Sent a file";
 	if (messageType === "emoji") return content;
 	if (messageType === "system") return content;
+	if (messageType === "nudge") return content; // "Nudge" or "Buzz"
 	return content;
 }
 
@@ -192,7 +193,12 @@ export function ContactList() {
 											<div className="mt-1 flex items-center justify-between">
 												<p className="truncate text-muted-foreground text-xs md:text-sm">
 													{group.lastMessageContent
-														? `${group.lastMessageFromMe ? "You" : (group.lastMessageSenderName ?? "Someone")}: ${previewText(group.lastMessageType, group.lastMessageContent)}`
+														? group.lastMessageType === "nudge"
+															? previewText(
+																	group.lastMessageType,
+																	group.lastMessageContent,
+																)
+															: `${group.lastMessageFromMe ? "You" : (group.lastMessageSenderName ?? "Someone")}: ${previewText(group.lastMessageType, group.lastMessageContent)}`
 														: typeof group.memberCount === "number"
 															? `${group.memberCount} members`
 															: "Group chat"}
@@ -310,7 +316,7 @@ export function ContactList() {
 									<div className="mt-1 flex items-center justify-between">
 										<p className="truncate text-muted-foreground text-xs md:text-sm">
 											{contact.lastMessageContent
-												? `${contact.lastMessageFromMe ? "You: " : ""}${previewText(contact.lastMessageType, contact.lastMessageContent)}`
+												? `${contact.lastMessageFromMe && contact.lastMessageType !== "nudge" ? "You: " : ""}${previewText(contact.lastMessageType, contact.lastMessageContent)}`
 												: getStatusDisplayText(
 														contact.status,
 														contact.statusMessage,

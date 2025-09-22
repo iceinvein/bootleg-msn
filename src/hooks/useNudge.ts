@@ -113,10 +113,6 @@ export function useNudge(): UseNudgeReturn {
 				if (nudgeId) {
 					// Start cooldown timer
 					setCooldownRemaining(30);
-
-					toast.success(`${nudgeType === "buzz" ? "Buzz" : "Nudge"} sent!`, {
-						duration: 2000,
-					});
 				}
 			} catch (error) {
 				console.error("Failed to send nudge:", error);

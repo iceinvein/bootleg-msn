@@ -292,18 +292,66 @@ export const getUserGroups = query({
 				const lastMessageSenderName =
 					lastSender?.name || lastSender?.email || undefined;
 
+				// Get last nudge in the group
+				const groupNudges = await ctx.db
+					.query("nudges")
+					.filter((q) =>
+						q.and(
+							q.eq(q.field("conversationId"), group._id),
+							q.eq(q.field("conversationType"), "group"),
+						),
+					)
+					.order("desc")
+					.take(1);
+				const lastNudge = groupNudges[0];
+
+				// Determine which is more recent: message or nudge
+				let lastInteractionTime: number | undefined;
+				let lastInteractionContent: string | undefined;
+				let lastInteractionType: string | undefined;
+				let lastInteractionFromMe: boolean = false;
+				let lastInteractionSenderName: string | undefined;
+
+				const messageTime = lastMessage?._creationTime;
+				const nudgeTime = lastNudge?.createdAt;
+
+				if (nudgeTime && (!messageTime || nudgeTime > messageTime)) {
+					// Nudge is more recent
+					lastInteractionTime = nudgeTime;
+					const nudgeTypeText =
+						lastNudge.nudgeType === "buzz" ? "buzz" : "nudge";
+					if (lastNudge.fromUserId === userId) {
+						lastInteractionContent = `You sent a ${nudgeTypeText} 👋`;
+						lastInteractionSenderName = undefined; // Clear sender name for own messages
+					} else {
+						// Get nudge sender name
+						const nudgeSender = await ctx.db.get(lastNudge.fromUserId);
+						const senderName =
+							nudgeSender?.name || nudgeSender?.email || "Someone";
+						lastInteractionContent = `${senderName} sent a ${nudgeTypeText}! 👋`;
+						lastInteractionSenderName = senderName;
+					}
+					lastInteractionType = "nudge";
+					lastInteractionFromMe = lastNudge.fromUserId === userId;
+				} else if (lastMessage) {
+					// Message is more recent (or no nudge exists)
+					lastInteractionTime = lastMessageTime;
+					lastInteractionContent = lastMessage.content;
+					lastInteractionType = lastMessage.messageType;
+					lastInteractionFromMe = lastMessage.senderId === userId;
+					lastInteractionSenderName = lastMessageSenderName;
+				}
+
 				return {
 					...group,
 					memberCount: memberCount.length,
 					unreadCount: userUnreadCount,
 					userRole: membership.role,
-					lastMessageTime,
-					lastMessageContent: lastMessage?.content,
-					lastMessageType: lastMessage?.messageType,
-					lastMessageFromMe: lastMessage
-						? lastMessage.senderId === userId
-						: false,
-					lastMessageSenderName,
+					lastMessageTime: lastInteractionTime,
+					lastMessageContent: lastInteractionContent,
+					lastMessageType: lastInteractionType,
+					lastMessageFromMe: lastInteractionFromMe,
+					lastMessageSenderName: lastInteractionSenderName,
 				};
 			}),
 		);
