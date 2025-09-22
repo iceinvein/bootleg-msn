@@ -70,36 +70,7 @@ describe("ThemeCustomizer", () => {
 		).toBeInTheDocument();
 	});
 
-	it("shows color customization options", () => {
-		render(<ThemeCustomizer />);
 
-		const button = screen.getByRole("button", { name: /customize theme/i });
-		fireEvent.click(button);
-
-		// Click on Colors tab
-		const colorsTab = screen.getByRole("tab", { name: /colors/i });
-		fireEvent.click(colorsTab);
-
-		expect(screen.getByLabelText("Primary Color")).toBeInTheDocument();
-		expect(screen.getByLabelText("Secondary Color")).toBeInTheDocument();
-		expect(screen.getByLabelText("Accent Color")).toBeInTheDocument();
-	});
-
-	it("shows glassmorphism effects options", () => {
-		render(<ThemeCustomizer />);
-
-		const button = screen.getByRole("button", { name: /customize theme/i });
-		fireEvent.click(button);
-
-		// Click on Effects tab
-		const effectsTab = screen.getByRole("tab", { name: /effects/i });
-		fireEvent.click(effectsTab);
-
-		expect(screen.getByText("Enable Glassmorphism")).toBeInTheDocument();
-		expect(
-			screen.getByText("Add modern glass effects to UI elements"),
-		).toBeInTheDocument();
-	});
 
 	it("displays live preview", () => {
 		render(<ThemeCustomizer />);

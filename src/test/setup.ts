@@ -16,6 +16,33 @@ vi.mock("next-themes", () => ({
 	}),
 }));
 
+// Mock window.matchMedia
+Object.defineProperty(window, "matchMedia", {
+	writable: true,
+	value: vi.fn().mockImplementation((query: string) => ({
+		matches: false,
+		media: query,
+		onchange: null,
+		addListener: vi.fn(), // deprecated
+		removeListener: vi.fn(), // deprecated
+		addEventListener: vi.fn(),
+		removeEventListener: vi.fn(),
+		dispatchEvent: vi.fn(),
+	})),
+});
+
+// Mock HTMLMediaElement.play() method
+Object.defineProperty(HTMLMediaElement.prototype, "play", {
+	writable: true,
+	value: vi.fn().mockImplementation(() => Promise.resolve()),
+});
+
+// Mock HTMLMediaElement.pause() method
+Object.defineProperty(HTMLMediaElement.prototype, "pause", {
+	writable: true,
+	value: vi.fn(),
+});
+
 // Mock file API
 Object.defineProperty(window, "File", {
 	value: class MockFile {

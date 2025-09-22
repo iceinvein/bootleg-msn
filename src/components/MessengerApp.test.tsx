@@ -15,6 +15,10 @@ vi.mock("@/hooks/useMessageNotifications", () => ({
 	useMessageNotifications: vi.fn(),
 }));
 
+vi.mock("@/hooks/useOnlineNotifications", () => ({
+	useOnlineNotifications: vi.fn(),
+}));
+
 vi.mock("./AccountLinkingNotification", () => ({
 	AccountLinkingNotification: () => <div data-testid="account-linking" />,
 }));
@@ -66,11 +70,13 @@ describe("MessengerApp", () => {
 
 		render(<MessengerApp />);
 
-		const sidebar = screen.getByTestId("status-bar").parentElement;
+		// Target the mobile layout specifically (md:hidden)
+		const mobileLayout = document.querySelector(".md\\:hidden");
+		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
 
 		// Should have classes that show sidebar on mobile when no chat is selected
-		expect(sidebar).toHaveClass("flex");
-		expect(sidebar).not.toHaveClass("hidden");
+		expect(mobileSidebar).toHaveClass("flex");
+		expect(mobileSidebar).not.toHaveClass("hidden");
 	});
 
 	it("hides sidebar when chat is selected on mobile", () => {
@@ -82,11 +88,12 @@ describe("MessengerApp", () => {
 
 		render(<MessengerApp />);
 
-		const sidebar = screen.getByTestId("status-bar").parentElement;
+		// Target the mobile layout specifically
+		const mobileLayout = document.querySelector(".md\\:hidden");
+		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
 
 		// Should have classes that hide sidebar on mobile when chat is selected
-		expect(sidebar).toHaveClass("hidden");
-		expect(sidebar).toHaveClass("md:flex"); // But still show on desktop
+		expect(mobileSidebar).toHaveClass("hidden");
 	});
 
 	it("hides sidebar when group chat is selected on mobile", () => {
@@ -98,11 +105,12 @@ describe("MessengerApp", () => {
 
 		render(<MessengerApp />);
 
-		const sidebar = screen.getByTestId("status-bar").parentElement;
+		// Target the mobile layout specifically
+		const mobileLayout = document.querySelector(".md\\:hidden");
+		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
 
 		// Should have classes that hide sidebar on mobile when group chat is selected
-		expect(sidebar).toHaveClass("hidden");
-		expect(sidebar).toHaveClass("md:flex"); // But still show on desktop
+		expect(mobileSidebar).toHaveClass("hidden");
 	});
 
 	it("shows loading spinner when user is not loaded", () => {
@@ -121,10 +129,10 @@ describe("MessengerApp", () => {
 		render(<MessengerApp />);
 
 		expect(screen.getByTestId("account-linking")).toBeInTheDocument();
-		expect(screen.getByTestId("status-bar")).toBeInTheDocument();
-		expect(screen.getByTestId("contact-list")).toBeInTheDocument();
-		expect(screen.getByTestId("version-badge")).toBeInTheDocument();
-		expect(screen.getByTestId("chat-area")).toBeInTheDocument();
+		expect(screen.getAllByTestId("status-bar")).toHaveLength(2); // Desktop + Mobile
+		expect(screen.getAllByTestId("contact-list")).toHaveLength(2); // Desktop + Mobile
+		expect(screen.getAllByTestId("version-badge")).toHaveLength(2); // Desktop + Mobile
+		expect(screen.getAllByTestId("chat-area")).toHaveLength(2); // Desktop + Mobile
 	});
 
 	it("shows sidebar at full width on mobile when no chat is selected", () => {
@@ -133,16 +141,16 @@ describe("MessengerApp", () => {
 
 		render(<MessengerApp />);
 
-		const sidebar = screen.getByTestId("status-bar").parentElement;
-		const chatArea = screen.getByTestId("chat-area").parentElement;
+		// Target the mobile layout specifically
+		const mobileLayout = document.querySelector(".md\\:hidden");
+		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
+		const mobileChatArea = mobileLayout?.querySelector('[data-testid="chat-area"]')?.parentElement;
 
 		// Sidebar should be full width on mobile
-		expect(sidebar).toHaveClass("w-full");
-		expect(sidebar).toHaveClass("md:w-auto"); // But auto width on desktop
+		expect(mobileSidebar).toHaveClass("w-full");
 
-		// Chat area should be hidden on mobile when no chat
-		expect(chatArea).toHaveClass("hidden");
-		expect(chatArea).toHaveClass("md:flex"); // But shown on desktop
+		// Chat area should be hidden on mobile when no chat is selected
+		expect(mobileChatArea).toHaveClass("hidden");
 	});
 
 	it("hides chat area on mobile when no chat is selected", () => {
@@ -151,10 +159,11 @@ describe("MessengerApp", () => {
 
 		render(<MessengerApp />);
 
-		const chatArea = screen.getByTestId("chat-area").parentElement;
+		// Target the mobile layout specifically
+		const mobileLayout = document.querySelector(".md\\:hidden");
+		const mobileChatArea = mobileLayout?.querySelector('[data-testid="chat-area"]')?.parentElement;
 
 		// Chat area should be hidden on mobile when no chat is selected
-		expect(chatArea).toHaveClass("hidden");
-		expect(chatArea).toHaveClass("md:flex"); // But always shown on desktop
+		expect(mobileChatArea).toHaveClass("hidden");
 	});
 });

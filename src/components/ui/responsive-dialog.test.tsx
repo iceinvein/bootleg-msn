@@ -28,7 +28,7 @@ describe("ResponsiveDialog", () => {
 
 		render(
 			<ResponsiveDialog>
-				<ResponsiveDialogTrigger>
+				<ResponsiveDialogTrigger asChild>
 					<button>Open Dialog</button>
 				</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent>
@@ -52,7 +52,7 @@ describe("ResponsiveDialog", () => {
 
 		render(
 			<ResponsiveDialog>
-				<ResponsiveDialogTrigger>
+				<ResponsiveDialogTrigger asChild>
 					<button>Open Drawer</button>
 				</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent>
@@ -77,7 +77,7 @@ describe("ResponsiveDialog", () => {
 
 		render(
 			<ResponsiveDialog open={true} onOpenChange={onOpenChange}>
-				<ResponsiveDialogTrigger>
+				<ResponsiveDialogTrigger asChild>
 					<button>Trigger</button>
 				</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent>
@@ -93,8 +93,8 @@ describe("ResponsiveDialog", () => {
 		mockUseMediaQuery.mockReturnValue(false); // Desktop
 
 		render(
-			<ResponsiveDialog>
-				<ResponsiveDialogTrigger>
+			<ResponsiveDialog open={true}>
+				<ResponsiveDialogTrigger asChild>
 					<button>Trigger</button>
 				</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent glass={true} showCloseButton={false}>
@@ -110,8 +110,8 @@ describe("ResponsiveDialog", () => {
 		mockUseMediaQuery.mockReturnValue(false);
 
 		render(
-			<ResponsiveDialog>
-				<ResponsiveDialogTrigger>
+			<ResponsiveDialog open={true}>
+				<ResponsiveDialogTrigger asChild>
 					<button>Trigger</button>
 				</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent className="custom-class">

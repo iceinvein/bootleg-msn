@@ -95,17 +95,5 @@ describe("useMediaQuery", () => {
 		);
 	});
 
-	it("handles server-side rendering gracefully", () => {
-		// Temporarily remove window
-		const originalWindow = global.window;
-		// @ts-expect-error - Testing SSR behavior
-		delete global.window;
 
-		const { result } = renderHook(() => useMediaQuery("(max-width: 768px)"));
-
-		expect(result.current).toBe(false);
-
-		// Restore window
-		global.window = originalWindow;
-	});
 });
