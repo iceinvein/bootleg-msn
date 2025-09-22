@@ -264,6 +264,13 @@ describe("useMessageNotifications", () => {
 	it("should not show notification when chat is active", async () => {
 		vi.mocked(chatWindowHelpers.isChatActiveAnywhere).mockReturnValue(true);
 
+		// Mock document.hasFocus to return true so window is considered focused
+		const mockHasFocus = vi.fn().mockReturnValue(true);
+		Object.defineProperty(document, 'hasFocus', {
+			value: mockHasFocus,
+			writable: true,
+		});
+
 		mockUseQuery
 			.mockReturnValueOnce(mockUser) // user (first render)
 			.mockReturnValueOnce([]) // allMessages (first render)

@@ -407,6 +407,18 @@ export const getAllUserMessages = query({
 			.sort((a, b) => b._creationTime - a._creationTime)
 			.slice(0, 200); // Final limit for performance
 
-		return allMessages;
+		// Get sender details for each message and add isFromMe flag
+		const messagesWithSenders = await Promise.all(
+			allMessages.map(async (message) => {
+				const sender = await ctx.db.get(message.senderId);
+				return {
+					...message,
+					sender,
+					isFromMe: message.senderId === userId,
+				};
+			}),
+		);
+
+		return messagesWithSenders;
 	},
 });

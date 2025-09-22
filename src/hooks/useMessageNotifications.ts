@@ -218,9 +218,12 @@ export function useMessageNotifications() {
 				const group = groups?.find((g) => g?._id === message.groupId);
 				return group?.name || "Unknown Group";
 			} else {
-				const contact = contacts?.find(
-					(c) => c.contactUserId === message.senderId,
-				);
+				// For direct messages, find the OTHER person in the conversation
+				// If message is from me, look for the receiver; otherwise look for the sender
+				const otherUserId = message.isFromMe
+					? message.receiverId
+					: message.senderId;
+				const contact = contacts?.find((c) => c.contactUserId === otherUserId);
 				return (
 					contact?.nickname ||
 					contact?.user?.name ||
@@ -237,10 +240,12 @@ export function useMessageNotifications() {
 		if (message.groupId) {
 			return chatWindowHelpers.isChatActiveAnywhere("group", message.groupId);
 		} else {
-			return chatWindowHelpers.isChatActiveAnywhere(
-				"contact",
-				message.senderId,
-			);
+			// For direct messages, check if the chat with the OTHER person is active
+			// If message is from me, check the receiver; otherwise check the sender
+			const otherUserId = message.isFromMe
+				? message.receiverId
+				: message.senderId;
+			return chatWindowHelpers.isChatActiveAnywhere("contact", otherUserId);
 		}
 	}, []);
 
@@ -253,9 +258,12 @@ export function useMessageNotifications() {
 					$selectedChat.set({ contact: null, group });
 				}
 			} else {
-				const contact = contacts?.find(
-					(c) => c.contactUserId === message.senderId,
-				);
+				// For direct messages, open the chat with the OTHER person
+				// If message is from me, open chat with receiver; otherwise open chat with sender
+				const otherUserId = message.isFromMe
+					? message.receiverId
+					: message.senderId;
+				const contact = contacts?.find((c) => c.contactUserId === otherUserId);
 				if (contact) {
 					$selectedChat.set({ contact, group: null });
 				}
@@ -298,9 +306,13 @@ export function useMessageNotifications() {
 			if (isDesktopNotificationSupported) {
 				try {
 					// Generate a unique chat ID for the notification
+					// For direct messages, use the OTHER person's ID to identify the chat
+					const otherUserId = message.isFromMe
+						? message.receiverId
+						: message.senderId;
 					const chatId = message.groupId
 						? `group:${message.groupId}`
-						: `contact:${message.senderId}`;
+						: `contact:${otherUserId}`;
 
 					await notifyNewMessage(
 						message._id,
@@ -319,9 +331,13 @@ export function useMessageNotifications() {
 			if (isBrowserEnvironment && canNotifyBrowser) {
 				try {
 					// Generate a unique chat ID for the notification
+					// For direct messages, use the OTHER person's ID to identify the chat
+					const otherUserId = message.isFromMe
+						? message.receiverId
+						: message.senderId;
 					const chatId = message.groupId
 						? `group:${message.groupId}`
-						: `contact:${message.senderId}`;
+						: `contact:${otherUserId}`;
 
 					await notifyBrowserMessage(
 						message._id,
