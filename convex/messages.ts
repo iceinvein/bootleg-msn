@@ -109,6 +109,16 @@ export const sendMessage = mutation({
 			throw new Error("Not authenticated");
 		}
 
+		// Validate that either receiverId or groupId is provided, but not both
+		if (
+			(!args.receiverId && !args.groupId) ||
+			(args.receiverId && args.groupId)
+		) {
+			throw new Error(
+				"Must specify either receiverId or groupId, but not both",
+			);
+		}
+
 		// If it's a group message, verify user is a member
 		if (args.groupId) {
 			const groupId = args.groupId; // TypeScript now knows this is not undefined
@@ -125,7 +135,7 @@ export const sendMessage = mutation({
 			}
 		}
 
-		await ctx.db.insert("messages", {
+		const messageId = await ctx.db.insert("messages", {
 			senderId: userId,
 			receiverId: args.receiverId,
 			groupId: args.groupId,
@@ -140,8 +150,12 @@ export const sendMessage = mutation({
 
 		// Schedule push notifications depending on conversation type
 		// Suppress for system messages (only send for text/emoji/file)
+		// Skip push notifications in test environment
 		const isSystem = args.messageType === "system";
-		if (!isSystem) {
+		const isTestEnvironment =
+			process.env.NODE_ENV === "test" || !process.env.CONVEX_SITE_URL;
+
+		if (!isSystem && !isTestEnvironment) {
 			if (args.receiverId) {
 				await ctx.scheduler.runAfter(0, api.push.notifyNewDirectMessage, {
 					senderId: userId,
@@ -156,6 +170,8 @@ export const sendMessage = mutation({
 				});
 			}
 		}
+
+		return messageId;
 	},
 });
 
