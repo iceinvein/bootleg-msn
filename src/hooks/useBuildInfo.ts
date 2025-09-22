@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export type BuildInfo = {
 	buildId: string;
@@ -67,7 +67,7 @@ export function useBuildInfo() {
 }
 
 /**
- * Hook to fetch the latest deployed build info from CDN
+ * Hook to fetch the latest deployed build info from CDN with automatic periodic updates
  * Used for comparison to detect if updates are available
  */
 export function useServerBuildInfo() {
@@ -76,8 +76,13 @@ export function useServerBuildInfo() {
 	);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const intervalRef = useRef<number | null>(null);
+	const isActiveRef = useRef(true);
 
-	const fetchServerBuildInfo = async () => {
+	const fetchServerBuildInfo = useCallback(async () => {
+		// Don't fetch if component is unmounted
+		if (!isActiveRef.current) return;
+
 		try {
 			setIsLoading(true);
 			setError(null);
@@ -98,21 +103,61 @@ export function useServerBuildInfo() {
 				throw new Error("Invalid build.json: missing buildId or version");
 			}
 
-			setServerBuildInfo({
-				buildId: data.buildId,
-				version: data.version,
-				timestamp: data.timestamp || Date.now(),
-				commit: data.commit || "unknown",
-				channel: data.channel || "prod",
-			});
+			// Only update state if component is still mounted
+			if (isActiveRef.current) {
+				setServerBuildInfo({
+					buildId: data.buildId,
+					version: data.version,
+					timestamp: data.timestamp || Date.now(),
+					commit: data.commit || "unknown",
+					channel: data.channel || "prod",
+				});
+			}
 		} catch (err) {
 			const errorMessage = err instanceof Error ? err.message : "Unknown error";
 			console.warn("Failed to fetch server build.json:", errorMessage);
-			setError(errorMessage);
-		} finally {
-			setIsLoading(false);
-		}
-	};
 
-	return { serverBuildInfo, isLoading, error, fetchServerBuildInfo };
+			// Only update error state if component is still mounted
+			if (isActiveRef.current) {
+				setError(errorMessage);
+			}
+		} finally {
+			// Only update loading state if component is still mounted
+			if (isActiveRef.current) {
+				setIsLoading(false);
+			}
+		}
+	}, []);
+
+	// Set up automatic periodic fetching
+	useEffect(() => {
+		// Initial fetch
+		fetchServerBuildInfo();
+
+		// Set up periodic fetching every 30 seconds
+		intervalRef.current = window.setInterval(fetchServerBuildInfo, 30000);
+
+		// Cleanup function
+		return () => {
+			isActiveRef.current = false;
+			if (intervalRef.current) {
+				clearInterval(intervalRef.current);
+				intervalRef.current = null;
+			}
+		};
+	}, [fetchServerBuildInfo]);
+
+	// Manual fetch function for external use (optional)
+	const refetch = useCallback(() => {
+		fetchServerBuildInfo();
+	}, [fetchServerBuildInfo]);
+
+	return {
+		serverBuildInfo,
+		isLoading,
+		error,
+		refetch,
+		// Keep the old name for backward compatibility
+		fetchServerBuildInfo: refetch,
+	};
 }

@@ -168,7 +168,7 @@ async function testForceUpdatePolicy(buildInfo) {
   }));
   
   // Test old client (should be forced to update)
-  const oldClientResult = await runConvex('deployment:checkForUpdatesV2', JSON.stringify({
+  const oldClientResult = await runConvex('deployment:checkForceUpdatePolicy', JSON.stringify({
     clientBuildTimestamp: oldTimestamp,
     channel: buildInfo.channel
   }));
@@ -178,7 +178,7 @@ async function testForceUpdatePolicy(buildInfo) {
   }
   
   // Test new client (should not be forced to update)
-  const newClientResult = await runConvex('deployment:checkForUpdatesV2', JSON.stringify({
+  const newClientResult = await runConvex('deployment:checkForceUpdatePolicy', JSON.stringify({
     clientBuildTimestamp: buildInfo.timestamp,
     channel: buildInfo.channel
   }));

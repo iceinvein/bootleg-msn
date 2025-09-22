@@ -207,7 +207,7 @@ export const getLatestAppPolicy = query({
 	},
 });
 
-export const checkForUpdatesV2 = query({
+export const checkForceUpdatePolicy = query({
 	args: {
 		clientBuildTimestamp: v.number(), // ms since epoch
 		channel: v.string(),

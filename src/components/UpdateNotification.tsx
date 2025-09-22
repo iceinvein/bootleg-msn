@@ -63,8 +63,8 @@ export function UpdateNotification() {
 	// Get current app's embedded build info (actual running version)
 	const { buildInfo } = useBuildInfo();
 
-	// Get server's latest build info for comparison
-	const { serverBuildInfo, fetchServerBuildInfo } = useServerBuildInfo();
+	// Get server's latest build info for comparison (automatically fetches periodically)
+	const { serverBuildInfo } = useServerBuildInfo();
 
 	// Check for updates by comparing client vs server build info
 	const hasUpdate =
@@ -83,17 +83,7 @@ export function UpdateNotification() {
 			: "skip",
 	);
 
-	// Periodically check for server updates
-	useEffect(() => {
-		if (!buildInfo) return;
-
-		// Initial check
-		fetchServerBuildInfo();
-
-		// Check every 30 seconds
-		const interval = setInterval(fetchServerBuildInfo, 30000);
-		return () => clearInterval(interval);
-	}, [buildInfo, fetchServerBuildInfo]);
+	// Note: serverBuildInfo hook automatically handles periodic fetching
 
 	// Debug logging
 	debugLog("🔄 Update Check Debug:", {
@@ -187,7 +177,7 @@ export function UpdateNotification() {
 			return;
 		}
 
-		// Skip toast for force deployments - ForceUpdateOverlay will handle it
+		// Skip toast for force deployments - ForceUpdateOverlay will handle them
 		if (buildUpdate?.forceDeployment) {
 			debugLog(
 				"⚡ Force deployment detected - skipping toast, overlay will handle",

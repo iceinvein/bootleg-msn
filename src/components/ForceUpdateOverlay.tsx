@@ -1,15 +1,19 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
-import { useBuildInfo } from "../hooks";
+import { useBuildInfo, useServerBuildInfo } from "../hooks";
 
 const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
 
 export function ForceUpdateOverlay() {
-	// Get current build info from deployed build.json
+	// Get current app's embedded build info (actual running version)
 	const { buildInfo } = useBuildInfo();
 
-	const res = useQuery(
-		api.deployment.checkForUpdatesV2,
+	// Get server's latest build info for comparison (automatically fetches periodically)
+	const { serverBuildInfo } = useServerBuildInfo();
+
+	// Check for admin force update policy (timestamp-based)
+	const adminForceUpdate = useQuery(
+		api.deployment.checkForceUpdatePolicy,
 		buildInfo
 			? {
 					clientBuildTimestamp: buildInfo.timestamp,
@@ -18,11 +22,35 @@ export function ForceUpdateOverlay() {
 			: "skip",
 	);
 
-	if (!res || !res.mustUpdate) return null;
+	// Check for force deployment (build-ID-based)
+	const buildUpdate = useQuery(
+		api.deployment.checkForUpdatesByBuild,
+		buildInfo
+			? {
+					clientBuildId: buildInfo.buildId,
+					channel: CHANNEL,
+				}
+			: "skip",
+	);
 
-	const message =
-		res.forceMessage ||
-		"A new version of the app is required. Please update to continue.";
+	// Note: serverBuildInfo hook automatically handles periodic fetching
+
+	// Check if update is needed and it's a force deployment
+	const hasForceDeployment =
+		buildInfo &&
+		serverBuildInfo &&
+		buildInfo.buildId !== serverBuildInfo.buildId &&
+		buildUpdate?.forceDeployment;
+
+	// Show overlay for either admin force update OR force deployment
+	const shouldShowOverlay = adminForceUpdate?.mustUpdate || hasForceDeployment;
+
+	if (!shouldShowOverlay) return null;
+
+	const message = hasForceDeployment
+		? "A critical update is required. Please refresh to continue."
+		: adminForceUpdate?.forceMessage ||
+			"A new version of the app is required. Please update to continue.";
 
 	const onUpdate = async () => {
 		try {
