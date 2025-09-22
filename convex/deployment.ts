@@ -16,6 +16,7 @@ export const beginDeployment = internalMutation({
 		commit: v.optional(v.string()),
 		channel: v.string(),
 		timestamp: v.optional(v.number()),
+		forceDeployment: v.optional(v.boolean()),
 	},
 	handler: async (ctx, a) => {
 		await ctx.db.insert("deploymentReleases", {
@@ -25,6 +26,7 @@ export const beginDeployment = internalMutation({
 			channel: a.channel,
 			status: "publishing",
 			timestamp: a.timestamp ?? Date.now(),
+			forceDeployment: a.forceDeployment ?? false,
 		});
 	},
 });
@@ -143,6 +145,7 @@ export const checkForUpdatesByBuild = query({
 		version: v.optional(v.string()),
 		status: v.string(),
 		debugInfo: v.string(),
+		forceDeployment: v.optional(v.boolean()),
 	}),
 	handler: async (ctx, a) => {
 		const latest = await ctx.db
@@ -158,6 +161,7 @@ export const checkForUpdatesByBuild = query({
 				version: "unknown",
 				status: "none",
 				debugInfo: "No releases",
+				forceDeployment: false,
 			};
 		}
 
@@ -169,6 +173,7 @@ export const checkForUpdatesByBuild = query({
 			version: latest.version,
 			status: latest.status,
 			debugInfo: `server=${latest.buildId} client=${a.clientBuildId} status=${latest.status}`,
+			forceDeployment: latest.forceDeployment,
 		};
 	},
 });

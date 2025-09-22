@@ -74,11 +74,15 @@ function listReleases(channel = 'prod') {
       const date = new Date(release.timestamp).toISOString();
       const status = release.status === 'live' ? '🟢' :
                     release.status === 'publishing' ? '🟡' : '🔴';
+      const forceFlag = release.forceDeployment ? ' ⚡' : '';
 
-      console.log(`${index + 1}. ${status} ${release.buildId}`);
+      console.log(`${index + 1}. ${status} ${release.buildId}${forceFlag}`);
       console.log(`   Status: ${release.status}`);
       console.log(`   Version: ${release.version || 'N/A'}`);
       console.log(`   Date: ${date}`);
+      if (release.forceDeployment) {
+        console.log(`   🚀 Force deployment`);
+      }
       console.log('');
     });
   } catch (error) {

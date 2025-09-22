@@ -65,11 +65,19 @@ export function VersionInfo() {
 					)}
 			</div>
 			{latestLive && (
-				<div className="text-xs opacity-75">Latest deployed {timeAgo}</div>
+				<div className="text-xs opacity-75">
+					Latest deployed {timeAgo}
+					{latestLive.forceDeployment && (
+						<span className="ml-1 text-orange-400">⚡</span>
+					)}
+				</div>
 			)}
 			{newestRelease?.status === "publishing" && (
 				<div className="text-blue-400 text-xs opacity-75">
 					New version publishing: {newestRelease.version}
+					{newestRelease.forceDeployment && (
+						<span className="ml-1 text-orange-400">⚡</span>
+					)}
 				</div>
 			)}
 		</div>

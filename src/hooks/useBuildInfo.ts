@@ -52,9 +52,9 @@ export function useBuildInfo() {
 				console.warn("Failed to fetch build.json:", errorMessage);
 				setError(errorMessage);
 
-				// Fallback to Vite env vars if build.json fails
+				// Fallback for development/local builds when build.json fails
 				setBuildInfo({
-					buildId: (import.meta.env.VITE_BUILD_ID as string) || "local.unknown",
+					buildId: `local.${Date.now()}`,
 					version: (import.meta.env.PACKAGE_VERSION as string) || "0.0.0",
 					timestamp: Date.now(),
 					commit: "local",

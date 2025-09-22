@@ -32,12 +32,21 @@ function UpdateToastDetails(props: {
 	toBuildId: string;
 	debugInfo?: string;
 	showDebug: boolean;
+	forceDeployment?: boolean;
 }) {
 	return (
 		<div className="text-sm text-white/80">
 			<p className="mt-1 text-white/60 text-xs">
 				Update from {props.fromBuildId} to {props.toBuildId}
+				{props.forceDeployment && (
+					<span className="ml-1 text-orange-300">⚡</span>
+				)}
 			</p>
+			{props.forceDeployment && (
+				<p className="mt-1 text-orange-300 text-xs">
+					Force deployment available
+				</p>
+			)}
 			{props.showDebug && props.debugInfo && (
 				<p className="mt-1 font-mono text-white/40 text-xs">
 					{props.debugInfo}
@@ -150,6 +159,14 @@ export function UpdateNotification() {
 			return;
 		}
 
+		// Skip toast for force deployments - ForceUpdateOverlay will handle it
+		if (buildUpdate.forceDeployment) {
+			debugLog(
+				"⚡ Force deployment detected - skipping toast, overlay will handle",
+			);
+			return;
+		}
+
 		// In development, only show if explicitly enabled
 		if (import.meta.env.DEV && !localStorage.getItem(LS_DEV_UPDATES)) {
 			debugLog("🚫 Dev updates disabled, skipping notification");
@@ -177,6 +194,7 @@ export function UpdateNotification() {
 					toBuildId={buildUpdate.latestBuildId}
 					debugInfo={buildUpdate.debugInfo}
 					showDebug={DEBUG_UPDATES}
+					forceDeployment={buildUpdate.forceDeployment}
 				/>
 			),
 			action: {

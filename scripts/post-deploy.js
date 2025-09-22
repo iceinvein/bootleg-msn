@@ -28,9 +28,28 @@ const { buildId, version, commit, channel } = buildInfo;
 const siteUrl = process.env.DEPLOY_PRIME_URL || process.env.URL || 'https://your-site.netlify.app';
 const buildJsonUrl = `${siteUrl}/build.json`;
 
+// Check if this is a force deployment by looking at commit message
+// Netlify provides commit message in different env vars depending on trigger
+const commitMessage = process.env.HEAD_COMMIT_MESSAGE ||
+                     process.env.COMMIT_MESSAGE ||
+                     process.env.CACHED_COMMIT_REF ||
+                     '';
+const isForceDeployment = commitMessage.toLowerCase().includes('[force]');
+
+// Debug: Log all commit-related env vars
+console.log('🔍 Commit environment variables:');
+console.log('  HEAD_COMMIT_MESSAGE:', process.env.HEAD_COMMIT_MESSAGE);
+console.log('  COMMIT_MESSAGE:', process.env.COMMIT_MESSAGE);
+console.log('  CACHED_COMMIT_REF:', process.env.CACHED_COMMIT_REF);
+console.log('  COMMIT_REF:', process.env.COMMIT_REF);
+
 console.log('🚀 Starting deployment tracking...');
 console.log(`📍 Site URL: ${siteUrl}`);
 console.log(`🔗 Build JSON URL: ${buildJsonUrl}`);
+console.log(`📝 Commit message: ${commitMessage}`);
+if (isForceDeployment) {
+  console.log('⚡ Force deployment detected!');
+}
 
 try {
   // Step 1: Begin deployment tracking
@@ -40,7 +59,8 @@ try {
     version,
     commit,
     channel,
-    timestamp: buildInfo.timestamp
+    timestamp: buildInfo.timestamp,
+    forceDeployment: isForceDeployment
   });
   
   execSync(`npx convex run deployment:beginDeployment '${beginArgs}'`, {

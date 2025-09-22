@@ -2,21 +2,15 @@ import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { readFileSync } from "fs";
 import path from "path";
-import { execSync } from "node:child_process";
 import { defineConfig } from "vite";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => {
 	// Read package.json to get version
 	const packageJson = JSON.parse(readFileSync("./package.json", "utf-8"));
-	
-	// Derive build metadata
-	const commit = (() => {
-		try { return execSync("git rev-parse --short HEAD").toString().trim(); } catch { return "local"; }
-	})();
-	const buildTs = Date.now().toString();
+
+	// Channel from environment (build.json will be the source of truth for build metadata)
 	const channel = process.env.VITE_CHANNEL || "prod";
-	const buildId = `${commit}.${buildTs}`;
 
 	return {
 	plugins: [
@@ -75,8 +69,6 @@ window.addEventListener('message', async (message) => {
 	},
 	define: {
 		"import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
-		"import.meta.env.VITE_BUILD_TIMESTAMP": JSON.stringify(buildTs),
-		"import.meta.env.VITE_BUILD_ID": JSON.stringify(buildId),
 		"import.meta.env.VITE_CHANNEL": JSON.stringify(channel),
 	},
 	build: {

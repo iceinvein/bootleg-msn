@@ -1,14 +1,22 @@
 import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
+import { useBuildInfo } from "../hooks";
 
-const BUILD_TS = Number(import.meta.env.VITE_BUILD_TIMESTAMP || Date.now());
 const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
 
 export function ForceUpdateOverlay() {
-	const res = useQuery(api.deployment.checkForUpdatesV2, {
-		clientBuildTimestamp: BUILD_TS,
-		channel: CHANNEL,
-	});
+	// Get current build info from deployed build.json
+	const { buildInfo } = useBuildInfo();
+
+	const res = useQuery(
+		api.deployment.checkForUpdatesV2,
+		buildInfo
+			? {
+					clientBuildTimestamp: buildInfo.timestamp,
+					channel: CHANNEL,
+				}
+			: "skip",
+	);
 
 	if (!res || !res.mustUpdate) return null;
 

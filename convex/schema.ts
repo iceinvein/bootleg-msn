@@ -152,6 +152,7 @@ const applicationTables = {
 			v.literal("rolled_back"),
 		),
 		timestamp: v.number(),
+		forceDeployment: v.optional(v.boolean()), // true if triggered by [force] commit
 	})
 		.index("by_channel", ["channel"])
 		.index("by_channel_and_time", ["channel", "timestamp"]),
