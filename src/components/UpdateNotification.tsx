@@ -2,7 +2,7 @@ import { api } from "@convex/_generated/api";
 import { useQuery } from "convex/react";
 import { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import { useBuildInfo } from "../hooks";
+import { useBuildInfo, useServerBuildInfo } from "../hooks";
 
 // Build metadata
 const CHANNEL = (import.meta.env.VITE_CHANNEL as string) || "prod";
@@ -60,10 +60,19 @@ export function UpdateNotification() {
 	const [hasShownInitialCheck, setHasShownInitialCheck] = useState(false);
 	const [lastNotificationTime, setLastNotificationTime] = useState(0);
 
-	// Get current build info from deployed build.json
+	// Get current app's embedded build info (actual running version)
 	const { buildInfo } = useBuildInfo();
 
-	// Build-based update check via Convex - only run when we have buildInfo
+	// Get server's latest build info for comparison
+	const { serverBuildInfo, fetchServerBuildInfo } = useServerBuildInfo();
+
+	// Check for updates by comparing client vs server build info
+	const hasUpdate =
+		buildInfo &&
+		serverBuildInfo &&
+		buildInfo.buildId !== serverBuildInfo.buildId;
+
+	// Query for additional metadata from Convex (like force deployment flag)
 	const buildUpdate = useQuery(
 		api.deployment.checkForUpdatesByBuild,
 		buildInfo
@@ -73,6 +82,18 @@ export function UpdateNotification() {
 				}
 			: "skip",
 	);
+
+	// Periodically check for server updates
+	useEffect(() => {
+		if (!buildInfo) return;
+
+		// Initial check
+		fetchServerBuildInfo();
+
+		// Check every 30 seconds
+		const interval = setInterval(fetchServerBuildInfo, 30000);
+		return () => clearInterval(interval);
+	}, [buildInfo, fetchServerBuildInfo]);
 
 	// Debug logging
 	debugLog("🔄 Update Check Debug:", {
@@ -141,26 +162,33 @@ export function UpdateNotification() {
 	}, [buildUpdate]);
 
 	useEffect(() => {
-		// Skip if build info or Convex unavailable yet
-		if (!buildInfo || !buildUpdate) {
+		// Skip if build info not available yet
+		if (!buildInfo || !serverBuildInfo) {
 			return;
 		}
 
 		// Mark that we've done the initial check
 		if (!hasShownInitialCheck) {
 			setHasShownInitialCheck(true);
-			debugLog("✅ Initial update check completed:", buildUpdate);
+			debugLog("✅ Initial update check completed:", {
+				clientBuildId: buildInfo.buildId,
+				serverBuildId: serverBuildInfo.buildId,
+				hasUpdate,
+			});
 			return; // Don't show notification on initial load
 		}
 
-		// Check if update is needed
-		if (!buildUpdate.hasUpdate) {
-			debugLog("✅ No update needed:", buildUpdate.debugInfo);
+		// Check if update is needed (client vs server build ID comparison)
+		if (!hasUpdate) {
+			debugLog("✅ No update needed - build IDs match:", {
+				clientBuildId: buildInfo.buildId,
+				serverBuildId: serverBuildInfo.buildId,
+			});
 			return;
 		}
 
 		// Skip toast for force deployments - ForceUpdateOverlay will handle it
-		if (buildUpdate.forceDeployment) {
+		if (buildUpdate?.forceDeployment) {
 			debugLog(
 				"⚡ Force deployment detected - skipping toast, overlay will handle",
 			);
@@ -184,17 +212,21 @@ export function UpdateNotification() {
 		}
 
 		// Show the update notification
-		debugLog("🔔 Showing update notification:", buildUpdate);
+		debugLog("🔔 Showing update notification:", {
+			clientBuildId: buildInfo.buildId,
+			serverBuildId: serverBuildInfo.buildId,
+			forceDeployment: buildUpdate?.forceDeployment,
+		});
 
 		toast.info("New version available!", {
 			duration: Infinity,
 			description: () => (
 				<UpdateToastDetails
-					fromBuildId={buildInfo?.buildId || "unknown"}
-					toBuildId={buildUpdate.latestBuildId}
-					debugInfo={buildUpdate.debugInfo}
+					fromBuildId={buildInfo.buildId}
+					toBuildId={serverBuildInfo.buildId}
+					debugInfo={`client=${buildInfo.buildId} server=${serverBuildInfo.buildId}`}
 					showDebug={DEBUG_UPDATES}
-					forceDeployment={buildUpdate.forceDeployment}
+					forceDeployment={buildUpdate?.forceDeployment}
 				/>
 			),
 			action: {
@@ -211,7 +243,9 @@ export function UpdateNotification() {
 		setLastNotificationTime(now);
 	}, [
 		buildInfo,
+		serverBuildInfo,
 		buildUpdate,
+		hasUpdate,
 		hasShownInitialCheck,
 		handleRefresh,
 		handleDismiss,

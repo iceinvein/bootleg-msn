@@ -70,6 +70,15 @@ window.addEventListener('message', async (message) => {
 	define: {
 		"import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
 		"import.meta.env.VITE_CHANNEL": JSON.stringify(channel),
+		// Build info - same logic as write-build-json.js for consistency
+		"import.meta.env.VITE_BUILD_ID": JSON.stringify(
+			process.env.BUILD_ID ||
+			`${process.env.COMMIT_REF || process.env.GIT_SHA || 'local'}.${process.env.DEPLOY_ID || Date.now()}`
+		),
+		"import.meta.env.VITE_BUILD_TIMESTAMP": JSON.stringify(Date.now()),
+		"import.meta.env.VITE_COMMIT": JSON.stringify(
+			process.env.COMMIT_REF || process.env.GIT_SHA || 'local'
+		),
 	},
 	build: {
 		target: process.env.TAURI_PLATFORM == "windows" ? "chrome105" : "safari13",

@@ -86,10 +86,13 @@ export function VersionInfo() {
 
 // Compact version for status bar
 export function VersionBadge() {
-	const rawPackageVersion = import.meta.env.PACKAGE_VERSION || "0.0.0";
-	const appVersion = rawPackageVersion.startsWith("v")
-		? rawPackageVersion
-		: `v${rawPackageVersion}`;
+	const { buildInfo } = useBuildInfo();
+
+	const appVersion = buildInfo?.version
+		? buildInfo.version.startsWith("v")
+			? buildInfo.version
+			: `v${buildInfo.version}`
+		: "v0.0.0";
 
 	return (
 		<span className="rounded bg-muted px-2 py-1 text-muted-foreground text-xs">

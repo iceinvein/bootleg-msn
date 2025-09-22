@@ -1,1 +1,5 @@
-export { type BuildInfo, useBuildInfo } from "./useBuildInfo";
+export {
+	type BuildInfo,
+	useBuildInfo,
+	useServerBuildInfo,
+} from "./useBuildInfo";
