@@ -1,5 +1,5 @@
 [build]
-  command = "npx convex deploy --cmd 'pnpm build:netlify'"
+  command = "npx convex deploy --cmd 'pnpm build:netlify' && node scripts/post-deploy.js"
   publish = "dist"
 
 [build.environment]

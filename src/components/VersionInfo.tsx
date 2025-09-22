@@ -19,8 +19,15 @@ function formatTimeAgo(timestamp: number): string {
 }
 
 export function VersionInfo() {
-	// Get latest release info for this channel
-	const latestRelease = useQuery(api.deployment.listReleases, {
+	// Get latest live release (server-side filtered)
+	const liveReleases = useQuery(api.deployment.listReleases, {
+		channel: CHANNEL,
+		limit: 1,
+		status: ["live"],
+	});
+
+	// Get latest release of any status to show publishing info
+	const allReleases = useQuery(api.deployment.listReleases, {
 		channel: CHANNEL,
 		limit: 1,
 	});
@@ -30,25 +37,34 @@ export function VersionInfo() {
 		? rawPackageVersion
 		: `v${rawPackageVersion}`;
 
-	const latest = latestRelease?.[0];
-	const timeAgo = latest ? formatTimeAgo(latest.timestamp) : undefined;
+	const latestLive = liveReleases?.[0];
+	const newestRelease = allReleases?.[0];
+
+	const timeAgo = latestLive ? formatTimeAgo(latestLive.timestamp) : undefined;
 
 	return (
 		<div className="text-gray-500 text-xs">
 			<div>
 				App: {appVersion}
-				{latest?.version && latest.version !== appVersion && (
-					<span className="ml-2 opacity-75">(latest: {latest.version})</span>
+				{latestLive?.version && latestLive.version !== appVersion && (
+					<span className="ml-2 opacity-75">
+						(latest: {latestLive.version})
+					</span>
 				)}
 			</div>
 			<div className="text-xs opacity-75">
 				Build: {BUILD_ID || "unknown"}
-				{latest?.status === "live" && latest.buildId !== BUILD_ID && (
+				{latestLive && latestLive.buildId !== BUILD_ID && (
 					<span className="ml-2 text-orange-400">(update available)</span>
 				)}
 			</div>
-			{latest && (
+			{latestLive && (
 				<div className="text-xs opacity-75">Latest deployed {timeAgo}</div>
+			)}
+			{newestRelease?.status === "publishing" && (
+				<div className="text-blue-400 text-xs opacity-75">
+					New version publishing: {newestRelease.version}
+				</div>
 			)}
 		</div>
 	);

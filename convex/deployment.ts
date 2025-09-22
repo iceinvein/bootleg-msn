@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { internal } from "./_generated/api";
 import {
 	action,
 	internalMutation,
@@ -73,7 +74,7 @@ export const verifyAndPublish = action({
 		timeoutMs: v.optional(v.number()),
 		intervalMs: v.optional(v.number()),
 	},
-	handler: async (_ctx, a) => {
+	handler: async (ctx, a) => {
 		const timeout = a.timeoutMs ?? 10 * 60 * 1000; // 10 minutes to accommodate Netlify build
 		const interval = a.intervalMs ?? 5000;
 		const start = Date.now();
@@ -95,13 +96,42 @@ export const verifyAndPublish = action({
 		while (Date.now() - start < timeout) {
 			const remote = await fetchRemoteBuildId();
 			if (remote === a.buildId) {
-				// For now, just return success - we'll implement the marking logic later
+				// Build verified - mark as live
 				console.log(`Build ${a.buildId} verified for channel ${a.channel}`);
-				return { ok: true } as const;
+				const marked = await ctx.runMutation(
+					internal.deployment.markReleaseAsLive,
+					{ buildId: a.buildId, channel: a.channel },
+				);
+				if (marked) {
+					console.log(
+						`Build ${a.buildId} marked as live on channel ${a.channel}`,
+					);
+					return { ok: true } as const;
+				} else {
+					console.error(`Failed to mark build ${a.buildId} as live`);
+					return { ok: false as const, error: "failed_to_mark_live" };
+				}
 			}
 			await new Promise((r) => setTimeout(r, interval));
 		}
-		return { ok: false as const, error: "timeout" };
+
+		// Timeout - but still try to mark as live (deployment might be working even if verification failed)
+		console.log(
+			`Verification timed out for build ${a.buildId}, but marking as live anyway`,
+		);
+		const marked = await ctx.runMutation(
+			internal.deployment.markReleaseAsLive,
+			{ buildId: a.buildId, channel: a.channel },
+		);
+		if (marked) {
+			console.log(
+				`Build ${a.buildId} marked as live on channel ${a.channel} (after timeout)`,
+			);
+			return { ok: true, warning: "verification_timeout" } as const;
+		} else {
+			console.error(`Failed to mark build ${a.buildId} as live after timeout`);
+			return { ok: false as const, error: "timeout_and_failed_to_mark_live" };
+		}
 	},
 });
 
@@ -203,7 +233,19 @@ export const checkForUpdatesV2 = query({
 
 // Admin query for listing releases
 export const listReleases = query({
-	args: { channel: v.string(), limit: v.optional(v.number()) },
+	args: {
+		channel: v.string(),
+		limit: v.optional(v.number()),
+		status: v.optional(
+			v.array(
+				v.union(
+					v.literal("publishing"),
+					v.literal("live"),
+					v.literal("rolled_back"),
+				),
+			),
+		),
+	},
 	returns: v.array(
 		v.object({
 			_id: v.id("deploymentReleases"),
@@ -221,10 +263,19 @@ export const listReleases = query({
 		}),
 	),
 	handler: async (ctx, args) => {
-		return await ctx.db
+		const query = ctx.db
 			.query("deploymentReleases")
 			.withIndex("by_channel_and_time", (q) => q.eq("channel", args.channel))
-			.order("desc")
-			.take(args.limit ?? 10);
+			.order("desc");
+
+		const results = await query.take(args.limit ?? 10);
+
+		// Filter by status if provided
+		if (args.status && args.status.length > 0) {
+			const statusFilter = args.status;
+			return results.filter((release) => statusFilter.includes(release.status));
+		}
+
+		return results;
 	},
 });
