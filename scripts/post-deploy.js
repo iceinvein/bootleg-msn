@@ -49,18 +49,15 @@ try {
   });
   
   console.log('✅ Deployment registered successfully');
-  
-  // Step 2: Verify and publish
-  console.log('🔍 Starting verification and publish process...');
-  const verifyArgs = JSON.stringify({
+
+  // Step 2: Mark as live immediately (Netlify only runs post-deploy on success)
+  console.log('🔍 Marking deployment as live...');
+  const markLiveArgs = JSON.stringify({
     buildId,
-    channel,
-    buildJsonUrl,
-    timeoutMs: 180000, // 3 minutes
-    intervalMs: 3000   // 3 seconds
+    channel
   });
-  
-  execSync(`npx convex run deployment:verifyAndPublish '${verifyArgs}'`, {
+
+  execSync(`npx convex run deployment:markReleaseAsLive '${markLiveArgs}'`, {
     stdio: 'inherit',
     cwd: path.join(__dirname, '..')
   });

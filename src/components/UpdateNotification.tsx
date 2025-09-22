@@ -65,9 +65,44 @@ export function UpdateNotification() {
 		isDev: import.meta.env.DEV,
 	});
 
-	const handleRefresh = useCallback(() => {
+	const handleRefresh = useCallback(async () => {
 		debugLog("🔄 Refreshing page for update");
 
+		try {
+			// Force service worker update
+			if ("serviceWorker" in navigator) {
+				const registration = await navigator.serviceWorker.getRegistration();
+				if (registration) {
+					debugLog("🔄 Updating service worker...");
+					await registration.update();
+
+					// If there's a waiting service worker, activate it
+					if (registration.waiting) {
+						debugLog("🔄 Activating waiting service worker...");
+						registration.waiting.postMessage({ type: "SKIP_WAITING" });
+
+						// Wait for the new service worker to take control
+						await new Promise((resolve) => {
+							const handleControllerChange = () => {
+								navigator.serviceWorker.removeEventListener(
+									"controllerchange",
+									handleControllerChange,
+								);
+								resolve(undefined);
+							};
+							navigator.serviceWorker.addEventListener(
+								"controllerchange",
+								handleControllerChange,
+							);
+						});
+					}
+				}
+			}
+		} catch (error) {
+			debugLog("⚠️ Service worker update failed:", error);
+		}
+
+		// Force reload with cache bypass
 		window.location.reload();
 	}, []);
 
