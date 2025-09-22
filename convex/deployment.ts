@@ -265,6 +265,7 @@ export const listReleases = query({
 			),
 			timestamp: v.number(),
 			_creationTime: v.number(),
+			forceDeployment: v.optional(v.boolean()),
 		}),
 	),
 	handler: async (ctx, args) => {
