@@ -4,6 +4,7 @@
 
 import { render, screen, act, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { TauriIntegration } from "../TauriIntegration";
 
 // Mock Tauri hooks
@@ -26,6 +27,15 @@ vi.mock("@/hooks/useTauri", () => ({
 	useUnreadCount: () => mockUseUnreadCount(),
 	useDeepLinks: () => mockUseDeepLinks(),
 }));
+
+// Helper function to render components with router context
+const renderWithRouter = (component: React.ReactElement, initialEntries: string[] = ["/"]) => {
+	return render(
+		<MemoryRouter initialEntries={initialEntries}>
+			{component}
+		</MemoryRouter>
+	);
+};
 
 describe("TauriIntegration - Advanced Functionality", () => {
 	beforeEach(() => {
@@ -75,7 +85,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 
 	describe("Window State Management", () => {
 		it("should render with window state integration", () => {
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -95,7 +105,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				windowManager: {},
 			});
 
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -108,7 +118,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 
 	describe("Hook Integration", () => {
 		it("should integrate all required hooks", () => {
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -150,7 +160,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				},
 			});
 
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -163,7 +173,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 
 	describe("Deep Link Integration", () => {
 		it("should integrate deep link handling", () => {
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -176,7 +186,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 
 	describe("Unread Count Integration", () => {
 		it("should integrate unread count functionality", () => {
-			render(
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>
@@ -189,47 +199,29 @@ describe("TauriIntegration - Advanced Functionality", () => {
 
 	describe("URL Parameter Handling", () => {
 		it("should handle deep link URL parameters", () => {
-			// Mock URL with deep link parameter
-			const originalLocation = window.location;
-			delete (window as any).location;
-			window.location = {
-				...originalLocation,
-				search: "?deeplink=msn://chat/user123",
-			};
-
-			render(
+			// Use MemoryRouter with initial entries to simulate URL parameters
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
+				["/?deeplink=msn://chat/user123"]
 			);
 
 			// Should handle deep link
 			expect(mockHandleDeepLink).toHaveBeenCalledWith("msn://chat/user123");
-
-			// Restore original location
-			window.location = originalLocation;
 		});
 
 		it("should not handle deep links when no parameter present", () => {
-			// Mock URL without deep link parameter
-			const originalLocation = window.location;
-			delete (window as any).location;
-			window.location = {
-				...originalLocation,
-				search: "",
-			};
-
-			render(
+			// Use MemoryRouter without deep link parameter
+			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
+				["/"]
 			);
 
 			// Should not call handleDeepLink
 			expect(mockHandleDeepLink).not.toHaveBeenCalled();
-
-			// Restore original location
-			window.location = originalLocation;
 		});
 	});
 
@@ -268,7 +260,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 					},
 				});
 
-				const { unmount } = render(
+				const { unmount } = renderWithRouter(
 					<TauriIntegration>
 						<div>Test Content</div>
 					</TauriIntegration>

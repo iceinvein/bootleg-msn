@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { MemoryRouter } from "react-router-dom";
 import { TauriIntegration, TauriStyles } from "./TauriIntegration";
 
 // Mock Tauri hooks
@@ -47,6 +48,15 @@ import { useTauri } from "@/hooks/useTauri";
 
 const mockUseTauri = vi.mocked(useTauri);
 
+// Helper function to render components with router context
+const renderWithRouter = (component: React.ReactElement, initialEntries: string[] = ["/"]) => {
+	return render(
+		<MemoryRouter initialEntries={initialEntries}>
+			{component}
+		</MemoryRouter>
+	);
+};
+
 describe("TauriIntegration", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
@@ -80,7 +90,7 @@ describe("TauriIntegration", () => {
 	});
 
 	it("should render children", () => {
-		render(
+		renderWithRouter(
 			<TauriIntegration>
 				<div data-testid="child-content">Test Content</div>
 			</TauriIntegration>,
@@ -91,7 +101,7 @@ describe("TauriIntegration", () => {
 	});
 
 	it("should not add platform classes when not in Tauri", () => {
-		render(
+		renderWithRouter(
 			<TauriIntegration>
 				<div>Test</div>
 			</TauriIntegration>,
@@ -130,7 +140,7 @@ describe("TauriIntegration", () => {
 			},
 		});
 
-		render(
+		renderWithRouter(
 			<TauriIntegration>
 				<div>Test</div>
 			</TauriIntegration>,
@@ -174,7 +184,7 @@ describe("TauriIntegration", () => {
 				},
 			});
 
-			const { unmount } = render(
+			const { unmount } = renderWithRouter(
 				<TauriIntegration>
 					<div>Test</div>
 				</TauriIntegration>,
@@ -215,7 +225,7 @@ describe("TauriIntegration", () => {
 			},
 		});
 
-		const { unmount } = render(
+		const { unmount } = renderWithRouter(
 			<TauriIntegration>
 				<div>Test</div>
 			</TauriIntegration>,
