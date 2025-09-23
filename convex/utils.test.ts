@@ -2,10 +2,7 @@
  * Tests for Convex utility functions
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ConvexTestingHelper } from "convex/testing";
-import { api } from "../_generated/api";
-import type { Id } from "../_generated/dataModel";
+import { describe, it, expect } from "vitest";
 import {
 	validateVoiceMessage,
 	validateBackgroundImage,
@@ -13,14 +10,14 @@ import {
 	validateTimezone,
 	getBackupExpiryDate,
 	generateSearchVector,
-} from "../utils";
+} from "./utils";
 import {
 	MAX_VOICE_MESSAGE_SIZE,
 	MAX_VOICE_MESSAGE_DURATION,
 	MIN_VOICE_MESSAGE_DURATION,
 	MAX_BACKGROUND_IMAGE_SIZE,
 	BACKUP_EXPIRY_DAYS,
-} from "../validators";
+} from "./validators";
 
 describe("Convex utils", () => {
 	describe("validateVoiceMessage", () => {
