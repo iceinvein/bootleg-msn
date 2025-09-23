@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	useChatWindows,
+	useDeepLinks,
 	useSystemTray,
 	useTauri,
 	useUnreadCount,
@@ -137,6 +138,25 @@ describe("useSystemTray", () => {
 		await act(async () => {
 			await result.current.minimizeToTray();
 			await result.current.restoreFromTray();
+		});
+
+		// Should not throw errors when not in Tauri
+		expect(true).toBe(true);
+	});
+});
+
+describe("useDeepLinks", () => {
+	it("should provide handleDeepLink function", () => {
+		const { result } = renderHook(() => useDeepLinks());
+
+		expect(typeof result.current.handleDeepLink).toBe("function");
+	});
+
+	it("should handle deep links in web environment", async () => {
+		const { result } = renderHook(() => useDeepLinks());
+
+		await act(async () => {
+			await result.current.handleDeepLink("msn://chat/user123");
 		});
 
 		// Should not throw errors when not in Tauri
