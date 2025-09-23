@@ -33,9 +33,14 @@ export function ThemeProvider({
 	storageKey = "vite-ui-theme",
 	...props
 }: ThemeProviderProps) {
-	const [theme, _setTheme] = useState<Theme>(
-		() => (localStorage.getItem(storageKey) as Theme) || defaultTheme,
-	);
+	const [theme, _setTheme] = useState<Theme>(() => {
+		try {
+			return (localStorage.getItem(storageKey) as Theme) || defaultTheme;
+		} catch (error) {
+			console.error("Failed to read theme from localStorage:", error);
+			return defaultTheme;
+		}
+	});
 
 	// Compute the effective theme (resolves "system" to light/dark)
 	const effectiveTheme = useMemo<Exclude<Theme, "system">>(() => {
@@ -84,7 +89,11 @@ export function ThemeProvider({
 		() => ({
 			theme,
 			setTheme: (next: Theme) => {
-				localStorage.setItem(storageKey, next);
+				try {
+					localStorage.setItem(storageKey, next);
+				} catch (error) {
+					console.error("Failed to save theme to localStorage:", error);
+				}
 				_setTheme(next);
 			},
 		}),

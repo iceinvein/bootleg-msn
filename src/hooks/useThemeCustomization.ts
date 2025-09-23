@@ -126,8 +126,13 @@ const DEFAULT_CONFIG: CustomThemeConfig = {
 
 export function useThemeCustomization() {
 	const [config, setConfig] = useState<CustomThemeConfig>(() => {
-		const saved = localStorage.getItem("msn-theme-config");
-		return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+		try {
+			const saved = localStorage.getItem("msn-theme-config");
+			return saved ? JSON.parse(saved) : DEFAULT_CONFIG;
+		} catch (error) {
+			console.error("Failed to parse saved theme config:", error);
+			return DEFAULT_CONFIG;
+		}
 	});
 
 	const applyTheme = useCallback((newConfig: CustomThemeConfig) => {
@@ -159,7 +164,9 @@ export function useThemeCustomization() {
 			);
 
 			// Update glass background opacity based on intensity
-			const currentBg = getComputedStyle(root).getPropertyValue("--glass-bg");
+			const currentBg =
+				getComputedStyle(root).getPropertyValue("--glass-bg") ||
+				"rgb(255, 255, 255)";
 			const baseColor = currentBg.split("/")[0].trim();
 			const newOpacity = intensityValues[newConfig.glassmorphism.intensity];
 			root.style.setProperty("--glass-bg", `${baseColor} / ${newOpacity}`);
