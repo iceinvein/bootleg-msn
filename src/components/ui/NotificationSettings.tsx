@@ -74,7 +74,7 @@ export function NotificationSettings({ className }: NotificationSettingsProps) {
 
 	const handleSettingChange = (
 		key: keyof NotificationSettingsType,
-		value: any,
+		value: boolean | string | undefined,
 	) => {
 		if (!localSettings) return;
 

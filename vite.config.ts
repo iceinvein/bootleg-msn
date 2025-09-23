@@ -67,6 +67,28 @@ window.addEventListener('message', async (message) => {
 	optimizeDeps: {
 		include: ["@tauri-apps/api", "@tauri-apps/plugin-shell", "@tauri-apps/plugin-store"],
 	},
+	test: {
+		environment: "jsdom",
+		globals: true,
+		setupFiles: ["./src/test/setup.ts"],
+		// Handle optional platform dependencies in tests
+		alias: {
+			// Mock Capacitor plugins for tests
+			"@capacitor/app": path.resolve(__dirname, "./src/test/mocks/capacitor-app.ts"),
+			"@capacitor/share": path.resolve(__dirname, "./src/test/mocks/capacitor-share.ts"),
+			"@capacitor/toast": path.resolve(__dirname, "./src/test/mocks/capacitor-toast.ts"),
+			"@capacitor/haptics": path.resolve(__dirname, "./src/test/mocks/capacitor-haptics.ts"),
+			"@capacitor/status-bar": path.resolve(__dirname, "./src/test/mocks/capacitor-status-bar.ts"),
+			"@capacitor/device": path.resolve(__dirname, "./src/test/mocks/capacitor-device.ts"),
+			// Mock Tauri APIs for tests
+			"@tauri-apps/api/shell": path.resolve(__dirname, "./src/test/mocks/tauri-shell.ts"),
+			"@tauri-apps/api/window": path.resolve(__dirname, "./src/test/mocks/tauri-window.ts"),
+			"@tauri-apps/api/event": path.resolve(__dirname, "./src/test/mocks/tauri-event.ts"),
+			"@tauri-apps/api/notification": path.resolve(__dirname, "./src/test/mocks/tauri-notification.ts"),
+			"@tauri-apps/api/app": path.resolve(__dirname, "./src/test/mocks/tauri-app.ts"),
+			"@tauri-apps/api/clipboard": path.resolve(__dirname, "./src/test/mocks/tauri-clipboard.ts"),
+		},
+	},
 	define: {
 		"import.meta.env.PACKAGE_VERSION": JSON.stringify(packageJson.version),
 		"import.meta.env.VITE_CHANNEL": JSON.stringify(channel),
