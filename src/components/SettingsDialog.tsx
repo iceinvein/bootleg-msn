@@ -29,6 +29,7 @@ import { VersionInfo } from "./VersionInfo";
 
 type SettingsDialogProps = {
 	children: React.ReactNode;
+	initialTab?: string;
 };
 
 // Animation configurations
@@ -42,7 +43,10 @@ const itemTransition = {
 	ease: "easeOut" as const,
 };
 
-export function SettingsDialog({ children }: SettingsDialogProps) {
+export function SettingsDialog({
+	children,
+	initialTab = "account",
+}: SettingsDialogProps) {
 	const user = useQuery(api.auth.loggedInUser);
 	const updateUserName = useMutation(api.auth.updateUserName);
 	const { signOut } = useAuthActions();
@@ -51,7 +55,15 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 	const [name, setName] = useState("");
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
-	const [activeTab, setActiveTab] = useState("account");
+	const [activeTab, setActiveTab] = useState(initialTab);
+	const [isOpen, setIsOpen] = useState(false);
+
+	// Reset to initial tab when dialog opens
+	useEffect(() => {
+		if (isOpen) {
+			setActiveTab(initialTab);
+		}
+	}, [isOpen, initialTab]);
 
 	const handleUpdateName = async () => {
 		if (!name.trim()) return;
@@ -77,7 +89,7 @@ export function SettingsDialog({ children }: SettingsDialogProps) {
 
 	return (
 		<>
-			<ResponsiveDialog>
+			<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
 				<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
 				<ResponsiveDialogContent
 					className="flex max-h-[85vh] max-w-4xl flex-col"

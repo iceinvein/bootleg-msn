@@ -76,12 +76,20 @@ export function StatusBar({ user }: StatusBarProps) {
 		<div className="bg-background/60 backdrop-blur-sm">
 			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
-					<Avatar className="h-8 w-8 border-2 border-white md:h-10 md:w-10">
-						{avatarUrl ? <AvatarImage key={avatarUrl} src={avatarUrl} /> : null}
-						<AvatarFallback delayMs={0} className="text-xs md:text-sm">
-							<User className="h-full w-full" />
-						</AvatarFallback>
-					</Avatar>
+					<SettingsDialog initialTab="account">
+						<Avatar
+							className="h-8 w-8 cursor-pointer border-2 border-white transition-opacity hover:opacity-80 md:h-10 md:w-10"
+							title="Open Settings"
+							aria-label="Open Settings"
+						>
+							{avatarUrl ? (
+								<AvatarImage key={avatarUrl} src={avatarUrl} />
+							) : null}
+							<AvatarFallback delayMs={0} className="text-xs md:text-sm">
+								<User className="h-full w-full" />
+							</AvatarFallback>
+						</Avatar>
+					</SettingsDialog>
 					<div className="min-w-0 flex-1">
 						<h2 className="font-semibold text-sm md:text-base">
 							{displayName}

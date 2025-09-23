@@ -33,8 +33,10 @@ vi.mock("./CreateGroupDialog", () => ({
 }));
 
 vi.mock("./SettingsDialog", () => ({
-	SettingsDialog: ({ children }: { children: React.ReactNode }) => (
-		<div data-testid="settings-dialog">{children}</div>
+	SettingsDialog: ({ children, initialTab }: { children: React.ReactNode; initialTab?: string }) => (
+		<div data-testid="settings-dialog" data-initial-tab={initialTab || "default"}>
+			{children}
+		</div>
 	),
 }));
 
@@ -60,8 +62,8 @@ vi.mock("./StatusSelector", () => ({
 
 // Mock Radix UI Avatar components
 vi.mock("@radix-ui/react-avatar", () => ({
-	Avatar: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-		<div data-testid="avatar" className={className}>{children}</div>
+	Avatar: ({ children, className, title, ...props }: { children: React.ReactNode; className?: string; title?: string; [key: string]: any }) => (
+		<div data-testid="avatar" className={className} title={title} {...props}>{children}</div>
 	),
 	AvatarImage: ({ src }: { src: string }) => (
 		<img data-testid="avatar-image" src={src} alt="Avatar" />
@@ -159,7 +161,20 @@ describe("StatusBar", () => {
 			expect(screen.getByTestId("add-contact-dialog")).toBeInTheDocument();
 			expect(screen.getByTestId("contact-requests-dialog")).toBeInTheDocument();
 			expect(screen.getByTestId("create-group-dialog")).toBeInTheDocument();
-			expect(screen.getByTestId("settings-dialog")).toBeInTheDocument();
+
+			// Should have two settings dialogs: one for avatar, one for settings button
+			const settingsDialogs = screen.getAllByTestId("settings-dialog");
+			expect(settingsDialogs).toHaveLength(2);
+		});
+
+		it("should have settings button without initial tab", () => {
+			render(<StatusBar user={mockUser} />);
+
+			const settingsDialogs = screen.getAllByTestId("settings-dialog");
+
+			// The second settings dialog should be the regular settings button without initialTab
+			const settingsButtonDialog = settingsDialogs[1];
+			expect(settingsButtonDialog).toHaveAttribute("data-initial-tab", "default");
 		});
 	});
 
@@ -284,6 +299,41 @@ describe("StatusBar", () => {
 
 			expect(screen.getByTestId("avatar-fallback")).toBeInTheDocument();
 			expect(screen.getByTestId("user-icon")).toBeInTheDocument();
+		});
+
+		it("should wrap avatar in settings dialog with account tab", () => {
+			render(<StatusBar user={mockUser} />);
+
+			// Find the settings dialog that wraps the avatar
+			const settingsDialogs = screen.getAllByTestId("settings-dialog");
+
+			// There should be two settings dialogs: one for avatar, one for settings button
+			expect(settingsDialogs).toHaveLength(2);
+
+			// The first one should be the avatar with initialTab="account"
+			const avatarSettingsDialog = settingsDialogs[0];
+			expect(avatarSettingsDialog).toHaveAttribute("data-initial-tab", "account");
+
+			// The avatar should be inside this settings dialog
+			const avatar = screen.getByTestId("avatar");
+			expect(avatarSettingsDialog).toContainElement(avatar);
+		});
+
+		it("should have clickable styling on avatar", () => {
+			render(<StatusBar user={mockUser} />);
+
+			const avatar = screen.getByTestId("avatar");
+			expect(avatar).toHaveClass("cursor-pointer");
+			expect(avatar).toHaveClass("hover:opacity-80");
+			expect(avatar).toHaveClass("transition-opacity");
+		});
+
+		it("should have proper accessibility attributes on avatar", () => {
+			render(<StatusBar user={mockUser} />);
+
+			const avatar = screen.getByTestId("avatar");
+			expect(avatar).toHaveAttribute("title", "Open Settings");
+			expect(avatar).toHaveAttribute("aria-label", "Open Settings");
 		});
 	});
 
