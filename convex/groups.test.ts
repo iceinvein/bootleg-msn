@@ -390,4 +390,500 @@ describe("Groups Database Operations", () => {
 			expect(members).toEqual([]);
 		});
 	});
+
+	describe("removeGroupMember", () => {
+		it("should remove member from group successfully", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test users
+			const user1Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			const user2Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Bob",
+					email: "bob@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: user1Id,
+					isPrivate: false,
+					memberCount: 2,
+				});
+			});
+
+			// Add members
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user1Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user2Id,
+					role: "member",
+					joinedAt: Date.now(),
+				});
+			});
+
+			// Remove member
+			await t.withIdentity({ subject: user1Id }).mutation(api.groups.removeGroupMember, {
+				groupId,
+				memberId: user2Id,
+			});
+
+			// Verify member was removed
+			const members = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("groupMembers")
+					.withIndex("by_group", (q) => q.eq("groupId", groupId))
+					.collect();
+			});
+
+			expect(members).toHaveLength(1);
+			expect(members[0].userId).toBe(user1Id);
+
+			// Verify system message was created
+			const messages = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("messages")
+					.filter((q) => q.eq(q.field("groupId"), groupId))
+					.collect();
+			});
+
+			expect(messages.some(m => m.messageType === "system" && m.content?.includes("removed"))).toBe(true);
+		});
+
+		it("should not allow removing the last admin", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test user
+			const userId = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: userId,
+					isPrivate: false,
+					memberCount: 1,
+				});
+			});
+
+			// Add user as admin
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+			});
+
+			await expect(
+				t.withIdentity({ subject: userId }).mutation(api.groups.removeGroupMember, {
+					groupId,
+					memberId: userId,
+				})
+			).rejects.toThrow("Cannot remove the last admin from the group");
+		});
+	});
+
+	describe("leaveGroup", () => {
+		it("should allow member to leave group", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test users
+			const user1Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			const user2Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Bob",
+					email: "bob@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: user1Id,
+					isPrivate: false,
+					memberCount: 2,
+				});
+			});
+
+			// Add members
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user1Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user2Id,
+					role: "member",
+					joinedAt: Date.now(),
+				});
+			});
+
+			// User2 leaves group
+			await t.withIdentity({ subject: user2Id }).mutation(api.groups.leaveGroup, {
+				groupId,
+			});
+
+			// Verify member was removed
+			const members = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("groupMembers")
+					.withIndex("by_group", (q) => q.eq("groupId", groupId))
+					.collect();
+			});
+
+			expect(members).toHaveLength(1);
+			expect(members[0].userId).toBe(user1Id);
+
+			// Verify system message was created
+			const messages = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("messages")
+					.filter((q) => q.eq(q.field("groupId"), groupId))
+					.collect();
+			});
+
+			expect(messages.some(m => m.messageType === "system" && m.content?.includes("left"))).toBe(true);
+		});
+
+		it("should not allow last admin to leave group", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test user
+			const userId = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: userId,
+					isPrivate: false,
+					memberCount: 1,
+				});
+			});
+
+			// Add user as admin
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+			});
+
+			await expect(
+				t.withIdentity({ subject: userId }).mutation(api.groups.leaveGroup, {
+					groupId,
+				})
+			).rejects.toThrow("Cannot leave group: you are the last admin");
+		});
+	});
+
+	describe("setMemberRole", () => {
+		it("should promote member to admin", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test users
+			const user1Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			const user2Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Bob",
+					email: "bob@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: user1Id,
+					isPrivate: false,
+					memberCount: 2,
+				});
+			});
+
+			// Add members
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user1Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user2Id,
+					role: "member",
+					joinedAt: Date.now(),
+				});
+			});
+
+			// Promote user2 to admin
+			await t.withIdentity({ subject: user1Id }).mutation(api.groups.setMemberRole, {
+				groupId,
+				memberId: user2Id,
+				role: "admin",
+			});
+
+			// Verify role was changed
+			const member = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("groupMembers")
+					.withIndex("by_group_and_user", (q) =>
+						q.eq("groupId", groupId).eq("userId", user2Id)
+					)
+					.unique();
+			});
+
+			expect(member?.role).toBe("admin");
+		});
+
+		it("should demote admin to member", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test users
+			const user1Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			const user2Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Bob",
+					email: "bob@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: user1Id,
+					isPrivate: false,
+					memberCount: 2,
+				});
+			});
+
+			// Add both as admins
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user1Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user2Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+			});
+
+			// Demote user2 to member
+			await t.withIdentity({ subject: user1Id }).mutation(api.groups.setMemberRole, {
+				groupId,
+				memberId: user2Id,
+				role: "member",
+			});
+
+			// Verify role was changed
+			const member = await t.run(async (ctx) => {
+				return await ctx.db
+					.query("groupMembers")
+					.withIndex("by_group_and_user", (q) =>
+						q.eq("groupId", groupId).eq("userId", user2Id)
+					)
+					.unique();
+			});
+
+			expect(member?.role).toBe("member");
+		});
+
+		it("should not allow demoting the last admin", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test user
+			const userId = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: userId,
+					isPrivate: false,
+					memberCount: 1,
+				});
+			});
+
+			// Add user as admin
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+			});
+
+			await expect(
+				t.withIdentity({ subject: userId }).mutation(api.groups.setMemberRole, {
+					groupId,
+					memberId: userId,
+					role: "member",
+				})
+			).rejects.toThrow("Cannot demote the last admin");
+		});
+	});
+
+	describe("updateGroupDetails", () => {
+		it("should update group name and description", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test user
+			const userId = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Old Name",
+					description: "Old description",
+					createdBy: userId,
+					isPrivate: false,
+					memberCount: 1,
+				});
+			});
+
+			// Add user as admin
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+			});
+
+			// Update group details
+			await t.withIdentity({ subject: userId }).mutation(api.groups.updateGroupDetails, {
+				groupId,
+				name: "New Name",
+				description: "New description",
+			});
+
+			// Verify updates
+			const group = await t.run(async (ctx) => {
+				return await ctx.db.get(groupId);
+			});
+
+			expect(group?.name).toBe("New Name");
+			expect(group?.description).toBe("New description");
+		});
+
+		it("should not allow non-admin to update group details", async () => {
+			const t = convexTest(schema, modules);
+
+			// Create test users
+			const user1Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Alice",
+					email: "alice@example.com",
+				});
+			});
+
+			const user2Id = await t.run(async (ctx) => {
+				return await ctx.db.insert("users", {
+					name: "Bob",
+					email: "bob@example.com",
+				});
+			});
+
+			// Create group
+			const groupId = await t.run(async (ctx) => {
+				return await ctx.db.insert("groups", {
+					name: "Test Group",
+					createdBy: user1Id,
+					isPrivate: false,
+					memberCount: 2,
+				});
+			});
+
+			// Add members
+			await t.run(async (ctx) => {
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user1Id,
+					role: "admin",
+					joinedAt: Date.now(),
+				});
+				await ctx.db.insert("groupMembers", {
+					groupId,
+					userId: user2Id,
+					role: "member",
+					joinedAt: Date.now(),
+				});
+			});
+
+			await expect(
+				t.withIdentity({ subject: user2Id }).mutation(api.groups.updateGroupDetails, {
+					groupId,
+					name: "New Name",
+				})
+			).rejects.toThrow("Only group admins can update group details");
+		});
+	});
 });

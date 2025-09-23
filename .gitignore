@@ -64,4 +64,5 @@ src-tauri/*.AppImage
 android/
 ios/
 
-convex-multiplatform-template
+.augment
+
