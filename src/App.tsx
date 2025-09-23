@@ -1,6 +1,7 @@
 import { useAuthActions } from "@convex-dev/auth/react";
 import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { CapacitorIntegration } from "./components/CapacitorIntegration";
 import { MessengerApp } from "./components/MessengerApp";
 import { MobileProvider } from "./components/MobileProvider";
@@ -21,6 +22,7 @@ function App() {
 		error?: string;
 	} | null>(null);
 	const { signIn } = useAuthActions();
+	const [searchParams] = useSearchParams();
 
 	useEffect(() => {
 		/**
@@ -82,15 +84,15 @@ function App() {
 		// Web platforms use Convex Auth server-side OAuth
 		if (Platform.supportsSystemBrowser()) {
 			// Check URL parameters first (for web-based callbacks)
-			const urlParams = new URLSearchParams(window.location.search);
-			const hasOAuthParams = urlParams.has("code") || urlParams.has("error");
+			const hasOAuthParams =
+				searchParams.has("code") || searchParams.has("error");
 
 			if (hasOAuthParams) {
 				setIsOAuthCallback(true);
 				setOauthData({
-					code: urlParams.get("code") || "",
-					state: urlParams.get("state") || undefined,
-					error: urlParams.get("error") || undefined,
+					code: searchParams.get("code") || "",
+					state: searchParams.get("state") || undefined,
+					error: searchParams.get("error") || undefined,
 				});
 			}
 
@@ -135,7 +137,7 @@ function App() {
 				setupDeepLinkListener();
 			}
 		}
-	}, []);
+	}, [searchParams]);
 
 	const handleOAuthComplete = () => {
 		setIsOAuthCallback(false);

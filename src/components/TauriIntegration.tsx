@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
 	useDeepLinks,
 	useTauri,
@@ -15,6 +16,7 @@ export function TauriIntegration({ children }: TauriIntegrationProps) {
 	const { saveState, restoreState } = useWindowState("main");
 	const { updateUnreadCount } = useUnreadCount();
 	const { handleDeepLink } = useDeepLinks();
+	const [searchParams] = useSearchParams();
 
 	// For now, we'll use a placeholder unread count
 	// TODO: Connect to Convex unread count when available
@@ -65,14 +67,13 @@ export function TauriIntegration({ children }: TauriIntegrationProps) {
 	useEffect(() => {
 		if (isTauri && isReady) {
 			// Check for deep link in URL parameters
-			const urlParams = new URLSearchParams(window.location.search);
-			const deepLink = urlParams.get("deeplink");
+			const deepLink = searchParams.get("deeplink");
 
 			if (deepLink) {
 				handleDeepLink(deepLink);
 			}
 		}
-	}, [isTauri, isReady, handleDeepLink]);
+	}, [isTauri, isReady, handleDeepLink, searchParams]);
 
 	return <>{children}</>;
 }
