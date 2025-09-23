@@ -10,6 +10,9 @@ import {
 	validateTimezone,
 	getBackupExpiryDate,
 	generateSearchVector,
+	formatFileSize,
+	formatDuration,
+	validateScheduledTime,
 } from "./utils";
 import {
 	MAX_VOICE_MESSAGE_SIZE,
@@ -306,6 +309,129 @@ describe("Convex utils", () => {
 		it("should handle numbers and alphanumeric content", () => {
 			expect(generateSearchVector("test123 hello456")).toBe("test123 hello456");
 			expect(generateSearchVector("version 2.0 update")).toBe("version update");
+		});
+	});
+
+	describe("formatFileSize", () => {
+		it("should format bytes correctly", () => {
+			expect(formatFileSize(0)).toBe("0 Bytes");
+			expect(formatFileSize(1)).toBe("1 Bytes");
+			expect(formatFileSize(1023)).toBe("1023 Bytes");
+		});
+
+		it("should format kilobytes correctly", () => {
+			expect(formatFileSize(1024)).toBe("1 KB");
+			expect(formatFileSize(1536)).toBe("1.5 KB"); // 1.5 * 1024
+			expect(formatFileSize(1024 * 1023)).toBe("1023 KB");
+		});
+
+		it("should format megabytes correctly", () => {
+			expect(formatFileSize(1024 * 1024)).toBe("1 MB");
+			expect(formatFileSize(1024 * 1024 * 2.5)).toBe("2.5 MB");
+			expect(formatFileSize(1024 * 1024 * 1023)).toBe("1023 MB");
+		});
+
+		it("should format gigabytes correctly", () => {
+			expect(formatFileSize(1024 * 1024 * 1024)).toBe("1 GB");
+			expect(formatFileSize(1024 * 1024 * 1024 * 2.5)).toBe("2.5 GB");
+		});
+
+		it("should handle decimal precision correctly", () => {
+			expect(formatFileSize(1536)).toBe("1.5 KB");
+			expect(formatFileSize(1024 * 1024 * 1.25)).toBe("1.25 MB");
+			expect(formatFileSize(1024 * 1024 * 1024 * 1.333)).toBe("1.33 GB");
+		});
+
+		it("should handle very large files", () => {
+			const veryLargeSize = 1024 * 1024 * 1024 * 500; // 500GB
+			expect(formatFileSize(veryLargeSize)).toBe("500 GB");
+		});
+	});
+
+	describe("formatDuration", () => {
+		it("should format seconds less than 60", () => {
+			expect(formatDuration(0)).toBe("0:00");
+			expect(formatDuration(5)).toBe("0:05");
+			expect(formatDuration(30)).toBe("0:30");
+			expect(formatDuration(59)).toBe("0:59");
+		});
+
+		it("should format minutes and seconds", () => {
+			expect(formatDuration(60)).toBe("1:00");
+			expect(formatDuration(65)).toBe("1:05");
+			expect(formatDuration(90)).toBe("1:30");
+			expect(formatDuration(125)).toBe("2:05");
+		});
+
+		it("should pad seconds with leading zero", () => {
+			expect(formatDuration(61)).toBe("1:01");
+			expect(formatDuration(62)).toBe("1:02");
+			expect(formatDuration(69)).toBe("1:09");
+		});
+
+		it("should handle longer durations", () => {
+			expect(formatDuration(600)).toBe("10:00"); // 10 minutes
+			expect(formatDuration(3661)).toBe("61:01"); // 1 hour 1 minute 1 second
+		});
+
+		it("should handle decimal seconds by flooring", () => {
+			expect(formatDuration(65.7)).toBe("1:05");
+			expect(formatDuration(90.9)).toBe("1:30");
+		});
+	});
+
+	describe("validateScheduledTime", () => {
+		it("should accept valid future times", () => {
+			const futureTime = Date.now() + 2 * 60 * 1000; // 2 minutes from now
+
+			expect(() => {
+				validateScheduledTime(futureTime, "America/New_York");
+			}).not.toThrow();
+		});
+
+		it("should reject times in the past", () => {
+			const pastTime = Date.now() - 60 * 1000; // 1 minute ago
+
+			expect(() => {
+				validateScheduledTime(pastTime, "America/New_York");
+			}).toThrow("Scheduled time must be at least 1 minute in the future");
+		});
+
+		it("should reject times too close to now", () => {
+			const tooSoonTime = Date.now() + 30 * 1000; // 30 seconds from now
+
+			expect(() => {
+				validateScheduledTime(tooSoonTime, "America/New_York");
+			}).toThrow("Scheduled time must be at least 1 minute in the future");
+		});
+
+		it("should reject times too far in the future", () => {
+			const tooFarTime = Date.now() + 366 * 24 * 60 * 60 * 1000; // More than 1 year
+
+			expect(() => {
+				validateScheduledTime(tooFarTime, "America/New_York");
+			}).toThrow("Scheduled time cannot be more than 1 year in the future");
+		});
+
+		it("should reject invalid timezones", () => {
+			const futureTime = Date.now() + 2 * 60 * 1000;
+
+			expect(() => {
+				validateScheduledTime(futureTime, "Invalid/Timezone");
+			}).toThrow("Invalid timezone");
+		});
+
+		it("should accept times exactly at the boundaries", () => {
+			const minFutureTime = Date.now() + 61 * 1000; // Just over 1 minute
+			const maxFutureTime = Date.now() + 364 * 24 * 60 * 60 * 1000; // Just under 1 year
+
+			expect(() => {
+				validateScheduledTime(minFutureTime, "UTC");
+			}).not.toThrow();
+
+			expect(() => {
+				validateScheduledTime(maxFutureTime, "UTC");
+			}).not.toThrow();
 		});
 	});
 });
