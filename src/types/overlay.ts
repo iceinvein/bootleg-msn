@@ -49,16 +49,44 @@ export type BaseOverlayProps = {
 export type ConfirmOverlayProps = BaseOverlayProps & {
 	/** Confirmation message */
 	message: string;
+	/** Variant of the confirmation dialog */
+	variant?: "info" | "warning" | "error" | "success";
 	/** Text for the confirm button */
 	confirmText?: string;
 	/** Text for the cancel button */
 	cancelText?: string;
-	/** Variant of the confirm button */
-	confirmVariant?: "default" | "destructive" | "outline" | "secondary";
 	/** Callback when user confirms */
 	onConfirm?: () => void | Promise<void>;
 	/** Callback when user cancels */
 	onCancel?: () => void;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to information dialogs
+ */
+export type InfoOverlayProps = BaseOverlayProps & {
+	/** Information content */
+	content?: string;
+	/** Custom content as React node */
+	children?: React.ReactNode;
+	/** Text for the action button */
+	buttonText?: string;
+	/** Callback when user clicks action button */
+	onAction?: () => void | Promise<void>;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to settings dialogs
+ */
+export type SettingsOverlayProps = BaseOverlayProps & {
+	/** Initial tab to show */
+	initialTab?: string;
+	/** Callback when overlay closes */
+	onClose?: () => void;
 };
 
 /**
@@ -78,8 +106,10 @@ export type EditUserOverlayProps = BaseOverlayProps & {
 	userId: string;
 	/** Initial user data */
 	initialData?: UserData;
-	/** Callback when user data is saved */
-	onSave?: (userData: UserData) => void | Promise<void>;
+	/** Callback when user data is updated */
+	onUserUpdated?: (userData: UserData) => void | Promise<void>;
+	/** Callback when overlay closes */
+	onClose?: () => void;
 };
 
 /**
@@ -87,9 +117,69 @@ export type EditUserOverlayProps = BaseOverlayProps & {
  */
 export type SheetOverlayProps = BaseOverlayProps & {
 	/** Content to display in the sheet */
-	content: React.ReactNode;
+	content?: string;
+	/** Custom content as React node */
+	children?: React.ReactNode;
 	/** Side to show the sheet from */
 	side?: "top" | "right" | "bottom" | "left";
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to group creation dialogs
+ */
+export type CreateGroupOverlayProps = BaseOverlayProps & {
+	/** Callback when group is created */
+	onGroupCreated?: (group: unknown) => void | Promise<void>;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to user invitation dialogs
+ */
+export type InviteUsersOverlayProps = BaseOverlayProps & {
+	/** ID of the group to invite users to */
+	groupId?: string;
+	/** Callback when users are invited */
+	onUsersInvited?: (users: unknown[]) => void | Promise<void>;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to file preview dialogs
+ */
+export type FilePreviewOverlayProps = BaseOverlayProps & {
+	/** ID of the file to preview */
+	fileId: string;
+	/** Name of the file */
+	fileName?: string;
+	/** URL of the file */
+	fileUrl?: string;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to emoji picker overlays
+ */
+export type EmojiPickerOverlayProps = BaseOverlayProps & {
+	/** Callback when emoji is selected */
+	onEmojiSelect?: (emoji: string) => void;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to theme selector overlays
+ */
+export type ThemeSelectorOverlayProps = BaseOverlayProps & {
+	/** Callback when theme is selected */
+	onThemeSelect?: (theme: unknown) => void;
+	/** Callback when overlay closes */
+	onClose?: () => void;
 };
 
 /**
@@ -97,8 +187,15 @@ export type SheetOverlayProps = BaseOverlayProps & {
  */
 export type OverlayProps =
 	| ConfirmOverlayProps
+	| InfoOverlayProps
+	| SettingsOverlayProps
 	| EditUserOverlayProps
 	| SheetOverlayProps
+	| CreateGroupOverlayProps
+	| InviteUsersOverlayProps
+	| FilePreviewOverlayProps
+	| EmojiPickerOverlayProps
+	| ThemeSelectorOverlayProps
 	| BaseOverlayProps;
 
 /**

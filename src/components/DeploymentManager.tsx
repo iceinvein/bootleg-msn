@@ -1,22 +1,15 @@
-import { api } from "@convex/_generated/api";
-import { useMutation } from "convex/react";
 import { useCallback, useEffect } from "react";
 
 // This component should only be used in development/admin contexts
 export function DeploymentManager() {
-	const updateDeploymentInfo = useMutation(
-		api.deployment.updateDeploymentInfoClient,
-	);
+	// TODO: The deployment API doesn't expose client-side functions for triggering deployments
+	// This component is currently disabled until proper API is available
 
 	const handleNewDeployment = useCallback(async () => {
 		const version = `1.0.${Date.now()}`;
-		try {
-			await updateDeploymentInfo({ version });
-			console.log("Deployment info updated:", version);
-		} catch (error) {
-			console.error("Failed to update deployment info:", error);
-		}
-	}, [updateDeploymentInfo]);
+		console.log("Simulated deployment update:", version);
+		// TODO: Implement actual deployment trigger when API is available
+	}, []);
 
 	// Auto-trigger deployment update in development
 	useEffect(() => {

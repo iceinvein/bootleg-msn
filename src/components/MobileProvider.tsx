@@ -1,3 +1,4 @@
+import type { PluginListenerHandle } from "@capacitor/core";
 import { Capacitor } from "@capacitor/core";
 import { Haptics, ImpactStyle } from "@capacitor/haptics";
 import { Keyboard } from "@capacitor/keyboard";
@@ -34,30 +35,43 @@ export function MobileProvider({ children }: MobileProviderProps) {
 	useEffect(() => {
 		if (!isMobile) return;
 
-		// Keyboard event listeners
-		const keyboardWillShow = Keyboard.addListener(
-			"keyboardWillShow",
-			(info) => {
-				setKeyboardHeight(info.keyboardHeight);
-				setIsKeyboardOpen(true);
-				document.body.classList.add("keyboard-open");
-				document.documentElement.style.setProperty(
-					"--keyboard-height",
-					`${info.keyboardHeight}px`,
-				);
-			},
-		);
+		let keyboardWillShowListener: PluginListenerHandle | null = null;
+		let keyboardWillHideListener: PluginListenerHandle | null = null;
 
-		const keyboardWillHide = Keyboard.addListener("keyboardWillHide", () => {
-			setKeyboardHeight(0);
-			setIsKeyboardOpen(false);
-			document.body.classList.remove("keyboard-open");
-			document.documentElement.style.setProperty("--keyboard-height", "0px");
-		});
+		// Setup keyboard event listeners
+		const setupKeyboardListeners = async () => {
+			keyboardWillShowListener = await Keyboard.addListener(
+				"keyboardWillShow",
+				(info) => {
+					setKeyboardHeight(info.keyboardHeight);
+					setIsKeyboardOpen(true);
+					document.body.classList.add("keyboard-open");
+					document.documentElement.style.setProperty(
+						"--keyboard-height",
+						`${info.keyboardHeight}px`,
+					);
+				},
+			);
+
+			keyboardWillHideListener = await Keyboard.addListener(
+				"keyboardWillHide",
+				() => {
+					setKeyboardHeight(0);
+					setIsKeyboardOpen(false);
+					document.body.classList.remove("keyboard-open");
+					document.documentElement.style.setProperty(
+						"--keyboard-height",
+						"0px",
+					);
+				},
+			);
+		};
+
+		setupKeyboardListeners();
 
 		return () => {
-			keyboardWillShow.remove();
-			keyboardWillHide.remove();
+			keyboardWillShowListener?.remove();
+			keyboardWillHideListener?.remove();
 		};
 	}, [isMobile]);
 

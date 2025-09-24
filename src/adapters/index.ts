@@ -5,6 +5,16 @@
  * throughout the application.
  */
 
+import { createPlatformHostAdapter } from "./PlatformHostAdapter";
+import {
+	detectPlatform,
+	getPlatformClasses,
+	getPlatformConfig,
+	platformSupports,
+	platformSwitch,
+} from "./platformDetection";
+import type { Platform } from "./types";
+
 export type {
 	UsePlatformHostAdapterConfig,
 	UsePlatformHostAdapterReturn,

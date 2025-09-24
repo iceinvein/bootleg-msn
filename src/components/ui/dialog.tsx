@@ -257,6 +257,17 @@ function DialogAnimatedContent({
 }
 
 function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
+  // Exclude props that conflict with Framer Motion
+  const {
+    onDrag,
+    onDragEnd,
+    onDragStart,
+    onAnimationStart,
+    onAnimationEnd,
+    onAnimationIteration,
+    ...motionProps
+  } = props;
+
   return (
     <motion.div
       data-slot="dialog-header"
@@ -268,12 +279,23 @@ function DialogHeader({ className, ...props }: React.ComponentProps<"div">) {
         transition: { delay: 0.1, duration: 0.3 }
       }}
       exit={{ opacity: 0, y: -5 }}
-      {...props}
+      {...motionProps}
     />
   )
 }
 
 function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
+  // Exclude props that conflict with Framer Motion
+  const {
+    onDrag,
+    onDragEnd,
+    onDragStart,
+    onAnimationStart,
+    onAnimationEnd,
+    onAnimationIteration,
+    ...motionProps
+  } = props;
+
   return (
     <motion.div
       data-slot="dialog-footer"
@@ -288,7 +310,7 @@ function DialogFooter({ className, ...props }: React.ComponentProps<"div">) {
         transition: { delay: 0.3, duration: 0.3 }
       }}
       exit={{ opacity: 0, y: 5 }}
-      {...props}
+      {...motionProps}
     />
   )
 }

@@ -24,6 +24,7 @@
 		"test:deployment": "node scripts/test-deployment-flow.js",
 		"lint": "biome check src convex",
 		"lint:fix": "biome check --write --unsafe src convex",
+		"typecheck": "npx tsc -b --noEmit",
 		"version:patch": "npm version patch --no-git-tag-version",
 		"version:minor": "npm version minor --no-git-tag-version",
 		"version:major": "npm version major --no-git-tag-version",

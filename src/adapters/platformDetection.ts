@@ -155,7 +155,7 @@ export function getPlatformCapabilities(
 /**
  * Check if running on Android in Capacitor
  */
-function isAndroidCapacitor(): boolean {
+export function isAndroidCapacitor(): boolean {
 	if (typeof window === "undefined" || !("Capacitor" in window)) {
 		return false;
 	}

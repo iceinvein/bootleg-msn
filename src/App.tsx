@@ -6,6 +6,7 @@ import { CapacitorIntegration } from "./components/CapacitorIntegration";
 import { MessengerApp } from "./components/MessengerApp";
 import { MobileProvider } from "./components/MobileProvider";
 import { OAuthCallback } from "./components/OAuthCallback";
+import { OverlayHost } from "./components/overlay";
 import { PushSubscriptionInitializer } from "./components/PushSubscriptionInitializer";
 import { SignInForm } from "./components/SignInForm";
 import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
@@ -177,6 +178,8 @@ function App() {
 						)}
 						<Toaster />
 					</main>
+					{/* Overlay system - renders all active overlays */}
+					<OverlayHost />
 				</TauriIntegration>
 			</MobileProvider>
 		</ThemeProvider>

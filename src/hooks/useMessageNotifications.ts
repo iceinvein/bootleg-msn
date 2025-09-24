@@ -245,6 +245,12 @@ export function useMessageNotifications() {
 			const otherUserId = message.isFromMe
 				? message.receiverId
 				: message.senderId;
+
+			// Return false if otherUserId is undefined
+			if (!otherUserId) {
+				return false;
+			}
+
 			return chatWindowHelpers.isChatActiveAnywhere("contact", otherUserId);
 		}
 	}, []);
