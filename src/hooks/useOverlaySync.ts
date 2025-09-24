@@ -20,7 +20,7 @@ import { useOverlayUrl } from "./useOverlayUrl";
 /**
  * Configuration for bidirectional overlay synchronization
  */
-export interface UseBidirectionalSyncConfig extends UrlConfig {
+export type UseBidirectionalSyncConfig = UrlConfig & {
 	/** Whether to sync URL changes to overlay state (default: true) */
 	urlToOverlay?: boolean;
 	/** Whether to sync overlay changes to URL (default: true) */
@@ -31,7 +31,7 @@ export interface UseBidirectionalSyncConfig extends UrlConfig {
 	preventLoops?: boolean;
 	/** Custom conflict resolution strategy */
 	conflictResolution?: "url-wins" | "overlay-wins" | "merge" | "ignore";
-}
+};
 
 /**
  * Hook for bidirectional synchronization between overlay state and URL

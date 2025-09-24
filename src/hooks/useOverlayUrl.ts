@@ -22,14 +22,14 @@ import { useOverlays } from "./useOverlays";
 /**
  * Configuration options for overlay URL synchronization
  */
-export interface UseOverlayUrlConfig extends UrlConfig {
+export type UseOverlayUrlConfig = UrlConfig & {
 	/** Whether to automatically sync overlay state with URL (default: true) */
 	autoSync?: boolean;
 	/** Whether to replace history instead of pushing new entries (default: false) */
 	replaceHistory?: boolean;
 	/** Debounce delay for URL updates in milliseconds (default: 100) */
 	debounceMs?: number;
-}
+};
 
 /**
  * Default configuration for overlay URL synchronization

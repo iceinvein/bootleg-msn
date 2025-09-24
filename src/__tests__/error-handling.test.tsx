@@ -10,20 +10,18 @@
  * - Backend validation and Convex error handling
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { toast } from "sonner";
 import { ConvexError } from "convex/values";
 
 // Mock auth error handler since it doesn't exist yet
 type AuthErrorType = "authentication" | "validation" | "network" | "rate_limit" | "unknown";
 
-interface ParsedAuthError {
+type ParsedAuthError = {
   type: AuthErrorType;
   message: string;
   code?: string;
   originalError: any;
-}
+};
 
 const parseAuthError = (error: any): ParsedAuthError => {
   if (!error) {

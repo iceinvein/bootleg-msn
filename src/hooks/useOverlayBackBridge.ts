@@ -21,7 +21,7 @@ export type BackButtonHandler = () => boolean | Promise<boolean>;
 /**
  * Configuration options for useOverlayBackBridge
  */
-export interface UseOverlayBackBridgeConfig {
+export type UseOverlayBackBridgeConfig = {
 	/** Whether to automatically handle overlay closing (default: true) */
 	autoHandleOverlays?: boolean;
 	/** Whether to integrate with URL synchronization (default: true) */
@@ -30,12 +30,12 @@ export interface UseOverlayBackBridgeConfig {
 	componentName?: string;
 	/** Enable debug logging (default: false) */
 	debug?: boolean;
-}
+};
 
 /**
  * Return type for useOverlayBackBridge hook
  */
-export interface UseOverlayBackBridgeReturn {
+export type UseOverlayBackBridgeReturn = {
 	/** Register a custom back button handler */
 	registerBackHandler: (handler: BackButtonHandler) => string;
 	/** Unregister a back button handler by ID */
@@ -53,7 +53,7 @@ export interface UseOverlayBackBridgeReturn {
 		hasHardwareBackButton: boolean;
 		hasKeyboardShortcuts: boolean;
 	};
-}
+};
 
 /**
  * Overlay back button bridge hook

@@ -21,7 +21,7 @@ import { DEFAULT_PLATFORM_BEHAVIORS } from "./types";
 /**
  * Configuration for the platform host adapter
  */
-export interface PlatformHostAdapterConfig {
+export type PlatformHostAdapterConfig = {
 	/** Platform adapter configuration */
 	adapterConfig?: Partial<PlatformAdapterConfig>;
 	/** Platform-specific overlay behaviors */
@@ -32,12 +32,12 @@ export interface PlatformHostAdapterConfig {
 	autoInitialize?: boolean;
 	/** Debug logging */
 	debug?: boolean;
-}
+};
 
 /**
  * Overlay system integration callbacks
  */
-export interface OverlaySystemCallbacks {
+export type OverlaySystemCallbacks = {
 	/** Check if any overlays are open */
 	hasOpenOverlays: () => boolean;
 	/** Get the number of open overlays */
@@ -48,7 +48,7 @@ export interface OverlaySystemCallbacks {
 	closeAllOverlays: () => void;
 	/** Handle URL-based overlay opening */
 	handleUrlOverlay?: (url: string) => void;
-}
+};
 
 /**
  * Platform host adapter that bridges platform events with overlay system

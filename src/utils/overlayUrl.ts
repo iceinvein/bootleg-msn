@@ -33,7 +33,7 @@ export const OVERLAY_URL_PARAMS = {
 /**
  * Configuration for URL encoding/decoding
  */
-export interface UrlConfig {
+export type UrlConfig = {
 	/** Whether to include overlay props in URL (default: true) */
 	includeProps?: boolean;
 	/** Whether to include overlay ID in URL (default: false) */
@@ -42,7 +42,7 @@ export interface UrlConfig {
 	maxPropsLength?: number;
 	/** Whether to compress props JSON (default: true) */
 	compressProps?: boolean;
-}
+};
 
 /**
  * Default URL configuration

@@ -27,18 +27,17 @@ import { useOverlayUrl } from "./useOverlayUrl";
 /**
  * Configuration for the platform host adapter hook
  */
-export interface UsePlatformHostAdapterConfig
-	extends PlatformHostAdapterConfig {
+export type UsePlatformHostAdapterConfig = PlatformHostAdapterConfig & {
 	/** Whether to automatically connect to overlay system */
 	autoConnect?: boolean;
 	/** Whether to handle URL-based overlays */
 	handleUrlOverlays?: boolean;
-}
+};
 
 /**
  * Return type for the platform host adapter hook
  */
-export interface UsePlatformHostAdapterReturn {
+export type UsePlatformHostAdapterReturn = {
 	/** The platform host adapter instance */
 	adapter: PlatformHostAdapter | null;
 	/** Current platform */
@@ -65,7 +64,7 @@ export interface UsePlatformHostAdapterReturn {
 	connect: () => void;
 	/** Disconnect from overlay system */
 	disconnect: () => void;
-}
+};
 
 /**
  * Hook for using the platform host adapter with React

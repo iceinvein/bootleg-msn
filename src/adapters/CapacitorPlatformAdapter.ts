@@ -9,16 +9,16 @@ import { BasePlatformAdapter } from "./BasePlatformAdapter";
 import type { PlatformAdapterConfig } from "./types";
 
 /**
- * Capacitor listener handle type
+ * Capacitor listener handle type (matches PluginListenerHandle from Capacitor)
  */
-interface CapacitorListenerHandle {
+type CapacitorListenerHandle = {
 	remove(): Promise<void>;
-}
+};
 
 /**
  * Device information from Capacitor
  */
-interface DeviceInfo {
+type DeviceInfo = {
 	model: string;
 	platform: string;
 	operatingSystem: string;
@@ -26,7 +26,7 @@ interface DeviceInfo {
 	manufacturer: string;
 	isVirtual: boolean;
 	webViewVersion: string;
-}
+};
 
 /**
  * Capacitor platform adapter implementation
@@ -117,12 +117,12 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 	}
 
 	/**
-	 * Open deep link using Capacitor App plugin
+	 * Open deep link using Capacitor Browser plugin
 	 */
 	public async openDeepLink(url: string): Promise<boolean> {
 		try {
-			const { App } = await import("@capacitor/app");
-			await App.openUrl({ url });
+			const { Browser } = await import("@capacitor/browser");
+			await Browser.open({ url });
 			this.log("Deep link opened:", url);
 			return true;
 		} catch (error) {
@@ -140,6 +140,7 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 			await Promise.all([
 				import("@capacitor/app").catch(() => null),
 				import("@capacitor/share").catch(() => null),
+				import("@capacitor/browser").catch(() => null),
 			]);
 			this.log("Capacitor plugins loaded");
 		} catch (error) {
@@ -154,7 +155,7 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 		try {
 			const { App } = await import("@capacitor/app");
 
-			this.backButtonListener = App.addListener(
+			this.backButtonListener = await App.addListener(
 				"backButton",
 				async (_event) => {
 					this.log("Hardware back button pressed");
@@ -192,10 +193,13 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 		try {
 			const { App } = await import("@capacitor/app");
 
-			this.appStateListener = App.addListener("appStateChange", (state) => {
-				const appState = state.isActive ? "active" : "background";
-				this.handleAppStateChange(appState);
-			});
+			this.appStateListener = await App.addListener(
+				"appStateChange",
+				(state) => {
+					const appState = state.isActive ? "active" : "background";
+					this.handleAppStateChange(appState);
+				},
+			);
 
 			this.log("App state listener added");
 		} catch (error) {
@@ -210,7 +214,7 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 		try {
 			const { App } = await import("@capacitor/app");
 
-			this.deepLinkListener = App.addListener("appUrlOpen", (event) => {
+			this.deepLinkListener = await App.addListener("appUrlOpen", (event) => {
 				this.handleDeepLink(event.url);
 			});
 
@@ -300,20 +304,13 @@ export class CapacitorPlatformAdapter extends BasePlatformAdapter {
 		try {
 			const { Haptics, ImpactStyle } = await import("@capacitor/haptics");
 
-			let style: ImpactStyle;
-			switch (type) {
-				case "light":
-					style = ImpactStyle.Light;
-					break;
-				case "medium":
-					style = ImpactStyle.Medium;
-					break;
-				case "heavy":
-					style = ImpactStyle.Heavy;
-					break;
-			}
+			const styleMap = {
+				light: ImpactStyle.Light,
+				medium: ImpactStyle.Medium,
+				heavy: ImpactStyle.Heavy,
+			};
 
-			await Haptics.impact({ style });
+			await Haptics.impact({ style: styleMap[type] });
 		} catch (error) {
 			this.log("Error with haptic feedback:", error);
 		}

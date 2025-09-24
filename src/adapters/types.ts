@@ -13,7 +13,7 @@ export type Platform = "web" | "capacitor" | "tauri";
 /**
  * Platform capabilities and features
  */
-export interface PlatformCapabilities {
+export type PlatformCapabilities = {
 	/** Whether the platform supports hardware back button */
 	hasHardwareBackButton: boolean;
 	/** Whether the platform supports system-level overlays */
@@ -26,12 +26,12 @@ export interface PlatformCapabilities {
 	hasKeyboardShortcuts: boolean;
 	/** Whether the platform supports window management */
 	hasWindowManagement: boolean;
-}
+};
 
 /**
  * Platform-specific event handlers
  */
-export interface PlatformEventHandlers {
+export type PlatformEventHandlers = {
 	/** Handle hardware back button press */
 	onBackButton?: () => boolean | Promise<boolean>;
 	/** Handle escape key press */
@@ -42,12 +42,12 @@ export interface PlatformEventHandlers {
 	onAppStateChange?: (state: "active" | "background" | "inactive") => void;
 	/** Handle window focus/blur */
 	onWindowFocus?: (focused: boolean) => void;
-}
+};
 
 /**
  * Platform adapter configuration
  */
-export interface PlatformAdapterConfig {
+export type PlatformAdapterConfig = {
 	/** Platform type */
 	platform: Platform;
 	/** Platform capabilities */
@@ -58,12 +58,12 @@ export interface PlatformAdapterConfig {
 	preventDefaults?: boolean;
 	/** Debug logging enabled */
 	debug?: boolean;
-}
+};
 
 /**
  * Platform adapter interface
  */
-export interface PlatformAdapter {
+export type PlatformAdapter = {
 	/** Platform type */
 	readonly platform: Platform;
 	/** Platform capabilities */
@@ -91,7 +91,7 @@ export interface PlatformAdapter {
 	}): Promise<boolean>;
 	/** Open deep link */
 	openDeepLink?(url: string): Promise<boolean>;
-}
+};
 
 /**
  * Back button handling result
@@ -104,7 +104,7 @@ export type BackButtonResult =
 /**
  * Platform detection result
  */
-export interface PlatformDetection {
+export type PlatformDetection = {
 	/** Detected platform */
 	platform: Platform;
 	/** Platform version/info */
@@ -115,12 +115,12 @@ export interface PlatformDetection {
 	isDevelopment: boolean;
 	/** Additional platform-specific data */
 	metadata?: Record<string, unknown>;
-}
+};
 
 /**
  * Overlay platform behavior configuration
  */
-export interface OverlayPlatformBehavior {
+export type OverlayPlatformBehavior = {
 	/** Whether overlays should close on back button */
 	closeOnBack: boolean;
 	/** Whether overlays should close on escape key */
@@ -133,19 +133,19 @@ export interface OverlayPlatformBehavior {
 	preferredAnimation?: "scale" | "slideDown" | "fade" | "slide";
 	/** Whether to use native transitions */
 	useNativeTransitions?: boolean;
-}
+};
 
 /**
  * Platform-specific overlay configuration
  */
-export interface PlatformOverlayConfig {
+export type PlatformOverlayConfig = {
 	/** Web-specific configuration */
 	web: OverlayPlatformBehavior;
 	/** Capacitor-specific configuration */
 	capacitor: OverlayPlatformBehavior;
 	/** Tauri-specific configuration */
 	tauri: OverlayPlatformBehavior;
-}
+};
 
 /**
  * Default platform behaviors

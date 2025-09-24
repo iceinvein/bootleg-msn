@@ -12,15 +12,25 @@ import type {
 } from "./types";
 
 /**
+ * Tauri API interface
+ */
+type TauriAPI = {
+	app?: {
+		getVersion?(): Promise<string> | string;
+	};
+	version?: string;
+};
+
+/**
  * Extended window interface for platform detection
  */
-interface ExtendedWindow extends Window {
-	__TAURI__?: unknown;
+type ExtendedWindow = Window & {
+	__TAURI__?: TauriAPI;
 	Capacitor?: {
 		getPlatform?(): string;
 		isNativePlatform?(): boolean;
 	};
-}
+};
 
 /**
  * Detect the current platform
@@ -77,7 +87,14 @@ function getTauriVersion(): string | undefined {
 	try {
 		if (typeof window !== "undefined" && "__TAURI__" in window) {
 			const tauri = (window as ExtendedWindow).__TAURI__;
-			return tauri?.app?.getVersion?.() || tauri?.version || "unknown";
+			// Try to get version from the version property first (synchronous)
+			if (tauri?.version) {
+				return tauri.version;
+			}
+			// For async getVersion, we can't await here, so return a fallback
+			if (tauri?.app?.getVersion) {
+				return "unknown"; // We'll handle async version getting elsewhere if needed
+			}
 		}
 	} catch (error) {
 		console.warn("Failed to get Tauri version:", error);

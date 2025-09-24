@@ -16,7 +16,7 @@ type TauriUnsubscribeFn = () => void;
 /**
  * Window information from Tauri
  */
-interface WindowInfo {
+type WindowInfo = {
 	scaleFactor: number;
 	size: {
 		width: number;
@@ -33,7 +33,7 @@ interface WindowInfo {
 	isFocused: boolean;
 	isDecorated: boolean;
 	isResizable: boolean;
-}
+};
 
 /**
  * Tauri platform adapter implementation
@@ -141,7 +141,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	private async addWindowFocusListeners(): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 
 			this.windowFocusListener = await appWindow.onFocusChanged(
 				({ payload: focused }) => {
@@ -208,7 +209,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async getWindowInfo(): Promise<Partial<WindowInfo> | null> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			const [
 				position,
 				size,
@@ -244,7 +246,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async setWindowTitle(title: string): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			await appWindow.setTitle(title);
 		} catch (error) {
 			this.log("Error setting window title:", error);
@@ -256,7 +259,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async minimizeWindow(): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			await appWindow.minimize();
 		} catch (error) {
 			this.log("Error minimizing window:", error);
@@ -268,7 +272,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async maximizeWindow(): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			await appWindow.maximize();
 		} catch (error) {
 			this.log("Error maximizing window:", error);
@@ -280,7 +285,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async closeWindow(): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			await appWindow.close();
 		} catch (error) {
 			this.log("Error closing window:", error);
@@ -292,7 +298,8 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 	 */
 	public async setAlwaysOnTop(alwaysOnTop: boolean): Promise<void> {
 		try {
-			const { appWindow } = await import("@tauri-apps/api/window");
+			const { getCurrentWindow } = await import("@tauri-apps/api/window");
+			const appWindow = getCurrentWindow();
 			await appWindow.setAlwaysOnTop(alwaysOnTop);
 		} catch (error) {
 			this.log("Error setting always on top:", error);
@@ -307,7 +314,7 @@ export class TauriPlatformAdapter extends BasePlatformAdapter {
 			const { sendNotification } = await import(
 				"@tauri-apps/plugin-notification"
 			);
-			await sendNotification({
+			sendNotification({
 				title,
 				body,
 			});
