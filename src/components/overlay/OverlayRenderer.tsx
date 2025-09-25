@@ -9,15 +9,21 @@
 import { motion } from "framer-motion";
 import { useCallback } from "react";
 import { useOverlays } from "@/hooks/useOverlays";
+import { useOverlayUrl } from "@/hooks/useOverlayUrl";
 import { cn } from "@/lib/utils";
 import type { OverlayEntry, OverlayType } from "@/types/overlay";
 
 // Import overlay components
+import { AddContactOverlay } from "./overlays/AddContactOverlay";
+import { AddMembersOverlay } from "./overlays/AddMembersOverlay";
+import { AvatarEditorOverlay } from "./overlays/AvatarEditorOverlay";
 import { ConfirmOverlay } from "./overlays/ConfirmOverlay";
+import { ContactRequestsOverlay } from "./overlays/ContactRequestsOverlay";
 import { CreateGroupOverlay } from "./overlays/CreateGroupOverlay";
 import { EditUserOverlay } from "./overlays/EditUserOverlay";
 import { EmojiPickerOverlay } from "./overlays/EmojiPickerOverlay";
 import { FilePreviewOverlay } from "./overlays/FilePreviewOverlay";
+import { GroupInfoOverlay } from "./overlays/GroupInfoOverlay";
 import { InfoOverlay } from "./overlays/InfoOverlay";
 import { InviteUsersOverlay } from "./overlays/InviteUsersOverlay";
 import { SettingsOverlay } from "./overlays/SettingsOverlay";
@@ -53,12 +59,17 @@ const OVERLAY_COMPONENTS: Record<OverlayType, OverlayComponent> = {
 	INFO: InfoOverlay as OverlayComponent,
 	SETTINGS: SettingsOverlay as OverlayComponent,
 	CREATE_GROUP: CreateGroupOverlay as OverlayComponent,
+	ADD_CONTACT: AddContactOverlay as OverlayComponent,
 	EDIT_USER: EditUserOverlay as OverlayComponent,
 	SHEET: SheetOverlay as OverlayComponent,
 	INVITE_USERS: InviteUsersOverlay as OverlayComponent,
 	FILE_PREVIEW: FilePreviewOverlay as OverlayComponent,
 	EMOJI_PICKER: EmojiPickerOverlay as OverlayComponent,
 	THEME_SELECTOR: ThemeSelectorOverlay as OverlayComponent,
+	GROUP_INFO: GroupInfoOverlay as OverlayComponent,
+	ADD_MEMBERS: AddMembersOverlay as OverlayComponent,
+	CONTACT_REQUESTS: ContactRequestsOverlay as OverlayComponent,
+	AVATAR_EDITOR: AvatarEditorOverlay as OverlayComponent,
 };
 
 /**
@@ -97,39 +108,32 @@ export function OverlayRenderer({
 
 	/**
 	 * Handle overlay close
+	 * Note: URL clearing is handled automatically by the bidirectional sync system
 	 */
+	// Use URL helpers without enabling auto-sync here to avoid competing effects
+	const { clearUrl, hasUrlOverlay } = useOverlayUrl({
+		autoSync: false,
+		replaceHistory: true,
+	});
+
 	const handleClose = useCallback(() => {
+		// First remove from overlay stack synchronously
 		close(entry.id);
-	}, [close, entry.id]);
+		// Then clear URL if this overlay persisted in URL and URL currently has overlay params
+		if (entry.persistInUrl && hasUrlOverlay()) {
+			clearUrl({ replace: true });
+		}
+	}, [close, entry.id, entry.persistInUrl, clearUrl, hasUrlOverlay]);
 
 	/**
 	 * Handle backdrop click (close if closable)
 	 */
-	const handleBackdropClick = useCallback(
-		(event: React.MouseEvent) => {
-			// Only close if clicking the backdrop itself, not child elements
-			// Default to closable=true if not specified
-			const isClosable = entry.props?.closable !== false;
-			if (event.target === event.currentTarget && isClosable) {
-				handleClose();
-			}
-		},
-		[handleClose, entry.props?.closable],
-	);
+	// Backdrop click handled by individual overlay components (e.g., Dialog/Drawer)
 
 	/**
 	 * Handle escape key press
 	 */
-	const handleKeyDown = useCallback(
-		(event: React.KeyboardEvent) => {
-			// Default to closable=true if not specified
-			const isClosable = entry.props?.closable !== false;
-			if (event.key === "Escape" && isClosable && isTopmost) {
-				handleClose();
-			}
-		},
-		[handleClose, entry.props?.closable, isTopmost],
-	);
+	// Escape key handling is provided by overlay components; avoid double-handling here
 
 	// Get the component for this overlay type
 	const OverlayComponent = OVERLAY_COMPONENTS[entry.type];
@@ -153,8 +157,8 @@ export function OverlayRenderer({
 		<motion.div
 			className={cn(
 				"fixed inset-0 flex items-center justify-center",
-				// Ensure proper stacking
-				"pointer-events-auto",
+				// Do not intercept clicks; overlay components handle interactions
+				"pointer-events-none",
 			)}
 			style={{ zIndex }}
 			variants={overlayVariants}
@@ -162,9 +166,6 @@ export function OverlayRenderer({
 			animate="animate"
 			exit="exit"
 			transition={{ duration: 0.2 }}
-			onClick={handleBackdropClick}
-			onKeyDown={handleKeyDown}
-			tabIndex={-1}
 			data-overlay-id={entry.id}
 			data-overlay-type={entry.type}
 			data-overlay-topmost={isTopmost}

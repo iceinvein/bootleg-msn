@@ -10,7 +10,7 @@ import {
 	UserPlus,
 	Users,
 } from "lucide-react";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,25 +22,22 @@ import {
 	ResponsiveDialogFooter,
 	ResponsiveDialogHeader,
 	ResponsiveDialogTitle,
-	ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { $selectedChat } from "@/stores/contact";
+import type { AddMembersOverlayProps } from "@/types/overlay";
 import { getStatusColor } from "@/utils/style";
 
-type AddMembersDialogProps = {
-	children: React.ReactNode;
-};
-
-export default function AddMembersDialog({ children }: AddMembersDialogProps) {
+export function AddMembersOverlay({
+	onClose,
+	groupId: groupIdProp,
+}: AddMembersOverlayProps & { onClose?: () => void }) {
 	const selectedChat = useStore($selectedChat);
-
-	const groupId = selectedChat?.group?._id;
+	const groupId = groupIdProp ?? selectedChat?.group?._id;
 
 	const [selectedMembers, setSelectedMembers] = useState<Id<"users">[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [isOpen, setIsOpen] = useState(false);
 
 	const contacts = useQuery(api.contacts.getContacts);
 	const existingMembers = useQuery(
@@ -49,24 +46,36 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 	);
 	const addGroupMembers = useMutation(api.groups.addGroupMembers);
 
-	// Filter out contacts who are already members
-	const availableContacts = contacts?.filter(
-		(contact) =>
-			!existingMembers?.some(
-				(member) => member.userId === contact.contactUserId,
-			),
+	const availableContacts = useMemo(
+		() =>
+			contacts?.filter(
+				(contact) =>
+					!existingMembers?.some(
+						(member) => member.userId === contact.contactUserId,
+					),
+			) ?? [],
+		[contacts, existingMembers],
 	);
 
-	const filteredContacts =
-		availableContacts?.filter(
-			(contact) =>
-				contact.nickname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				contact.user?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				contact.user?.email?.toLowerCase().includes(searchQuery.toLowerCase()),
-		) ?? [];
+	const filteredContacts = useMemo(
+		() =>
+			availableContacts.filter(
+				(contact) =>
+					contact.nickname?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+					contact.user?.name
+						?.toLowerCase()
+						.includes(searchQuery.toLowerCase()) ||
+					contact.user?.email
+						?.toLowerCase()
+						.includes(searchQuery.toLowerCase()),
+			),
+		[availableContacts, searchQuery],
+	);
 
-	// Fetch avatars for all available contacts
-	const contactUserIds = availableContacts?.map((c) => c.contactUserId);
+	const contactUserIds = useMemo(
+		() => availableContacts.map((c) => c.contactUserId),
+		[availableContacts],
+	);
 	const avatarUrls = useUserAvatarUrls(contactUserIds);
 
 	const handleMemberToggle = (contactUserId: Id<"users">) => {
@@ -81,13 +90,10 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 		e.preventDefault();
 		if (selectedMembers.length > 0 && groupId) {
 			try {
-				await addGroupMembers({
-					groupId,
-					memberIds: selectedMembers,
-				});
+				await addGroupMembers({ groupId, memberIds: selectedMembers });
 				setSelectedMembers([]);
 				setSearchQuery("");
-				setIsOpen(false);
+				onClose?.();
 			} catch (error) {
 				console.error("Failed to add members:", error);
 			}
@@ -100,8 +106,12 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 	};
 
 	return (
-		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
-			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+		<ResponsiveDialog
+			open={true}
+			onOpenChange={(open) => {
+				if (!open) onClose?.();
+			}}
+		>
 			<ResponsiveDialogContent className="max-h-[90vh] sm:max-w-2xl">
 				<ResponsiveDialogHeader>
 					<ResponsiveDialogTitle className="flex items-center space-x-2">
@@ -114,28 +124,26 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 				</ResponsiveDialogHeader>
 
 				<form onSubmit={handleSubmit} className="space-y-6">
-					{/* Search Bar */}
 					<div className="space-y-3">
 						<div className="flex items-center justify-between">
-							<Label className="font-semibold text-base text-gray-700 dark:text-gray-300">
+							<Label className="font-semibold text-base">
 								Available Contacts ({selectedMembers.length} selected)
 							</Label>
 							<div className="relative">
-								<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-gray-400" />
+								<Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 transform text-muted-foreground" />
 								<Input
 									placeholder="Search contacts..."
 									value={searchQuery}
 									onChange={(e) => setSearchQuery(e.target.value)}
-									className="w-64 border-gray-300 bg-white pl-10 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-100"
+									className="w-64 pl-10"
 								/>
 							</div>
 						</div>
 
-						{/* Members List */}
-						<ScrollArea className="h-80 rounded-lg border bg-white p-2 dark:border-gray-600 dark:bg-gray-700">
+						<ScrollArea className="h-80 rounded-lg border p-2">
 							{filteredContacts.length === 0 ? (
-								<div className="py-8 text-center text-gray-500 dark:text-gray-400">
-									{availableContacts?.length === 0 ? (
+								<div className="py-8 text-center text-muted-foreground">
+									{availableContacts.length === 0 ? (
 										<>
 											<Users className="mx-auto mb-2 h-8 w-8 opacity-50" />
 											<p className="text-sm">
@@ -157,9 +165,9 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 										<button
 											type="button"
 											key={contact._id}
-											className={`flex w-full cursor-pointer items-center space-x-3 rounded-lg p-3 transition-all hover:bg-gray-50 dark:hover:bg-gray-600 ${
+											className={`flex w-full cursor-pointer items-center space-x-3 rounded-lg p-3 transition-all hover:bg-muted ${
 												selectedMembers.includes(contact.contactUserId)
-													? "border border-blue-200 bg-blue-50 dark:border-blue-700 dark:bg-blue-900/20"
+													? "border border-primary/30 bg-primary/10"
 													: ""
 											}`}
 											onClick={() => handleMemberToggle(contact.contactUserId)}
@@ -171,29 +179,30 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 											)}
 											<div className="relative">
 												<Avatar className="h-10 w-10">
-													{avatarUrls.get(contact.contactUserId) ? (
-														<AvatarImage
-															src={avatarUrls.get(contact.contactUserId)}
-														/>
-													) : (
-														<AvatarFallback delayMs={0}>
-															<User className="h-10 w-10" />
-														</AvatarFallback>
-													)}
+													{(() => {
+														const url = avatarUrls.get(contact.contactUserId);
+														return url ? (
+															<AvatarImage src={url} />
+														) : (
+															<AvatarFallback delayMs={0}>
+																<User className="h-10 w-10" />
+															</AvatarFallback>
+														);
+													})()}
 												</Avatar>
 												<div
-													className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-white ${getStatusColor(contact.status)}`}
+													className={`-bottom-1 -right-1 absolute h-3 w-3 rounded-full border-2 border-background ${getStatusColor(contact.status)}`}
 												/>
 											</div>
 											<div className="ml-2">
-												<p className="truncate font-medium text-gray-900 text-sm dark:text-gray-100">
+												<p className="truncate font-medium text-sm">
 													{contact.nickname ??
 														contact.user?.name ??
 														contact.user?.email ??
 														"Unknown User"}
 												</p>
 												{contact.statusMessage && (
-													<p className="truncate text-gray-500 text-xs dark:text-gray-400">
+													<p className="truncate text-muted-foreground text-xs">
 														{contact.statusMessage}
 													</p>
 												)}
@@ -205,13 +214,12 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 						</ScrollArea>
 					</div>
 
-					{/* Selected Members Preview */}
 					{selectedMembers.length > 0 && (
 						<div className="space-y-3">
-							<Label className="font-semibold text-gray-700 text-sm dark:text-gray-300">
+							<Label className="font-semibold text-sm">
 								Selected Members ({selectedMembers.length})
 							</Label>
-							<div className="flex flex-wrap gap-2 rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-700 dark:bg-blue-900/20">
+							<div className="flex flex-wrap gap-2 rounded-lg border p-3">
 								{selectedMembers.map((memberId) => {
 									const contact = contacts?.find(
 										(c) => c.contactUserId === memberId,
@@ -220,7 +228,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 									return (
 										<div
 											key={memberId}
-											className="flex items-center space-x-2 rounded-full border bg-white px-3 py-1 dark:bg-gray-700"
+											className="flex items-center space-x-2 rounded-full border px-3 py-1"
 										>
 											<Avatar className="h-6 w-6">
 												{contact.user?.image ? (
@@ -231,7 +239,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 													</AvatarFallback>
 												)}
 											</Avatar>
-											<span className="font-medium text-gray-900 text-sm dark:text-gray-100">
+											<span className="font-medium text-sm">
 												{contact.nickname ??
 													contact.user?.name ??
 													contact.user?.email ??
@@ -242,7 +250,7 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 												size="sm"
 												variant="ghost"
 												onClick={() => handleMemberToggle(memberId)}
-												className="h-4 w-4 p-0 hover:bg-gray-200 dark:hover:bg-gray-600"
+												className="h-4 w-4 p-0"
 											>
 												×
 											</Button>
@@ -261,15 +269,11 @@ export default function AddMembersDialog({ children }: AddMembersDialogProps) {
 							<Button
 								type="button"
 								variant="outline"
-								onClick={() => setIsOpen(false)}
+								onClick={() => onClose?.()}
 							>
 								Cancel
 							</Button>
-							<Button
-								type="submit"
-								className="msn-gradient text-white hover:opacity-90"
-								disabled={selectedMembers.length === 0}
-							>
+							<Button type="submit" disabled={selectedMembers.length === 0}>
 								Add {selectedMembers.length} Member
 								{selectedMembers.length !== 1 ? "s" : ""}
 							</Button>

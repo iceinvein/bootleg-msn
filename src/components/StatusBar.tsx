@@ -8,10 +8,8 @@ import type { Infer } from "convex/values";
 import { Settings, User, UserCheck, UserPlus, Users } from "lucide-react";
 import { useState } from "react";
 import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
-import AddContactDialog from "./AddContactDialog";
-import ContactRequestsDialog from "./ContactRequestsDialog";
-import { CreateGroupDialog } from "./CreateGroupDialog";
-import { SettingsDialog } from "./SettingsDialog";
+import { useOverlays } from "@/hooks/useOverlays";
+
 import { StatusMessage } from "./StatusMessage";
 import { StatusSelector } from "./StatusSelector";
 import { Badge } from "./ui/badge";
@@ -37,6 +35,7 @@ export function StatusBar({ user }: StatusBarProps) {
 	const sentRequests = useQuery(api.contacts.getSentRequests);
 
 	const updateStatus = useMutation(api.userStatus.updateStatus);
+	const { open } = useOverlays();
 
 	const handleStatusChange = async (status: StatusValue) => {
 		setCurrentStatus(status);
@@ -54,6 +53,41 @@ export function StatusBar({ user }: StatusBarProps) {
 	const displayName = user.name ?? "You";
 	const totalRequestCount =
 		(pendingRequests?.length ?? 0) + (sentRequests?.length ?? 0);
+
+	// Overlay functions
+	const showSettings = (initialTab = "account") => {
+		open({
+			type: "SETTINGS",
+			props: {
+				initialTab,
+				onClose: () => {
+					console.log("Settings closed");
+				},
+			},
+		});
+	};
+
+	const showCreateGroup = () => {
+		open({
+			type: "CREATE_GROUP",
+			props: {
+				onGroupCreated: (group: unknown) => {
+					console.log("Group created:", group);
+				},
+			},
+		});
+	};
+
+	const showAddContact = () => {
+		open({
+			type: "ADD_CONTACT",
+			props: {
+				onContactAdded: (contact: unknown) => {
+					console.log("Contact added:", contact);
+				},
+			},
+		});
+	};
 
 	// Map broader status (which may include 'offline') to selectable set used by StatusSelector
 	const toSelectableStatus = (
@@ -76,20 +110,17 @@ export function StatusBar({ user }: StatusBarProps) {
 		<div className="bg-background/60 backdrop-blur-sm">
 			<div className="transition-all duration-300 ease-in-out md:p-4">
 				<div className="flex items-center space-x-3">
-					<SettingsDialog initialTab="account">
-						<Avatar
-							className="h-8 w-8 cursor-pointer border-2 border-white transition-opacity hover:opacity-80 md:h-10 md:w-10"
-							title="Open Settings"
-							aria-label="Open Settings"
-						>
-							{avatarUrl ? (
-								<AvatarImage key={avatarUrl} src={avatarUrl} />
-							) : null}
-							<AvatarFallback delayMs={0} className="text-xs md:text-sm">
-								<User className="h-full w-full" />
-							</AvatarFallback>
-						</Avatar>
-					</SettingsDialog>
+					<Avatar
+						className="h-8 w-8 cursor-pointer border-2 border-white transition-opacity hover:opacity-80 md:h-10 md:w-10"
+						title="Open Settings"
+						aria-label="Open Settings"
+						onClick={() => showSettings("account")}
+					>
+						{avatarUrl ? <AvatarImage key={avatarUrl} src={avatarUrl} /> : null}
+						<AvatarFallback delayMs={0} className="text-xs md:text-sm">
+							<User className="h-full w-full" />
+						</AvatarFallback>
+					</Avatar>
 					<div className="min-w-0 flex-1">
 						<h2 className="font-semibold text-sm md:text-base">
 							{displayName}
@@ -101,55 +132,56 @@ export function StatusBar({ user }: StatusBarProps) {
 					</div>
 				</div>
 				<div className="mt-2 flex flex-row justify-between gap-1">
-					<AddContactDialog>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-10 w-10 cursor-pointer"
-							title="Add contact"
-							aria-label="Add contact"
-						>
-							<UserPlus className="md:h-5! md:w-5!" />
-						</Button>
-					</AddContactDialog>
-					<ContactRequestsDialog>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="relative h-10 w-10 cursor-pointer"
-							title="Check Invites"
-							aria-label="Check Invites"
-						>
-							<UserCheck className="md:h-5! md:w-5!" />
-							{totalRequestCount > 0 && (
-								<Badge className="-top-1 -right-1 absolute h-5 w-5 bg-destructive p-0 text-destructive-foreground text-xs hover:bg-destructive">
-									{totalRequestCount}
-								</Badge>
-							)}
-						</Button>
-					</ContactRequestsDialog>
-					<CreateGroupDialog>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-10 w-10 cursor-pointer"
-							title="Create Group Chat"
-							aria-label="Create Group Chat"
-						>
-							<Users className="md:h-5! md:w-5!" />
-						</Button>
-					</CreateGroupDialog>
-					<SettingsDialog>
-						<Button
-							variant="ghost"
-							size="sm"
-							className="h-10 w-10 cursor-pointer"
-							title="Settings"
-							aria-label="Settings"
-						>
-							<Settings className="md:h-5! md:w-5!" />
-						</Button>
-					</SettingsDialog>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-10 w-10 cursor-pointer"
+						title="Add contact"
+						aria-label="Add contact"
+						onClick={showAddContact}
+					>
+						<UserPlus className="md:h-5! md:w-5!" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="relative h-10 w-10 cursor-pointer"
+						title="Check Invites"
+						aria-label="Check Invites"
+						onClick={() => open({ type: "CONTACT_REQUESTS" })}
+					>
+						<UserCheck className="md:h-5! md:w-5!" />
+						{totalRequestCount > 0 && (
+							<Badge className="-top-1 -right-1 absolute h-5 w-5 bg-destructive p-0 text-destructive-foreground text-xs hover:bg-destructive">
+								{totalRequestCount}
+							</Badge>
+						)}
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-10 w-10 cursor-pointer"
+						title="Create Group Chat"
+						aria-label="Create Group Chat"
+						onClick={showCreateGroup}
+					>
+						<Users className="md:h-5! md:w-5!" />
+					</Button>
+					<Button
+						variant="ghost"
+						size="sm"
+						className="h-10 w-10 cursor-pointer"
+						title="Settings"
+						aria-label="Settings"
+						onClick={() =>
+							open({
+								type: "SETTINGS",
+								props: { onClose: () => console.log("Settings closed") },
+							})
+						}
+					>
+						<Settings className="md:h-5! md:w-5!" />
+					</Button>
 				</div>
 			</div>
 

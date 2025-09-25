@@ -1,4 +1,9 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
+import { useEffect } from "react";
+import { useOverlays } from "@/hooks/useOverlays";
+import { useSearchParams } from "react-router-dom";
+import { OVERLAY_URL_PARAMS } from "@/utils/overlayUrl";
+
 import { renderHook, act, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import {
@@ -49,12 +54,12 @@ Object.defineProperty(window, "location", {
 });
 
 // Wrapper component for React Router context
-const RouterWrapper = ({ 
-	children, 
-	initialEntries = ["/"] 
-}: { 
-	children: React.ReactNode; 
-	initialEntries?: string[] 
+const RouterWrapper = ({
+	children,
+	initialEntries = ["/"]
+}: {
+	children: React.ReactNode;
+	initialEntries?: string[]
 }) => (
 	<MemoryRouter initialEntries={initialEntries}>
 		{children}
@@ -133,6 +138,125 @@ describe("useOverlaySync Hooks", () => {
 
 			expect(result.current.isSyncing).toBe(false);
 		});
+
+      it("does not auto-close immediately when opened while URL is empty", async () => {
+        // Harness component mounts bidirectional sync and opens an overlay on mount
+        function Harness({ persistInUrl = true }: { persistInUrl?: boolean }) {
+          useBidirectionalSync({ debounceMs: 50, preventLoops: true });
+          const { open, topOverlay } = useOverlays();
+          const [search] = useSearchParams();
+          useEffect(() => {
+            open({ type: "INFO", props: { title: "Test" }, persistInUrl });
+          }, [open, persistInUrl]);
+          const hasModal = search.has(OVERLAY_URL_PARAMS.MODAL);
+          return (
+            <div data-open={!!topOverlay} data-has-url={hasModal} />
+          );
+        }
+
+        const { container } = require("@testing-library/react").render(
+          <RouterWrapper>
+            <Harness />
+          </RouterWrapper>
+        );
+
+        // Wait for overlay to open
+        await waitFor(() => {
+          expect(container.querySelector("div[data-open='true']")).toBeTruthy();
+        });
+
+        // After debounce, it should still be open (no auto-close due to empty URL)
+        await new Promise((r) => setTimeout(r, 120));
+        expect(container.querySelector("div[data-open='true']")).toBeTruthy();
+      });
+
+      it("respects persistInUrl=false (does not write modal param and does not close)", async () => {
+        function Harness() {
+          useBidirectionalSync({ debounceMs: 50, preventLoops: true });
+          const { open, topOverlay } = useOverlays();
+          const [search] = useSearchParams();
+          useEffect(() => {
+            open({ type: "INFO", props: { title: "Transient" }, persistInUrl: false });
+          }, [open]);
+          const hasModal = search.has(OVERLAY_URL_PARAMS.MODAL);
+          return <div data-open={!!topOverlay} data-has-url={hasModal} />;
+        }
+
+        const { container } = require("@testing-library/react").render(
+          <RouterWrapper>
+            <Harness />
+          </RouterWrapper>
+        );
+
+        // Wait for overlay to open
+        await waitFor(() => {
+          expect(container.querySelector("div[data-open='true']")).toBeTruthy();
+        });
+
+        // After debounce, URL should still not have modal and overlay remains open
+        await new Promise((r) => setTimeout(r, 120));
+        const el = container.querySelector("div[data-open]") as HTMLElement;
+        expect(el?.getAttribute("data-open")).toBe("true");
+        expect(el?.getAttribute("data-has-url")).toBe("false");
+      });
+
+
+      it("defaults: INFO does not persist in URL", async () => {
+        function Harness() {
+          useBidirectionalSync({ debounceMs: 50, preventLoops: true });
+          const { open, topOverlay } = useOverlays();
+          const [search] = useSearchParams();
+          useEffect(() => {
+            open({ type: "INFO", props: { title: "Info" } }); // no persistInUrl specified
+          }, [open]);
+          const hasModal = search.has(OVERLAY_URL_PARAMS.MODAL);
+          return <div data-open={!!topOverlay} data-has-url={hasModal} />;
+        }
+
+        const { container } = require("@testing-library/react").render(
+          <RouterWrapper>
+            <Harness />
+          </RouterWrapper>
+        );
+
+        await waitFor(() => {
+          expect(container.querySelector("div[data-open='true']")).toBeTruthy();
+        });
+
+        await new Promise((r) => setTimeout(r, 120));
+        const el = container.querySelector("div[data-open]") as HTMLElement;
+        expect(el?.getAttribute("data-open")).toBe("true");
+        expect(el?.getAttribute("data-has-url")).toBe("false");
+      });
+
+      it("defaults: SETTINGS persists in URL", async () => {
+        function Harness() {
+          useBidirectionalSync({ debounceMs: 50, preventLoops: true });
+          const { open, topOverlay } = useOverlays();
+          const [search] = useSearchParams();
+          useEffect(() => {
+            open({ type: "SETTINGS", props: { title: "Settings" } });
+          }, [open]);
+          const hasModal = search.has(OVERLAY_URL_PARAMS.MODAL);
+          return <div data-open={!!topOverlay} data-has-url={hasModal} />;
+        }
+
+        const { container } = require("@testing-library/react").render(
+          <RouterWrapper>
+            <Harness />
+          </RouterWrapper>
+        );
+
+        await waitFor(() => {
+          expect(container.querySelector("div[data-open='true']")).toBeTruthy();
+        });
+
+        await new Promise((r) => setTimeout(r, 120));
+        const el = container.querySelector("div[data-open]") as HTMLElement;
+        expect(el?.getAttribute("data-open")).toBe("true");
+        expect(el?.getAttribute("data-has-url")).toBe("true");
+      });
+
 	});
 
 	describe("useOverlayBatch", () => {

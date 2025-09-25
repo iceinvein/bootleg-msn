@@ -65,7 +65,7 @@ describe("Overlay Store", () => {
 				id: "overlay_test-id-1",
 				type: "CONFIRM",
 				props: { message: "Test message" },
-				persistInUrl: true,
+				persistInUrl: false,
 			});
 			expect(stack[0].createdAt).toBeTypeOf("number");
 		});

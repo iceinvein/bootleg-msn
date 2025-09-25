@@ -23,6 +23,8 @@ export type {
 	SheetOverlayProps,
 	ThemeSelectorOverlayProps,
 } from "@/types/overlay";
+// Example components
+export { OverlayExamples } from "./examples/OverlayExamples";
 // Re-export types for convenience
 export type {
 	OverlayHostConfig,

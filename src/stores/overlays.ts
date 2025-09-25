@@ -7,7 +7,9 @@ import type {
 	OverlayId,
 	OverlayProps,
 	OverlayState,
+	OverlayType,
 } from "@/types/overlay";
+import { overlayDebugLog } from "@/utils/overlayDebug";
 
 /**
  * Default configuration for the overlay system
@@ -51,6 +53,25 @@ function generateOverlayId(): OverlayId {
 	return `overlay_${nanoid(8)}`;
 }
 
+/** Default URL persistence per overlay type */
+const DEFAULT_PERSIST: Record<OverlayType, boolean> = {
+	CONFIRM: false,
+	INFO: false,
+	SHEET: false,
+	SETTINGS: true,
+	CREATE_GROUP: true,
+	EDIT_USER: true,
+	ADD_CONTACT: true,
+	INVITE_USERS: true,
+	FILE_PREVIEW: true,
+	EMOJI_PICKER: false,
+	THEME_SELECTOR: false,
+	GROUP_INFO: true,
+	ADD_MEMBERS: false,
+	CONTACT_REQUESTS: true,
+	AVATAR_EDITOR: false,
+};
+
 /**
  * Helper function to create a complete overlay entry
  */
@@ -61,7 +82,7 @@ function createOverlayEntry(
 		...entry,
 		id: generateOverlayId(),
 		createdAt: Date.now(),
-		persistInUrl: entry.persistInUrl ?? true,
+		persistInUrl: entry.persistInUrl ?? DEFAULT_PERSIST[entry.type] ?? true,
 	};
 }
 
@@ -91,6 +112,12 @@ export const overlayActions: OverlayActions = {
 			stack: newStack,
 		});
 
+		overlayDebugLog("overlay.open", {
+			id: newEntry.id,
+			type: newEntry.type,
+			stackSize: newStack.length,
+		});
+
 		return newEntry.id;
 	},
 
@@ -99,11 +126,18 @@ export const overlayActions: OverlayActions = {
 	 */
 	close: (id: OverlayId): void => {
 		const currentState = $overlayState.get();
+		const target = currentState.stack.find((o) => o.id === id);
 		const newStack = currentState.stack.filter((overlay) => overlay.id !== id);
 
 		$overlayState.set({
 			...currentState,
 			stack: newStack,
+		});
+
+		overlayDebugLog("overlay.close", {
+			id,
+			type: target?.type ?? null,
+			stackSize: newStack.length,
 		});
 	},
 
@@ -113,10 +147,16 @@ export const overlayActions: OverlayActions = {
 	closeTop: (): void => {
 		const currentState = $overlayState.get();
 		if (currentState.stack.length > 0) {
+			const target = currentState.stack[currentState.stack.length - 1];
 			const newStack = currentState.stack.slice(0, -1);
 			$overlayState.set({
 				...currentState,
 				stack: newStack,
+			});
+			overlayDebugLog("overlay.close", {
+				id: target.id,
+				type: target.type,
+				stackSize: newStack.length,
 			});
 		}
 	},
@@ -129,6 +169,9 @@ export const overlayActions: OverlayActions = {
 		$overlayState.set({
 			...currentState,
 			stack: [],
+		});
+		overlayDebugLog("overlay.closeAll", {
+			prevStackSize: currentState.stack.length,
 		});
 	},
 
@@ -153,6 +196,12 @@ export const overlayActions: OverlayActions = {
 			stack: newStack,
 		});
 
+		overlayDebugLog("overlay.replaceTop", {
+			id: newEntry.id,
+			type: newEntry.type,
+			stackSize: newStack.length,
+		});
+
 		return newEntry.id;
 	},
 
@@ -175,6 +224,8 @@ export const overlayActions: OverlayActions = {
 			...currentState,
 			stack: newStack,
 		});
+
+		overlayDebugLog("overlay.updateProps", { id });
 	},
 
 	/**

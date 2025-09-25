@@ -222,6 +222,7 @@ function isValidOverlayType(type: string): boolean {
 		"SETTINGS",
 		"INFO",
 		"CREATE_GROUP",
+		"ADD_CONTACT",
 		"INVITE_USERS",
 		"FILE_PREVIEW",
 		"EMOJI_PICKER",

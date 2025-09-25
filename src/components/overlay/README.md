@@ -176,10 +176,37 @@ import { useBidirectionalSync } from "@/hooks/useOverlaySync";
 
 function MyComponent() {
   const { openFromUrl, updateUrl } = useBidirectionalSync();
-  
+
   // Overlay state will sync with URL parameters
 }
 ```
+
+### Single-Writer URL Sync Policy (Important)
+
+To avoid feedback loops and race conditions, only one place in the app should own URL↔overlay synchronization:
+
+- Use useBidirectionalSync at the app root to handle url→overlay and overlay→url.
+- Do not enable autoSync in component-level useOverlayUrl calls. If you need helpers like clearUrl or hasUrlOverlay, call useOverlayUrl({ autoSync: false }).
+- OverlayRenderer follows this policy and calls clearUrl on close without auto-syncing.
+
+### Default URL Persistence by Overlay Type
+
+Some overlays should be deep-linkable by default; others should be transient. The system applies these defaults when you do not specify persistInUrl in open():
+
+- Persist (true): ADD_CONTACT, EDIT_USER, SETTINGS, CREATE_GROUP, INVITE_USERS, FILE_PREVIEW
+- Transient (false): CONFIRM, INFO, EMOJI_PICKER, THEME_SELECTOR, SHEET
+
+Override per call if needed:
+
+```tsx
+open({ type: "INFO", props: {...}, persistInUrl: true });   // force persist
+open({ type: "SETTINGS", props: {...}, persistInUrl: false }); // force transient
+```
+
+Notes:
+- url→overlay closes are only triggered on a true transition from having a modal in the URL to not having one (e.g., back navigation), preventing churn.
+- overlay→url only writes when it would actually change the URL, avoiding redundant updates.
+
 
 ### Batch Operations
 
@@ -188,7 +215,7 @@ import { useOverlayBatch } from "@/hooks/useOverlaySync";
 
 function MyComponent() {
   const { batchOpen, batchClose } = useOverlayBatch();
-  
+
   const openMultiple = () => {
     batchOpen([
       { type: "INFO", props: { title: "First" } },
@@ -227,10 +254,10 @@ pnpm test
 The overlay system is fully typed with TypeScript:
 
 ```tsx
-import type { 
-  OverlayType, 
-  OverlayEntry, 
-  ConfirmOverlayProps 
+import type {
+  OverlayType,
+  OverlayEntry,
+  ConfirmOverlayProps
 } from "@/types/overlay";
 
 // Type-safe overlay usage

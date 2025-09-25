@@ -8,6 +8,7 @@
 import { useCallback, useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { OverlayEntry } from "@/types/overlay";
+import { overlayDebugLog } from "@/utils/overlayDebug";
 import {
 	clearOverlayFromUrl,
 	decodeOverlayFromUrl,
@@ -78,6 +79,7 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 	 */
 	const updateUrl = useCallback(
 		(overlay: OverlayEntry | null, options: { replace?: boolean } = {}) => {
+			const prev = searchParams.toString();
 			const newParams = updateUrlWithOverlay(
 				searchParams,
 				overlay,
@@ -85,6 +87,13 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 			);
 			const replace = options.replace ?? finalConfig.replaceHistory;
 
+			overlayDebugLog("url.update", {
+				source: "useOverlayUrl.updateUrl",
+				overlayType: overlay?.type ?? null,
+				prev,
+				next: newParams.toString(),
+				replace,
+			});
 			setSearchParams(newParams, { replace });
 		},
 		[searchParams, setSearchParams, finalConfig],
@@ -96,6 +105,11 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 	const openFromUrl = useCallback(() => {
 		const overlayData = decodeOverlayFromUrl(searchParams, finalConfig);
 		if (overlayData?.type) {
+			overlayDebugLog("sync.urlToOverlay.openFromUrl", {
+				decodedType: overlayData.type,
+				decodedProps: overlayData.props ? Object.keys(overlayData.props) : null,
+				search: searchParams.toString(),
+			});
 			// Create a complete overlay entry
 			const overlayEntry: Omit<OverlayEntry, "id" | "createdAt"> = {
 				type: overlayData.type,
@@ -113,9 +127,16 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 	 */
 	const clearUrl = useCallback(
 		(options: { replace?: boolean } = {}) => {
+			const prev = searchParams.toString();
 			const newParams = clearOverlayFromUrl(searchParams);
 			const replace = options.replace ?? finalConfig.replaceHistory;
 
+			overlayDebugLog("url.clear", {
+				source: "useOverlayUrl.clearUrl",
+				prev,
+				next: newParams.toString(),
+				replace,
+			});
 			setSearchParams(newParams, { replace });
 		},
 		[searchParams, setSearchParams, finalConfig],
@@ -192,6 +213,10 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 
 				// Only update URL if overlay should persist
 				if (currentOverlay?.persistInUrl !== false) {
+					overlayDebugLog("sync.overlayToUrl.updateUrl", {
+						source: "useOverlayUrl.autoSync",
+						type: currentOverlay?.type ?? null,
+					});
 					updateUrl(currentOverlay, { replace: true });
 				}
 			}, finalConfig.debounceMs);
@@ -222,11 +247,22 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 				const urlOverlay = decodeOverlayFromUrl(searchParams, finalConfig);
 				const currentOverlay = topOverlay;
 
+				overlayDebugLog("router.popstate", {
+					urlOverlayType: urlOverlay?.type ?? null,
+					currentOverlayType: currentOverlay?.type ?? null,
+					search: searchParams.toString(),
+				});
+
 				// Only open if different from current overlay
 				if (!currentOverlay || currentOverlay.type !== urlOverlay?.type) {
 					openFromUrl();
 				}
 			} else if (topOverlay) {
+				overlayDebugLog("router.popstate", {
+					urlOverlayType: null,
+					currentOverlayType: topOverlay?.type ?? null,
+					search: searchParams.toString(),
+				});
 				closeAll();
 			}
 		};
@@ -244,6 +280,7 @@ export function useOverlayUrl(config: UseOverlayUrlConfig = {}) {
 	 */
 	useEffect(() => {
 		if (finalConfig.autoSync && hasOverlayInUrl(searchParams) && !topOverlay) {
+			overlayDebugLog("init.fromUrl", { search: searchParams.toString() });
 			openFromUrl();
 		}
 	}, [finalConfig.autoSync, openFromUrl, searchParams, topOverlay]); // Only run on mount

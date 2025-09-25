@@ -15,10 +15,15 @@ export type OverlayType =
 	| "SETTINGS" // Settings dialog
 	| "INFO" // Information dialog
 	| "CREATE_GROUP" // Group creation form
+	| "ADD_CONTACT" // Add contact dialog
 	| "INVITE_USERS" // User invitation dialog
 	| "FILE_PREVIEW" // File preview modal
 	| "EMOJI_PICKER" // Emoji picker overlay
-	| "THEME_SELECTOR"; // Theme selection dialog
+	| "THEME_SELECTOR" // Theme selection dialog
+	| "GROUP_INFO" // Group info dialog
+	| "ADD_MEMBERS" // Add members to group
+	| "CONTACT_REQUESTS" // Contact requests management
+	| "AVATAR_EDITOR"; // Avatar editor
 
 /**
  * Unique identifier for overlay instances
@@ -137,6 +142,51 @@ export type CreateGroupOverlayProps = BaseOverlayProps & {
 };
 
 /**
+ * Props specific to group information dialogs
+ */
+export type GroupInfoOverlayProps = BaseOverlayProps & {
+	/** Group to display information for */
+	group: import("@/stores/contact").Group | null;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/** Props specific to add members dialogs */
+export type AddMembersOverlayProps = BaseOverlayProps & {
+	/** Optional explicit group id; if omitted, selected chat's group is used */
+	groupId?: import("@convex/_generated/dataModel").Id<"groups">;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/** Props specific to contact requests dialogs */
+export type ContactRequestsOverlayProps = BaseOverlayProps & {
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/** Props specific to avatar editor dialog */
+export type AvatarEditorOverlayProps = BaseOverlayProps & {
+	entity:
+		| { type: "group"; id: import("@convex/_generated/dataModel").Id<"groups"> }
+		| { type: "user" };
+	currentAvatarUrl?: string | undefined;
+	previewShape?: "circle" | "rounded" | "square";
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
+ * Props specific to add contact dialogs
+ */
+export type AddContactOverlayProps = BaseOverlayProps & {
+	/** Callback when contact is added */
+	onContactAdded?: (contact: unknown) => void | Promise<void>;
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
  * Props specific to user invitation dialogs
  */
 export type InviteUsersOverlayProps = BaseOverlayProps & {
@@ -192,6 +242,11 @@ export type OverlayProps =
 	| EditUserOverlayProps
 	| SheetOverlayProps
 	| CreateGroupOverlayProps
+	| GroupInfoOverlayProps
+	| AddMembersOverlayProps
+	| ContactRequestsOverlayProps
+	| AvatarEditorOverlayProps
+	| AddContactOverlayProps
 	| InviteUsersOverlayProps
 	| FilePreviewOverlayProps
 	| EmojiPickerOverlayProps

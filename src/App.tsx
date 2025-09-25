@@ -13,6 +13,7 @@ import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { Toaster } from "./components/ui/sonner";
+import { useBidirectionalSync } from "./hooks/useOverlaySync";
 import { Platform } from "./utils/platform";
 
 function App() {
@@ -24,6 +25,15 @@ function App() {
 	} | null>(null);
 	const { signIn } = useAuthActions();
 	const [searchParams] = useSearchParams();
+
+	// Initialize overlay URL synchronization for deep linking and shareability
+	useBidirectionalSync({
+		urlToOverlay: true,
+		overlayToUrl: true,
+		conflictResolution: "url-wins",
+		debounceMs: 100,
+		preventLoops: true,
+	});
 
 	useEffect(() => {
 		/**

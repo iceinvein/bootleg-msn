@@ -6,6 +6,16 @@ import { StatusBar, type Style } from "@capacitor/status-bar";
 import type React from "react";
 import { createContext, useContext, useEffect, useState } from "react";
 
+// Type guard to detect promise-like values without using `any`
+function isPromiseLike<T>(obj: unknown): obj is Promise<T> {
+	return (
+		typeof obj === "object" &&
+		obj !== null &&
+		"then" in obj &&
+		typeof (obj as { then?: unknown }).then === "function"
+	);
+}
+
 type MobileContextType = {
 	isMobile: boolean;
 	platform: string;
@@ -38,9 +48,9 @@ export function MobileProvider({ children }: MobileProviderProps) {
 		let keyboardWillShowListener: PluginListenerHandle | null = null;
 		let keyboardWillHideListener: PluginListenerHandle | null = null;
 
-		// Setup keyboard event listeners
-		const setupKeyboardListeners = async () => {
-			keyboardWillShowListener = await Keyboard.addListener(
+		// Setup keyboard event listeners (handle both promise and non-promise returns)
+		const setupKeyboardListeners = () => {
+			const showMaybe: unknown = Keyboard.addListener(
 				"keyboardWillShow",
 				(info) => {
 					setKeyboardHeight(info.keyboardHeight);
@@ -52,8 +62,15 @@ export function MobileProvider({ children }: MobileProviderProps) {
 					);
 				},
 			);
+			if (isPromiseLike<PluginListenerHandle>(showMaybe)) {
+				showMaybe.then((h) => {
+					keyboardWillShowListener = h;
+				});
+			} else {
+				keyboardWillShowListener = showMaybe as PluginListenerHandle;
+			}
 
-			keyboardWillHideListener = await Keyboard.addListener(
+			const hideMaybe: unknown = Keyboard.addListener(
 				"keyboardWillHide",
 				() => {
 					setKeyboardHeight(0);
@@ -65,13 +82,20 @@ export function MobileProvider({ children }: MobileProviderProps) {
 					);
 				},
 			);
+			if (isPromiseLike<PluginListenerHandle>(hideMaybe)) {
+				hideMaybe.then((h) => {
+					keyboardWillHideListener = h;
+				});
+			} else {
+				keyboardWillHideListener = hideMaybe as PluginListenerHandle;
+			}
 		};
 
 		setupKeyboardListeners();
 
 		return () => {
-			keyboardWillShowListener?.remove();
-			keyboardWillHideListener?.remove();
+			keyboardWillShowListener?.remove?.();
+			keyboardWillHideListener?.remove?.();
 		};
 	}, [isMobile]);
 

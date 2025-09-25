@@ -25,17 +25,25 @@ import { Textarea } from "@/components/ui/textarea";
 import { getStatusColor } from "@/utils/style";
 
 type CreateGroupDialogProps = {
-	children: React.ReactNode;
+	children?: React.ReactNode;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 };
 
-export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
+export function CreateGroupDialog({
+	children,
+	open,
+	onOpenChange,
+}: CreateGroupDialogProps) {
 	const [isLoading, setIsLoading] = useState(false);
 
 	const [groupName, setGroupName] = useState("");
 	const [description, setDescription] = useState("");
 	const [selectedMembers, setSelectedMembers] = useState<Id<"users">[]>([]);
 	const [searchQuery, setSearchQuery] = useState("");
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalOpen, setInternalOpen] = useState(false);
+	const isOpen = open ?? internalOpen;
+	const setIsOpen = onOpenChange ?? setInternalOpen;
 
 	const contacts = useQuery(api.contacts.getContacts);
 	const createGroup = useMutation(api.groups.createGroup);
@@ -92,7 +100,9 @@ export function CreateGroupDialog({ children }: CreateGroupDialogProps) {
 
 	return (
 		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
-			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			{children ? (
+				<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+			) : null}
 			<ResponsiveDialogContent
 				className="max-h-[90vh] sm:max-w-2xl"
 				animationType="fade"

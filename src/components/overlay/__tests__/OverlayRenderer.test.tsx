@@ -13,6 +13,17 @@ vi.mock("@/hooks/useOverlays", () => ({
 	useOverlays: vi.fn(),
 }));
 
+// Mock overlay URL hook to avoid needing a Router
+vi.mock("@/hooks/useOverlayUrl", () => ({
+	useOverlayUrl: () => ({
+		updateUrl: vi.fn(),
+		openFromUrl: vi.fn(),
+		clearUrl: vi.fn(),
+		hasUrlOverlay: () => true,
+		searchParams: new URLSearchParams(),
+	}),
+}));
+
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
 	motion: {
@@ -22,6 +33,7 @@ vi.mock("framer-motion", () => ({
 			</div>
 		),
 	},
+	cubicBezier: () => (t: number) => t,
 }));
 
 // Mock all overlay components
@@ -106,10 +118,18 @@ vi.mock("../overlays/ThemeSelectorOverlay", () => ({
 	),
 }));
 
+vi.mock("../overlays/AddContactOverlay", () => ({
+	AddContactOverlay: ({ onClose, ...props }: any) => (
+		<div data-testid="add-contact-overlay" onClick={onClose}>
+			AddContactOverlay
+		</div>
+	),
+}));
+
 const mockClose = vi.fn();
 const mockUseOverlays = vi.fn();
 
-// Import useOverlays after mocking
+// Import hooks after mocking
 const { useOverlays } = await import("@/hooks/useOverlays");
 vi.mocked(useOverlays).mockImplementation(mockUseOverlays);
 
@@ -127,6 +147,7 @@ describe("OverlayRenderer", () => {
 			topOverlay: null,
 			state: { stack: [], config: {} },
 		});
+
 	});
 
 	it("renders CONFIRM overlay correctly", () => {
@@ -174,26 +195,8 @@ describe("OverlayRenderer", () => {
 		expect(container).toHaveStyle({ zIndex: "1500" });
 	});
 
-	it("handles backdrop click for closable overlay", async () => {
-		const user = userEvent.setup();
-		const entry: OverlayEntry = {
-			id: "closable-overlay",
-			type: "CONFIRM",
-			props: {
-				closable: true,
-			},
-			createdAt: Date.now(),
-		};
-
-		render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />);
-
-		const container = document.querySelector('[data-overlay-id="closable-overlay"]');
-		expect(container).toBeInTheDocument();
-
-		// Click the backdrop (container itself)
-		fireEvent.click(container!);
-
-		expect(mockClose).toHaveBeenCalledWith("closable-overlay");
+	it.skip("handles backdrop click for closable overlay (delegated to child overlay now)", async () => {
+		/* OverlayRenderer no longer handles backdrop clicks. Child overlays (Dialog/Drawer) handle this. */
 	});
 
 	it("ignores backdrop click for non-closable overlay", async () => {
@@ -217,25 +220,8 @@ describe("OverlayRenderer", () => {
 		expect(mockClose).not.toHaveBeenCalled();
 	});
 
-	it("handles escape key for topmost closable overlay", async () => {
-		const entry: OverlayEntry = {
-			id: "escapable-overlay",
-			type: "CONFIRM",
-			props: {
-				closable: true,
-			},
-			createdAt: Date.now(),
-		};
-
-		render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />);
-
-		const container = document.querySelector('[data-overlay-id="escapable-overlay"]');
-		expect(container).toBeInTheDocument();
-
-		// Press escape key
-		fireEvent.keyDown(container!, { key: "Escape" });
-
-		expect(mockClose).toHaveBeenCalledWith("escapable-overlay");
+	it.skip("handles escape key for topmost closable overlay (delegated to child overlay now)", async () => {
+		/* OverlayRenderer no longer listens for Escape; child overlays (Dialog/Drawer) handle it via onOpenChange. */
 	});
 
 	it("ignores escape key for non-topmost overlay", async () => {
@@ -294,6 +280,36 @@ describe("OverlayRenderer", () => {
 
 		consoleSpy.mockRestore();
 	});
+
+	describe("Close behavior", () => {
+		it("calls close when overlay component triggers onClose", async () => {
+			const entry: OverlayEntry = {
+				id: "test-overlay",
+				type: "ADD_CONTACT",
+				props: {},
+				createdAt: Date.now(),
+				persistInUrl: true,
+			};
+
+			render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />);
+
+			const overlayComponent = screen.getByTestId("add-contact-overlay");
+
+			// Simulate clicking the overlay component (which triggers onClose)
+			fireEvent.click(overlayComponent);
+
+			// Should call close (URL clearing is handled by bidirectional sync)
+			expect(mockClose).toHaveBeenCalledWith("test-overlay");
+		});
+
+		it.skip("calls close when closing via backdrop click (delegated to child overlay now)", async () => {
+			/* OverlayRenderer no longer handles backdrop clicks. */
+		});
+
+		it.skip("calls close when closing via escape key (delegated to child overlay now)", async () => {
+			/* OverlayRenderer no longer handles escape key. */
+		});
+	});
 });
 
 describe("OverlayRenderer utilities", () => {
@@ -305,18 +321,24 @@ describe("OverlayRenderer utilities", () => {
 
 	it("getSupportedOverlayTypes returns all supported types", () => {
 		const supportedTypes = getSupportedOverlayTypes();
-		
+
 		expect(supportedTypes).toContain("CONFIRM");
 		expect(supportedTypes).toContain("INFO");
 		expect(supportedTypes).toContain("SETTINGS");
 		expect(supportedTypes).toContain("CREATE_GROUP");
+		expect(supportedTypes).toContain("ADD_CONTACT");
 		expect(supportedTypes).toContain("EDIT_USER");
 		expect(supportedTypes).toContain("SHEET");
 		expect(supportedTypes).toContain("INVITE_USERS");
 		expect(supportedTypes).toContain("FILE_PREVIEW");
 		expect(supportedTypes).toContain("EMOJI_PICKER");
 		expect(supportedTypes).toContain("THEME_SELECTOR");
-		
-		expect(supportedTypes).toHaveLength(10);
+		// newly added overlay types
+		expect(supportedTypes).toContain("GROUP_INFO");
+		expect(supportedTypes).toContain("ADD_MEMBERS");
+		expect(supportedTypes).toContain("CONTACT_REQUESTS");
+		expect(supportedTypes).toContain("AVATAR_EDITOR");
+
+		expect(supportedTypes).toHaveLength(15);
 	});
 });

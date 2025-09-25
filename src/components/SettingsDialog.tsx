@@ -28,8 +28,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { VersionInfo } from "./VersionInfo";
 
 type SettingsDialogProps = {
-	children: React.ReactNode;
+	children?: React.ReactNode;
 	initialTab?: string;
+	open?: boolean;
+	onOpenChange?: (open: boolean) => void;
 };
 
 // Animation configurations
@@ -46,6 +48,8 @@ const itemTransition = {
 export function SettingsDialog({
 	children,
 	initialTab = "account",
+	open,
+	onOpenChange,
 }: SettingsDialogProps) {
 	const user = useQuery(api.auth.loggedInUser);
 	const updateUserName = useMutation(api.auth.updateUserName);
@@ -56,7 +60,9 @@ export function SettingsDialog({
 	const [isUpdating, setIsUpdating] = useState(false);
 	const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState(initialTab);
-	const [isOpen, setIsOpen] = useState(false);
+	const [internalOpen, setInternalOpen] = useState(false);
+	const isOpen = open ?? internalOpen;
+	const setIsOpen = onOpenChange ?? setInternalOpen;
 
 	// Reset to initial tab when dialog opens
 	useEffect(() => {
@@ -90,7 +96,9 @@ export function SettingsDialog({
 	return (
 		<>
 			<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
-				<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+				{children ? (
+					<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+				) : null}
 				<ResponsiveDialogContent
 					className="flex max-h-[85vh] max-w-4xl flex-col"
 					glass={true}

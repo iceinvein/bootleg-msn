@@ -28,11 +28,15 @@ import type { SettingsOverlayProps } from "@/types/overlay";
  */
 export function SettingsOverlay({
 	initialTab = "account",
-	onClose: _onClose,
+	onClose,
 }: SettingsOverlayProps) {
 	return (
-		<SettingsDialog initialTab={initialTab}>
-			<div /> {/* Trigger element - not used in overlay mode */}
-		</SettingsDialog>
+		<SettingsDialog
+			initialTab={initialTab}
+			open={true}
+			onOpenChange={(o) => {
+				if (!o) onClose?.();
+			}}
+		/>
 	);
 }

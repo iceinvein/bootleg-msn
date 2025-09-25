@@ -13,31 +13,10 @@ vi.mock("@/hooks/useAvatarUrls", () => ({
 	useUserAvatarUrls: vi.fn(() => new Map()),
 }));
 
-// Mock child components
-vi.mock("./AddContactDialog", () => ({
-	default: ({ children }: { children: React.ReactNode }) => (
-		<div data-testid="add-contact-dialog">{children}</div>
-	),
-}));
-
-vi.mock("./ContactRequestsDialog", () => ({
-	default: ({ children }: { children: React.ReactNode }) => (
-		<div data-testid="contact-requests-dialog">{children}</div>
-	),
-}));
-
-vi.mock("./CreateGroupDialog", () => ({
-	CreateGroupDialog: ({ children }: { children: React.ReactNode }) => (
-		<div data-testid="create-group-dialog">{children}</div>
-	),
-}));
-
-vi.mock("./SettingsDialog", () => ({
-	SettingsDialog: ({ children, initialTab }: { children: React.ReactNode; initialTab?: string }) => (
-		<div data-testid="settings-dialog" data-initial-tab={initialTab || "default"}>
-			{children}
-		</div>
-	),
+// Mock overlay hook
+const openSpy = vi.fn();
+vi.mock("@/hooks/useOverlays", () => ({
+	useOverlays: () => ({ open: openSpy }),
 }));
 
 vi.mock("./StatusMessage", () => ({
@@ -80,15 +59,9 @@ vi.mock("./ui/badge", () => ({
 }));
 
 vi.mock("./ui/button", () => ({
-	Button: ({ children, onClick, variant, size, className }: any) => (
-		<button 
-			data-testid="button" 
-			onClick={onClick}
-			data-variant={variant}
-			data-size={size}
-			className={className}
-		>
-			{children}
+	Button: (props: any) => (
+		<button data-testid="button" {...props}>
+			{props.children}
 		</button>
 	),
 }));
@@ -158,23 +131,21 @@ describe("StatusBar", () => {
 		it("should render action buttons", () => {
 			render(<StatusBar user={mockUser} />);
 
-			expect(screen.getByTestId("add-contact-dialog")).toBeInTheDocument();
-			expect(screen.getByTestId("contact-requests-dialog")).toBeInTheDocument();
-			expect(screen.getByTestId("create-group-dialog")).toBeInTheDocument();
-
-			// Should have two settings dialogs: one for avatar, one for settings button
-			const settingsDialogs = screen.getAllByTestId("settings-dialog");
-			expect(settingsDialogs).toHaveLength(2);
+			// Buttons should be present
+			expect(screen.getByTitle("Add contact")).toBeInTheDocument();
+			expect(screen.getByTitle("Check Invites")).toBeInTheDocument();
+			expect(screen.getByTitle("Create Group Chat")).toBeInTheDocument();
+			expect(screen.getByTitle("Settings")).toBeInTheDocument();
 		});
 
-		it("should have settings button without initial tab", () => {
+		it("should open settings from settings button without initial tab", () => {
 			render(<StatusBar user={mockUser} />);
-
-			const settingsDialogs = screen.getAllByTestId("settings-dialog");
-
-			// The second settings dialog should be the regular settings button without initialTab
-			const settingsButtonDialog = settingsDialogs[1];
-			expect(settingsButtonDialog).toHaveAttribute("data-initial-tab", "default");
+			openSpy.mockClear();
+			fireEvent.click(screen.getByTitle("Settings"));
+			expect(openSpy).toHaveBeenCalled();
+			const call = openSpy.mock.calls.find((c) => c[0]?.type === "SETTINGS");
+			expect(call).toBeTruthy();
+			expect(call?.[0]?.props?.initialTab).toBeUndefined();
 		});
 	});
 
@@ -275,8 +246,9 @@ describe("StatusBar", () => {
 
 			render(<StatusBar user={mockUser} />);
 
-			// Should still render but without visible badge content
-			expect(screen.getByTestId("contact-requests-dialog")).toBeInTheDocument();
+			// Should still render the invites button but without badge
+			expect(screen.getByTitle("Check Invites")).toBeInTheDocument();
+			expect(screen.queryByTestId("badge")).toBeNull();
 		});
 	});
 
@@ -301,22 +273,13 @@ describe("StatusBar", () => {
 			expect(screen.getByTestId("user-icon")).toBeInTheDocument();
 		});
 
-		it("should wrap avatar in settings dialog with account tab", () => {
+		it("should open settings with account tab when clicking avatar", () => {
 			render(<StatusBar user={mockUser} />);
-
-			// Find the settings dialog that wraps the avatar
-			const settingsDialogs = screen.getAllByTestId("settings-dialog");
-
-			// There should be two settings dialogs: one for avatar, one for settings button
-			expect(settingsDialogs).toHaveLength(2);
-
-			// The first one should be the avatar with initialTab="account"
-			const avatarSettingsDialog = settingsDialogs[0];
-			expect(avatarSettingsDialog).toHaveAttribute("data-initial-tab", "account");
-
-			// The avatar should be inside this settings dialog
-			const avatar = screen.getByTestId("avatar");
-			expect(avatarSettingsDialog).toContainElement(avatar);
+			openSpy.mockClear();
+			fireEvent.click(screen.getByTestId("avatar"));
+			expect(openSpy).toHaveBeenCalled();
+			const call = openSpy.mock.calls.find((c) => c[0]?.type === "SETTINGS");
+			expect(call?.[0]?.props?.initialTab).toBe("account");
 		});
 
 		it("should have clickable styling on avatar", () => {

@@ -1,8 +1,21 @@
-import { api } from "@convex/_generated/api";
+/**
+ * AddContactOverlay Component
+ *
+ * A responsive overlay for adding contacts that works with the overlay system.
+ * Uses Drawer on mobile and Dialog on desktop for optimal UX.
+ *
+ * Features:
+ * - Contact request mode for existing users
+ * - Invitation mode for non-existing users
+ * - Form validation with React Hook Form
+ * - Responsive design (drawer on mobile, dialog on desktop)
+ * - Proper overlay system integration
+ */
+
+// Constants
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useAction, useMutation } from "convex/react";
-import { Mail, Send, User, UserPlus } from "lucide-react";
-import type React from "react";
+import { Mail, User, UserPlus } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
@@ -24,145 +37,136 @@ import {
 	ResponsiveDialogFooter,
 	ResponsiveDialogHeader,
 	ResponsiveDialogTitle,
-	ResponsiveDialogTrigger,
 } from "@/components/ui/responsive-dialog";
 import { Textarea } from "@/components/ui/textarea";
+import type { AddContactOverlayProps } from "@/types/overlay";
+import { api } from "../../../../convex/_generated/api";
 
-// Constants
-const DEFAULT_MESSAGE = "Hi! I'd like to add you to my contact list.";
-const USER_NOT_FOUND_ERROR = "User has not signed up yet";
-
-// Form validation schema
+// Form schema
 const formSchema = z.object({
-	email: z
-		.email("Please enter a valid email address")
-		.nonempty("Email is required"),
+	email: z.string().email("Please enter a valid email address"),
 	nickname: z.string().optional(),
 	message: z.string().optional(),
 });
 
-// Configuration for different dialog modes
-const DIALOG_CONFIG = {
-	contactRequest: {
-		icon: UserPlus,
-		title: "Add New Contact",
-		description: "Send a contact request to someone you'd like to chat with.",
-		buttonText: "Send Request",
-		successMessage: (autoAccepted: boolean) =>
-			autoAccepted
-				? "Contact added! They had already sent you a request."
-				: "Contact request sent! Waiting for them to accept.",
-	},
-	invitation: {
-		icon: Send,
-		title: "Invite to Join",
-		description:
-			"This person hasn't joined MSN Messenger yet. Send them an invitation!",
-		buttonText: "Send Invitation",
-		successMessage: () =>
-			"Invitation sent! They'll receive an email to join MSN Messenger.",
-	},
-};
-
-type AddContactDialogProps = {
-	children: React.ReactNode;
-};
-
-type DialogMode = "contactRequest" | "invitation";
 type FormData = z.infer<typeof formSchema>;
 
-export default function AddContactDialog({ children }: AddContactDialogProps) {
+// Dialog modes
+type DialogMode = "contactRequest" | "invitation";
+
+// Dialog configuration
+const DIALOG_CONFIG = {
+	contactRequest: {
+		title: "Add Contact",
+		description: "Send a contact request to connect with someone.",
+		buttonText: "Send Request",
+		icon: UserPlus,
+	},
+	invitation: {
+		title: "Invite to MSN Messenger",
+		description:
+			"This person will receive an invitation to join MSN Messenger.",
+		buttonText: "Send Invitation",
+		icon: Mail,
+	},
+} as const;
+
+/**
+ * AddContactOverlay Component
+ *
+ * Responsive overlay for adding contacts with proper close handling
+ */
+export function AddContactOverlay({
+	onContactAdded: _onContactAdded,
+	onClose,
+}: AddContactOverlayProps) {
 	const [isLoading, setIsLoading] = useState(false);
-	const [isOpen, setIsOpen] = useState(false);
 	const [dialogMode, setDialogMode] = useState<DialogMode>("contactRequest");
+	const [isOpen, setIsOpen] = useState(true);
 
 	const form = useForm<FormData>({
 		resolver: zodResolver(formSchema),
 		defaultValues: {
 			email: "",
 			nickname: "",
-			message: DEFAULT_MESSAGE,
+			message: "",
 		},
 	});
 
+	// Convex mutations and actions
 	const sendContactRequest = useMutation(api.contacts.sendContactRequest);
 	const sendInvitation = useAction(api.invitations.sendInvitation);
 
-	// Utility functions
-	const extractErrorMessage = (error: unknown): string =>
-		error instanceof Error ? error.message : String(error);
+	// Handle dialog close
+	const handleDialogClose = useCallback(
+		(open: boolean) => {
+			if (!open) {
+				setIsOpen(false);
+				onClose?.();
+				setDialogMode("contactRequest");
+			}
+		},
+		[onClose],
+	);
 
-	const resetFormAndDialog = useCallback(() => {
-		form.reset();
-		setDialogMode("contactRequest");
-		setIsOpen(false);
-	}, [form]);
+	/**
+	 * Handle form submission
+	 */
+	const onSubmit = useCallback(
+		async (data: FormData) => {
+			if (isLoading) return;
 
-	const withLoading = useCallback(async (asyncFn: () => Promise<void>) => {
-		setIsLoading(true);
-		try {
-			await asyncFn();
-		} finally {
-			setIsLoading(false);
-		}
-	}, []);
+			setIsLoading(true);
+			try {
+				if (dialogMode === "contactRequest") {
+					await sendContactRequest({
+						contactEmail: data.email,
+						nickname: data.nickname || undefined,
+					});
+					toast.success("Contact request sent successfully!");
+				} else {
+					await sendInvitation({
+						inviteeEmail: data.email,
+						inviteeName: data.nickname || undefined,
+						message: data.message || undefined,
+					});
+					toast.success("Invitation sent successfully!");
+				}
 
-	// Get current dialog configuration
-	const currentConfig =
-		dialogMode === "invitation"
-			? DIALOG_CONFIG.invitation
-			: DIALOG_CONFIG.contactRequest;
+				// Reset form and close dialog
+				form.reset();
+				handleDialogClose(false);
+			} catch (error) {
+				console.error("Error:", error);
+				if (
+					error instanceof Error &&
+					error.message.includes("User not found")
+				) {
+					// Switch to invitation mode
+					setDialogMode("invitation");
+					toast.info("User not found. Switching to invitation mode.");
+				} else {
+					toast.error("Failed to send request. Please try again.");
+				}
+			} finally {
+				setIsLoading(false);
+			}
+		},
+		[
+			dialogMode,
+			sendContactRequest,
+			sendInvitation,
+			form,
+			isLoading,
+			handleDialogClose,
+		],
+	);
+
+	const currentConfig = DIALOG_CONFIG[dialogMode];
 	const IconComponent = currentConfig.icon;
 
-	const onSubmit = async (data: FormData) => {
-		await withLoading(async () => {
-			setDialogMode("contactRequest");
-
-			try {
-				const result = await sendContactRequest({
-					contactEmail: data.email.trim(),
-					nickname: data.nickname?.trim() || undefined,
-				});
-
-				toast.success(
-					DIALOG_CONFIG.contactRequest.successMessage(result.autoAccepted),
-				);
-				resetFormAndDialog();
-			} catch (error) {
-				const errorMessage = extractErrorMessage(error);
-
-				if (errorMessage.includes(USER_NOT_FOUND_ERROR)) {
-					setDialogMode("invitation");
-				} else {
-					toast.error(errorMessage || "Failed to send contact request");
-				}
-			}
-		});
-	};
-
-	const handleSendInvitation = async () => {
-		const values = form.getValues();
-		if (!values.email.trim()) return;
-
-		await withLoading(async () => {
-			try {
-				await sendInvitation({
-					inviteeEmail: values.email.trim(),
-					inviteeName: values.nickname?.trim() || undefined,
-					message: values.message?.trim() || undefined,
-				});
-
-				toast.success(DIALOG_CONFIG.invitation.successMessage());
-				resetFormAndDialog();
-			} catch (error) {
-				toast.error(extractErrorMessage(error) || "Failed to send invitation");
-			}
-		});
-	};
-
 	return (
-		<ResponsiveDialog open={isOpen} onOpenChange={setIsOpen}>
-			<ResponsiveDialogTrigger asChild>{children}</ResponsiveDialogTrigger>
+		<ResponsiveDialog open={isOpen} onOpenChange={handleDialogClose}>
 			<ResponsiveDialogContent
 				className="sm:max-w-md"
 				animationType="slideDown"
@@ -248,8 +252,8 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 										</h3>
 										<div className="mt-2 text-sm text-yellow-700">
 											<p>
-												This email address isn't registered yet. Would you like
-												to invite them to join MSN Messenger?
+												This person hasn't signed up for MSN Messenger yet.
+												We'll send them an invitation to join!
 											</p>
 										</div>
 									</div>
@@ -263,37 +267,15 @@ export default function AddContactDialog({ children }: AddContactDialogProps) {
 					<Button
 						type="button"
 						variant="outline"
-						onClick={() => {
-							setIsOpen(false);
-							setDialogMode("contactRequest");
-						}}
+						onClick={() => handleDialogClose(false)}
 						disabled={isLoading}
 					>
 						Cancel
 					</Button>
-					{dialogMode === "invitation" ? (
-						<>
-							<Button
-								type="button"
-								variant="outline"
-								onClick={() => setDialogMode("contactRequest")}
-								disabled={isLoading}
-							>
-								Back
-							</Button>
-							<Button
-								type="button"
-								onClick={handleSendInvitation}
-								className="msn-gradient text-white hover:opacity-90"
-								disabled={isLoading}
-							>
-								<IconComponent className="mr-2 h-4 w-4" />
-								{currentConfig.buttonText}
-							</Button>
-						</>
-					) : (
+					{!isLoading && (
 						<Button
 							type="submit"
+							onClick={form.handleSubmit(onSubmit)}
 							className="msn-gradient text-white hover:opacity-90"
 							disabled={isLoading}
 						>

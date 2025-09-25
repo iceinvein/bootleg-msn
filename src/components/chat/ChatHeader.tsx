@@ -1,11 +1,11 @@
 import { useStore } from "@nanostores/react";
 import { ArrowLeft, Info, User, Users, X } from "lucide-react";
+import { useOverlays } from "@/hooks/useOverlays";
 import {
 	$selectedGroupAvatarUrl,
 	$selectedUserAvatarUrl,
 } from "@/stores/avatars";
 import { $isMessagesLoading, $selectedChat } from "@/stores/contact";
-import { GroupInfoDialog } from "../GroupInfoDialog";
 import { InlineStatusEditor } from "../InlineStatusEditor";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Button } from "../ui/button";
@@ -25,6 +25,8 @@ export function ChatHeader({ onClose }: ChatHeaderProps) {
 			selectedChat?.contact?.user?.name ||
 			selectedChat?.contact?.user?.email ||
 			"Unknown User";
+
+	const { open } = useOverlays();
 
 	return (
 		<div className="chat-header mx-4 mt-4 rounded-2xl border border-border bg-background/80 p-3 shadow-lg backdrop-blur-md md:p-4">
@@ -86,15 +88,19 @@ export function ChatHeader({ onClose }: ChatHeaderProps) {
 				</div>
 				<div className="flex items-center space-x-1 md:space-x-2">
 					{selectedChat?.group && (
-						<GroupInfoDialog group={selectedChat.group}>
-							<Button
-								variant="ghost"
-								size="sm"
-								className="h-8 w-8 md:h-10 md:w-10"
-							>
-								<Info className="h-3 w-3 md:h-4 md:w-4" />
-							</Button>
-						</GroupInfoDialog>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="h-8 w-8 md:h-10 md:w-10"
+							onClick={() => {
+								open({
+									type: "GROUP_INFO",
+									props: { group: selectedChat.group },
+								});
+							}}
+						>
+							<Info className="h-3 w-3 md:h-4 md:w-4" />
+						</Button>
 					)}
 					<Button
 						variant="ghost"

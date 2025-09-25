@@ -9,10 +9,12 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { OverlayEntry, OverlayType } from "@/types/overlay";
+import { overlayDebugLog } from "@/utils/overlayDebug";
 import {
 	decodeOverlayFromUrl,
 	hasOverlayInUrl,
 	type UrlConfig,
+	updateUrlWithOverlay,
 } from "@/utils/overlayUrl";
 import { useOverlays } from "./useOverlays";
 import { useOverlayUrl } from "./useOverlayUrl";
@@ -86,7 +88,12 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 
 	const [searchParams] = useSearchParams();
 	const { topOverlay, open, closeAll } = useOverlays();
-	const { updateUrl, openFromUrl } = useOverlayUrl(urlConfig);
+	// Disable autoSync here; this hook (useBidirectionalSync) owns all sync directions
+	const { updateUrl, openFromUrl } = useOverlayUrl({
+		...urlConfig,
+		autoSync: false,
+		replaceHistory: true,
+	});
 
 	// Track synchronization state
 	const [conflicts, setConflicts] = useState<
@@ -101,6 +108,12 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 	// Prevent infinite loops
 	const syncInProgress = useRef(false);
 	const lastSyncTimestamp = useRef(0);
+
+	// Suppress immediate reopen after a local close for a short window
+	const suppressUrlOpenUntilRef = useRef<number>(0);
+	const lastTopOverlayRef = useRef<OverlayEntry | null>(null);
+	// Track whether the URL previously had an overlay param
+	const lastHasUrlOverlayRef = useRef<boolean>(hasOverlayInUrl(searchParams));
 
 	/**
 	 * Detect synchronization conflicts
@@ -207,11 +220,31 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 
 			if (newConflicts.length === 0) {
 				// No conflicts, safe to sync
-				if (hasOverlayInUrl(searchParams) && !topOverlay) {
+				const hasUrl = hasOverlayInUrl(searchParams);
+				if (hasUrl && !topOverlay) {
+					// If we just locally closed, suppress immediate reopen and clear URL instead
+					if (Date.now() < suppressUrlOpenUntilRef.current) {
+						overlayDebugLog("sync.suppressedReopen", {
+							reason: "local-close",
+							search: searchParams.toString(),
+						});
+						updateUrl(null, { replace: true });
+						return;
+					}
+					overlayDebugLog("sync.urlToOverlay.openFromUrl", {
+						reason: "url-has-overlay",
+						search: searchParams.toString(),
+					});
 					openFromUrl();
-				} else if (!hasOverlayInUrl(searchParams) && topOverlay) {
+				} else if (!hasUrl && topOverlay && lastHasUrlOverlayRef.current) {
+					// Only close if the URL previously had an overlay and now it was cleared (e.g., back navigation)
+					overlayDebugLog("sync.urlToOverlay.closeAll", {
+						reason: "url-cleared",
+					});
 					closeAll();
 				}
+				// Track last URL overlay presence
+				lastHasUrlOverlayRef.current = hasUrl;
 			}
 		}, debounceMs);
 
@@ -224,6 +257,7 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 		openFromUrl,
 		closeAll,
 		topOverlay,
+		updateUrl,
 	]);
 
 	/**
@@ -238,12 +272,35 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 
 			if (newConflicts.length === 0) {
 				// No conflicts, safe to sync
-				updateUrl(topOverlay, { replace: true });
+				const prevStr = searchParams.toString();
+				const nextStr = updateUrlWithOverlay(
+					searchParams,
+					topOverlay && topOverlay.persistInUrl === false ? null : topOverlay,
+					urlConfig,
+				).toString();
+				if (nextStr !== prevStr) {
+					overlayDebugLog("sync.overlayToUrl.updateUrl", {
+						type: topOverlay?.type ?? null,
+					});
+					if (topOverlay && topOverlay.persistInUrl === false) {
+						updateUrl(null, { replace: true });
+					} else {
+						updateUrl(topOverlay, { replace: true });
+					}
+				}
 			}
 		}, debounceMs);
 
 		return () => clearTimeout(timeoutId);
-	}, [topOverlay, overlayToUrl, debounceMs, detectConflicts, updateUrl]);
+	}, [
+		topOverlay,
+		overlayToUrl,
+		debounceMs,
+		detectConflicts,
+		updateUrl,
+		searchParams,
+		urlConfig,
+	]);
 
 	/**
 	 * Auto-resolve conflicts if strategy is not "ignore"
@@ -254,6 +311,18 @@ export function useBidirectionalSync(config: UseBidirectionalSyncConfig = {}) {
 			return () => clearTimeout(timeoutId);
 		}
 	}, [conflicts, conflictResolution, resolvePending]);
+
+	/**
+	 * Track local close to suppress immediate url->overlay reopen
+	 */
+	useEffect(() => {
+		// If there was a top overlay and now there isn't, we likely just locally closed
+		if (lastTopOverlayRef.current && !topOverlay) {
+			// Suppress url-driven open for a short window beyond debounce
+			suppressUrlOpenUntilRef.current = Date.now() + debounceMs + 100;
+		}
+		lastTopOverlayRef.current = topOverlay ?? null;
+	}, [topOverlay, debounceMs]);
 
 	return {
 		/** Current synchronization conflicts */

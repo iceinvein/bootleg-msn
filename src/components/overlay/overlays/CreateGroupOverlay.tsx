@@ -28,14 +28,17 @@ import type { CreateGroupOverlayProps } from "@/types/overlay";
  */
 export function CreateGroupOverlay({
 	onGroupCreated: _onGroupCreated,
-	onClose: _onClose,
+	onClose,
 }: CreateGroupOverlayProps) {
 	// Note: CreateGroupDialog handles group creation internally
 	// The onGroupCreated callback is not currently supported by the dialog
 	// TODO: Enhance CreateGroupDialog to support external callbacks
 	return (
-		<CreateGroupDialog>
-			<div /> {/* Trigger element - not used in overlay mode */}
-		</CreateGroupDialog>
+		<CreateGroupDialog
+			open={true}
+			onOpenChange={(o) => {
+				if (!o) onClose?.();
+			}}
+		/>
 	);
 }
