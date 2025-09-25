@@ -136,7 +136,7 @@ describe("Browser Notifications Push Integration", () => {
 			expect(mockNotification).toHaveBeenCalledWith("Test Notification", {
 				body: "Test body",
 				icon: "/test-icon.png",
-			badge: "/badge-72.png",
+				badge: "/badge-72.png",
 				data: { chatId: "chat123" },
 				tag: undefined,
 				requireInteraction: false,
@@ -154,7 +154,7 @@ describe("Browser Notifications Push Integration", () => {
 			expect(mockNotification).toHaveBeenCalledWith("Tagged Notification", {
 				body: "Tagged body",
 				icon: "/icon-192.png",
-			badge: "/badge-72.png",
+				badge: "/badge-72.png",
 				data: undefined,
 				tag: "custom-tag",
 				requireInteraction: false,
@@ -169,15 +169,18 @@ describe("Browser Notifications Push Integration", () => {
 				requireInteraction: true,
 			});
 
-			expect(mockNotification).toHaveBeenCalledWith("Interactive Notification", {
-				body: "Requires interaction",
-				icon: "/icon-192.png",
-			badge: "/badge-72.png",
-				data: undefined,
-				tag: undefined,
-				requireInteraction: true,
-				silent: false,
-			});
+			expect(mockNotification).toHaveBeenCalledWith(
+				"Interactive Notification",
+				{
+					body: "Requires interaction",
+					icon: "/icon-192.png",
+					badge: "/badge-72.png",
+					data: undefined,
+					tag: undefined,
+					requireInteraction: true,
+					silent: false,
+				},
+			);
 		});
 
 		it("should handle silent notifications", async () => {
@@ -190,7 +193,7 @@ describe("Browser Notifications Push Integration", () => {
 			expect(mockNotification).toHaveBeenCalledWith("Silent Notification", {
 				body: "Silent body",
 				icon: "/icon-192.png",
-			badge: "/badge-72.png",
+				badge: "/badge-72.png",
 				data: undefined,
 				tag: undefined,
 				requireInteraction: false,
@@ -317,27 +320,34 @@ describe("Browser Notifications Push Integration", () => {
 				"John Doe",
 				"Hello there!",
 				"chat456",
-				"user789"
+				"user789",
 			);
 
-			expect(mockNotification).toHaveBeenCalledWith("New message from John Doe", {
-				body: "Hello there!",
-				icon: "/icon-192.png",
-				badge: "/badge-72.png",
-				data: {
-					messageId: "msg123",
-					chatId: "chat456",
-					senderId: "user789",
-					action: "openChat",
+			expect(mockNotification).toHaveBeenCalledWith(
+				"New message from John Doe",
+				{
+					body: "Hello there!",
+					icon: "/icon-192.png",
+					badge: "/badge-72.png",
+					data: {
+						messageId: "msg123",
+						chatId: "chat456",
+						senderId: "user789",
+						action: "openChat",
+					},
+					tag: "message-chat456",
+					requireInteraction: false,
+					silent: false,
 				},
-				tag: "message-chat456",
-				requireInteraction: false,
-				silent: false,
-			});
+			);
 		});
 
 		it("should handle contact request notifications with push support", async () => {
-			await browserNotifications.notifyContactRequest("req123", "Jane Smith", "user456");
+			await browserNotifications.notifyContactRequest(
+				"req123",
+				"Jane Smith",
+				"user456",
+			);
 
 			expect(mockNotification).toHaveBeenCalledWith("New Contact Request", {
 				body: "Jane Smith (user456) wants to add you as a contact",
@@ -355,10 +365,15 @@ describe("Browser Notifications Push Integration", () => {
 		});
 
 		it("should handle group invite notifications with push support", async () => {
-			await browserNotifications.notifyGroupInvite("invite123", "Team Chat", "Alice Johnson", "group789");
+			await browserNotifications.notifyGroupInvite(
+				"invite123",
+				"Team Chat",
+				"Alice Johnson",
+				"group789",
+			);
 
 			expect(mockNotification).toHaveBeenCalledWith("Group Invitation", {
-				body: "Alice Johnson invited you to join \"Team Chat\"",
+				body: 'Alice Johnson invited you to join "Team Chat"',
 				icon: "/icon-192.png",
 				badge: "/badge-72.png",
 				data: {

@@ -72,7 +72,9 @@ describe("MessengerApp", () => {
 
 		// Target the mobile layout specifically (md:hidden)
 		const mobileLayout = document.querySelector(".md\\:hidden");
-		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
+		const mobileSidebar = mobileLayout?.querySelector(
+			'[data-testid="status-bar"]',
+		)?.parentElement;
 
 		// Should have classes that show sidebar on mobile when no chat is selected
 		expect(mobileSidebar).toHaveClass("flex");
@@ -90,7 +92,9 @@ describe("MessengerApp", () => {
 
 		// Target the mobile layout specifically
 		const mobileLayout = document.querySelector(".md\\:hidden");
-		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
+		const mobileSidebar = mobileLayout?.querySelector(
+			'[data-testid="status-bar"]',
+		)?.parentElement;
 
 		// Should have classes that hide sidebar on mobile when chat is selected
 		expect(mobileSidebar).toHaveClass("hidden");
@@ -107,7 +111,9 @@ describe("MessengerApp", () => {
 
 		// Target the mobile layout specifically
 		const mobileLayout = document.querySelector(".md\\:hidden");
-		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
+		const mobileSidebar = mobileLayout?.querySelector(
+			'[data-testid="status-bar"]',
+		)?.parentElement;
 
 		// Should have classes that hide sidebar on mobile when group chat is selected
 		expect(mobileSidebar).toHaveClass("hidden");
@@ -143,8 +149,12 @@ describe("MessengerApp", () => {
 
 		// Target the mobile layout specifically
 		const mobileLayout = document.querySelector(".md\\:hidden");
-		const mobileSidebar = mobileLayout?.querySelector('[data-testid="status-bar"]')?.parentElement;
-		const mobileChatArea = mobileLayout?.querySelector('[data-testid="chat-area"]')?.parentElement;
+		const mobileSidebar = mobileLayout?.querySelector(
+			'[data-testid="status-bar"]',
+		)?.parentElement;
+		const mobileChatArea = mobileLayout?.querySelector(
+			'[data-testid="chat-area"]',
+		)?.parentElement;
 
 		// Sidebar should be full width on mobile
 		expect(mobileSidebar).toHaveClass("w-full");
@@ -161,7 +171,9 @@ describe("MessengerApp", () => {
 
 		// Target the mobile layout specifically
 		const mobileLayout = document.querySelector(".md\\:hidden");
-		const mobileChatArea = mobileLayout?.querySelector('[data-testid="chat-area"]')?.parentElement;
+		const mobileChatArea = mobileLayout?.querySelector(
+			'[data-testid="chat-area"]',
+		)?.parentElement;
 
 		// Chat area should be hidden on mobile when no chat is selected
 		expect(mobileChatArea).toHaveClass("hidden");

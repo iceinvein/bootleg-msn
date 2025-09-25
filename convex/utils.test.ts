@@ -2,24 +2,24 @@
  * Tests for Convex utility functions
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import {
-	validateVoiceMessage,
+	formatDuration,
+	formatFileSize,
+	generateSearchVector,
+	getBackupExpiryDate,
 	validateBackgroundImage,
 	validateHexColor,
-	validateTimezone,
-	getBackupExpiryDate,
-	generateSearchVector,
-	formatFileSize,
-	formatDuration,
 	validateScheduledTime,
+	validateTimezone,
+	validateVoiceMessage,
 } from "./utils";
 import {
-	MAX_VOICE_MESSAGE_SIZE,
-	MAX_VOICE_MESSAGE_DURATION,
-	MIN_VOICE_MESSAGE_DURATION,
-	MAX_BACKGROUND_IMAGE_SIZE,
 	BACKUP_EXPIRY_DAYS,
+	MAX_BACKGROUND_IMAGE_SIZE,
+	MAX_VOICE_MESSAGE_DURATION,
+	MAX_VOICE_MESSAGE_SIZE,
+	MIN_VOICE_MESSAGE_DURATION,
 } from "./validators";
 
 describe("Convex utils", () => {
@@ -29,7 +29,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					60, // 60 seconds (within limits)
 					5 * 1024 * 1024, // 5MB
-					"audio/webm"
+					"audio/webm",
 				);
 			}).not.toThrow();
 
@@ -37,7 +37,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					30, // 30 seconds (within limits)
 					1 * 1024 * 1024, // 1MB
-					"audio/mp4"
+					"audio/mp4",
 				);
 			}).not.toThrow();
 		});
@@ -47,7 +47,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					MIN_VOICE_MESSAGE_DURATION - 1,
 					1 * 1024 * 1024,
-					"audio/webm"
+					"audio/webm",
 				);
 			}).toThrow("Voice message too short");
 		});
@@ -57,7 +57,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					MAX_VOICE_MESSAGE_DURATION + 1,
 					1 * 1024 * 1024,
-					"audio/webm"
+					"audio/webm",
 				);
 			}).toThrow("Voice message too long");
 		});
@@ -67,7 +67,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					60, // Valid duration
 					MAX_VOICE_MESSAGE_SIZE + 1,
-					"audio/webm"
+					"audio/webm",
 				);
 			}).toThrow("Voice message file too large");
 		});
@@ -77,7 +77,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					60, // Valid duration
 					1 * 1024 * 1024,
-					"audio/flac" // Unsupported format
+					"audio/flac", // Unsupported format
 				);
 			}).toThrow("Unsupported audio format");
 
@@ -85,7 +85,7 @@ describe("Convex utils", () => {
 				validateVoiceMessage(
 					60, // Valid duration
 					1 * 1024 * 1024,
-					"video/mp4" // Wrong type
+					"video/mp4", // Wrong type
 				);
 			}).toThrow("Unsupported audio format");
 		});
@@ -99,7 +99,7 @@ describe("Convex utils", () => {
 				"audio/ogg",
 			];
 
-			supportedFormats.forEach(format => {
+			supportedFormats.forEach((format) => {
 				expect(() => {
 					validateVoiceMessage(60, 1 * 1024 * 1024, format);
 				}).not.toThrow();
@@ -112,40 +112,31 @@ describe("Convex utils", () => {
 			expect(() => {
 				validateBackgroundImage(
 					2 * 1024 * 1024, // 2MB
-					"image/jpeg"
+					"image/jpeg",
 				);
 			}).not.toThrow();
 
 			expect(() => {
 				validateBackgroundImage(
 					1 * 1024 * 1024, // 1MB
-					"image/png"
+					"image/png",
 				);
 			}).not.toThrow();
 		});
 
 		it("should throw error for images that are too large", () => {
 			expect(() => {
-				validateBackgroundImage(
-					MAX_BACKGROUND_IMAGE_SIZE + 1,
-					"image/jpeg"
-				);
+				validateBackgroundImage(MAX_BACKGROUND_IMAGE_SIZE + 1, "image/jpeg");
 			}).toThrow("Background image too large");
 		});
 
 		it("should throw error for unsupported image formats", () => {
 			expect(() => {
-				validateBackgroundImage(
-					1 * 1024 * 1024,
-					"image/bmp"
-				);
+				validateBackgroundImage(1 * 1024 * 1024, "image/bmp");
 			}).toThrow("Unsupported image format");
 
 			expect(() => {
-				validateBackgroundImage(
-					1 * 1024 * 1024,
-					"video/mp4"
-				);
+				validateBackgroundImage(1 * 1024 * 1024, "video/mp4");
 			}).toThrow("Unsupported image format");
 		});
 
@@ -158,7 +149,7 @@ describe("Convex utils", () => {
 				"image/webp",
 			];
 
-			supportedFormats.forEach(format => {
+			supportedFormats.forEach((format) => {
 				expect(() => {
 					validateBackgroundImage(1 * 1024 * 1024, format);
 				}).not.toThrow();
@@ -234,7 +225,7 @@ describe("Convex utils", () => {
 				"Pacific/Auckland",
 			];
 
-			validTimezones.forEach(timezone => {
+			validTimezones.forEach((timezone) => {
 				expect(validateTimezone(timezone)).toBe(true);
 			});
 		});
@@ -244,7 +235,7 @@ describe("Convex utils", () => {
 		it("should return a future timestamp", () => {
 			const now = Date.now();
 			const expiryDate = getBackupExpiryDate();
-			
+
 			expect(expiryDate).toBeGreaterThan(now);
 		});
 
@@ -252,7 +243,7 @@ describe("Convex utils", () => {
 			const now = Date.now();
 			const expiryDate = getBackupExpiryDate();
 			const expectedExpiry = now + BACKUP_EXPIRY_DAYS * 24 * 60 * 60 * 1000;
-			
+
 			// Allow for small timing differences (within 1 second)
 			expect(Math.abs(expiryDate - expectedExpiry)).toBeLessThan(1000);
 		});
@@ -260,7 +251,7 @@ describe("Convex utils", () => {
 		it("should return consistent results for calls made close together", () => {
 			const expiry1 = getBackupExpiryDate();
 			const expiry2 = getBackupExpiryDate();
-			
+
 			// Should be very close (within 10ms)
 			expect(Math.abs(expiry1 - expiry2)).toBeLessThan(10);
 		});
@@ -286,7 +277,9 @@ describe("Convex utils", () => {
 
 		it("should handle multiple spaces", () => {
 			expect(generateSearchVector("hello    world")).toBe("hello world");
-			expect(generateSearchVector("test   with   spaces")).toBe("test with spaces");
+			expect(generateSearchVector("test   with   spaces")).toBe(
+				"test with spaces",
+			);
 		});
 
 		it("should handle empty and whitespace-only strings", () => {
@@ -297,11 +290,14 @@ describe("Convex utils", () => {
 
 		it("should preserve words longer than 2 characters", () => {
 			expect(generateSearchVector("cat dog elephant")).toBe("cat dog elephant");
-			expect(generateSearchVector("programming javascript typescript")).toBe("programming javascript typescript");
+			expect(generateSearchVector("programming javascript typescript")).toBe(
+				"programming javascript typescript",
+			);
 		});
 
 		it("should handle mixed content", () => {
-			const input = "Hello! This is a test message with @mentions and #hashtags.";
+			const input =
+				"Hello! This is a test message with @mentions and #hashtags.";
 			const expected = "hello this test message with mentions and hashtags";
 			expect(generateSearchVector(input)).toBe(expected);
 		});

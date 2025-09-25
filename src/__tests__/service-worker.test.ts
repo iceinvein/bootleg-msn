@@ -21,24 +21,26 @@ Object.defineProperty(global, "self", {
 });
 
 describe("Service Worker Push Events", () => {
-	let pushEventHandler: (event: any) => void;
-	let notificationClickHandler: (event: any) => void;
+	let _pushEventHandler: (event: any) => void;
+	let _notificationClickHandler: (event: any) => void;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		// Reset handlers
-		pushEventHandler = () => {};
-		notificationClickHandler = () => {};
+		_pushEventHandler = () => {};
+		_notificationClickHandler = () => {};
 
 		// Mock addEventListener to capture event handlers
-		mockSelf.addEventListener.mockImplementation((eventType: string, handler: any) => {
-			if (eventType === "push") {
-				pushEventHandler = handler;
-			} else if (eventType === "notificationclick") {
-				notificationClickHandler = handler;
-			}
-		});
+		mockSelf.addEventListener.mockImplementation(
+			(eventType: string, handler: any) => {
+				if (eventType === "push") {
+					_pushEventHandler = handler;
+				} else if (eventType === "notificationclick") {
+					_notificationClickHandler = handler;
+				}
+			},
+		);
 
 		// Load the service worker code (simulate)
 		// In a real test, you might load the actual sw.js file
@@ -64,7 +66,7 @@ describe("Service Worker Push Events", () => {
 				let data = {};
 				try {
 					if (event.data) data = event.data.json();
-				} catch (e) {
+				} catch (_e) {
 					data = { title: "Notification", body: event.data?.text() || "" };
 				}
 
@@ -86,15 +88,18 @@ describe("Service Worker Push Events", () => {
 
 			expect(mockEvent.data.json).toHaveBeenCalled();
 			expect(mockEvent.waitUntil).toHaveBeenCalled();
-			expect(mockRegistration.showNotification).toHaveBeenCalledWith("Test Notification", {
-				body: "Test message body",
-				icon: "/test-icon.png",
-				badge: "/badge-72.png",
-				data: { chatId: "chat123" },
-				actions: [],
-				requireInteraction: false,
-				silent: false,
-			});
+			expect(mockRegistration.showNotification).toHaveBeenCalledWith(
+				"Test Notification",
+				{
+					body: "Test message body",
+					icon: "/test-icon.png",
+					badge: "/badge-72.png",
+					data: { chatId: "chat123" },
+					actions: [],
+					requireInteraction: false,
+					silent: false,
+				},
+			);
 		});
 
 		it("should handle push event with text data", () => {
@@ -112,7 +117,7 @@ describe("Service Worker Push Events", () => {
 				let data = {};
 				try {
 					if (event.data) data = event.data.json();
-				} catch (e) {
+				} catch (_e) {
 					data = { title: "Notification", body: event.data?.text() || "" };
 				}
 
@@ -134,15 +139,18 @@ describe("Service Worker Push Events", () => {
 
 			expect(mockEvent.data.json).toHaveBeenCalled();
 			expect(mockEvent.data.text).toHaveBeenCalled();
-			expect(mockRegistration.showNotification).toHaveBeenCalledWith("Notification", {
-				body: "Plain text message",
-				icon: "/icon-192.png",
-				badge: "/badge-72.png",
-				data: {},
-				actions: [],
-				requireInteraction: false,
-				silent: false,
-			});
+			expect(mockRegistration.showNotification).toHaveBeenCalledWith(
+				"Notification",
+				{
+					body: "Plain text message",
+					icon: "/icon-192.png",
+					badge: "/badge-72.png",
+					data: {},
+					actions: [],
+					requireInteraction: false,
+					silent: false,
+				},
+			);
 		});
 
 		it("should handle push event with no data", () => {
@@ -155,7 +163,7 @@ describe("Service Worker Push Events", () => {
 				let data = {};
 				try {
 					if (event.data) data = event.data.json();
-				} catch (e) {
+				} catch (_e) {
 					data = { title: "Notification", body: event.data?.text() || "" };
 				}
 
@@ -175,15 +183,18 @@ describe("Service Worker Push Events", () => {
 
 			handlePushEvent(mockEvent);
 
-			expect(mockRegistration.showNotification).toHaveBeenCalledWith("Notification", {
-				body: "",
-				icon: "/icon-192.png",
-				badge: "/badge-72.png",
-				data: {},
-				actions: [],
-				requireInteraction: false,
-				silent: false,
-			});
+			expect(mockRegistration.showNotification).toHaveBeenCalledWith(
+				"Notification",
+				{
+					body: "",
+					icon: "/icon-192.png",
+					badge: "/badge-72.png",
+					data: {},
+					actions: [],
+					requireInteraction: false,
+					silent: false,
+				},
+			);
 		});
 
 		it("should handle push event with custom options", () => {
@@ -210,7 +221,7 @@ describe("Service Worker Push Events", () => {
 				let data = {};
 				try {
 					if (event.data) data = event.data.json();
-				} catch (e) {
+				} catch (_e) {
 					data = { title: "Notification", body: event.data?.text() || "" };
 				}
 
@@ -230,18 +241,21 @@ describe("Service Worker Push Events", () => {
 
 			handlePushEvent(mockEvent);
 
-			expect(mockRegistration.showNotification).toHaveBeenCalledWith("Custom Notification", {
-				body: "Custom body",
-				icon: "/custom-icon.png",
-				badge: "/custom-badge.png",
-				data: { type: "message", chatId: "chat456" },
-				actions: [
-					{ action: "reply", title: "Reply" },
-					{ action: "dismiss", title: "Dismiss" },
-				],
-				requireInteraction: true,
-				silent: true,
-			});
+			expect(mockRegistration.showNotification).toHaveBeenCalledWith(
+				"Custom Notification",
+				{
+					body: "Custom body",
+					icon: "/custom-icon.png",
+					badge: "/custom-badge.png",
+					data: { type: "message", chatId: "chat456" },
+					actions: [
+						{ action: "reply", title: "Reply" },
+						{ action: "dismiss", title: "Dismiss" },
+					],
+					requireInteraction: true,
+					silent: true,
+				},
+			);
 		});
 	});
 
@@ -284,7 +298,7 @@ describe("Service Worker Push Events", () => {
 						if (clients.openWindow) {
 							return clients.openWindow(urlToOpen);
 						}
-					})
+					}),
 				);
 			};
 
@@ -340,7 +354,7 @@ describe("Service Worker Push Events", () => {
 				let data = {};
 				try {
 					if (event.data) data = event.data.json();
-				} catch (e) {
+				} catch (_e) {
 					data = { title: "Notification", body: event.data?.text() || "" };
 				}
 
@@ -360,15 +374,18 @@ describe("Service Worker Push Events", () => {
 
 			// Should not throw
 			expect(() => handlePushEvent(mockEvent)).not.toThrow();
-			expect(mockRegistration.showNotification).toHaveBeenCalledWith("Notification", {
-				body: "Fallback text",
-				icon: "/icon-192.png",
-				badge: "/badge-72.png",
-				data: {},
-				actions: [],
-				requireInteraction: false,
-				silent: false,
-			});
+			expect(mockRegistration.showNotification).toHaveBeenCalledWith(
+				"Notification",
+				{
+					body: "Fallback text",
+					icon: "/icon-192.png",
+					badge: "/badge-72.png",
+					data: {},
+					actions: [],
+					requireInteraction: false,
+					silent: false,
+				},
+			);
 		});
 	});
 });

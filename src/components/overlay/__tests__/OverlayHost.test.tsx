@@ -2,11 +2,10 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { OverlayHost, useOverlayHost } from "../OverlayHost";
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOverlays } from "@/hooks/useOverlays";
+import { OverlayHost, useOverlayHost } from "../OverlayHost";
 
 // Mock the overlay store
 vi.mock("@nanostores/react", () => ({
@@ -20,7 +19,9 @@ vi.mock("@/hooks/useOverlays", () => ({
 
 // Mock framer-motion
 vi.mock("framer-motion", () => ({
-	AnimatePresence: ({ children }: { children: React.ReactNode }) => <div data-testid="animate-presence">{children}</div>,
+	AnimatePresence: ({ children }: { children: React.ReactNode }) => (
+		<div data-testid="animate-presence">{children}</div>
+	),
 	motion: {
 		div: ({ children, ...props }: any) => <div {...props}>{children}</div>,
 	},
@@ -85,9 +86,18 @@ describe("OverlayHost", () => {
 		render(<OverlayHost />);
 
 		expect(screen.getByTestId("overlay-test-overlay-1")).toBeInTheDocument();
-		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute("data-overlay-type", "CONFIRM");
-		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute("data-z-index", "1000");
-		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute("data-topmost", "true");
+		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute(
+			"data-overlay-type",
+			"CONFIRM",
+		);
+		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute(
+			"data-z-index",
+			"1000",
+		);
+		expect(screen.getByTestId("overlay-test-overlay-1")).toHaveAttribute(
+			"data-topmost",
+			"true",
+		);
 	});
 
 	it("renders multiple overlays with correct z-index stacking", () => {
@@ -143,7 +153,7 @@ describe("OverlayHost", () => {
 					usePortal: false,
 				}}
 				className="custom-overlay-host"
-			/>
+			/>,
 		);
 
 		const overlay = screen.getByTestId("overlay-test-overlay");
@@ -203,7 +213,8 @@ describe("useOverlayHost", () => {
 		mockUseStore.mockReturnValue(mockOverlays);
 
 		function TestComponent() {
-			const { overlayCount, hasOverlays, topOverlay, overlayStack } = useOverlayHost();
+			const { overlayCount, hasOverlays, topOverlay, overlayStack } =
+				useOverlayHost();
 
 			return (
 				<div>

@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
-import { useOverlayUrl, useOverlayShare } from "../useOverlayUrl";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetOverlaySystem } from "@/stores/overlays";
 import type { OverlayEntry } from "@/types/overlay";
+import { useOverlayShare, useOverlayUrl } from "../useOverlayUrl";
 
 // Mock nanoid for predictable IDs
 let idCounter = 0;
@@ -31,11 +31,13 @@ Object.defineProperty(window, "location", {
 });
 
 // Wrapper component for React Router context
-const RouterWrapper = ({ children, initialEntries = ["/"] }: { children: React.ReactNode; initialEntries?: string[] }) => (
-	<MemoryRouter initialEntries={initialEntries}>
-		{children}
-	</MemoryRouter>
-);
+const RouterWrapper = ({
+	children,
+	initialEntries = ["/"],
+}: {
+	children: React.ReactNode;
+	initialEntries?: string[];
+}) => <MemoryRouter initialEntries={initialEntries}>{children}</MemoryRouter>;
 
 describe("useOverlayUrl Hook", () => {
 	beforeEach(() => {
@@ -66,7 +68,9 @@ describe("useOverlayUrl Hook", () => {
 		it("should detect overlay in URL", () => {
 			const { result } = renderHook(() => useOverlayUrl(), {
 				wrapper: ({ children }) => (
-					<RouterWrapper initialEntries={["/?modal=CONFIRM"]}>{children}</RouterWrapper>
+					<RouterWrapper initialEntries={["/?modal=CONFIRM"]}>
+						{children}
+					</RouterWrapper>
 				),
 			});
 
@@ -86,7 +90,13 @@ describe("useOverlayUrl Hook", () => {
 		it("should open overlay from URL parameters", async () => {
 			const { result } = renderHook(() => useOverlayUrl(), {
 				wrapper: ({ children }) => (
-					<RouterWrapper initialEntries={["/?modal=CONFIRM&modalProps=eyJ0aXRsZSI6IlRlc3QifQ=="]}>{children}</RouterWrapper>
+					<RouterWrapper
+						initialEntries={[
+							"/?modal=CONFIRM&modalProps=eyJ0aXRsZSI6IlRlc3QifQ==",
+						]}
+					>
+						{children}
+					</RouterWrapper>
 				),
 			});
 
@@ -117,7 +127,9 @@ describe("useOverlayUrl Hook", () => {
 		it("should handle malformed URL parameters gracefully", () => {
 			const { result } = renderHook(() => useOverlayUrl(), {
 				wrapper: ({ children }) => (
-					<RouterWrapper initialEntries={["/?modal=INVALID_TYPE"]}>{children}</RouterWrapper>
+					<RouterWrapper initialEntries={["/?modal=INVALID_TYPE"]}>
+						{children}
+					</RouterWrapper>
 				),
 			});
 
@@ -177,9 +189,12 @@ describe("useOverlayUrl Hook", () => {
 		});
 
 		it("should respect includeProps configuration", () => {
-			const { result } = renderHook(() => useOverlayUrl({ includeProps: false }), {
-				wrapper: RouterWrapper,
-			});
+			const { result } = renderHook(
+				() => useOverlayUrl({ includeProps: false }),
+				{
+					wrapper: RouterWrapper,
+				},
+			);
 
 			const mockOverlay: OverlayEntry = {
 				id: "test-id",
@@ -210,7 +225,9 @@ describe("useOverlayUrl Hook", () => {
 		it("should clear overlay parameters from URL", () => {
 			const { result } = renderHook(() => useOverlayUrl(), {
 				wrapper: ({ children }) => (
-					<RouterWrapper initialEntries={["/?modal=CONFIRM&other=value"]}>{children}</RouterWrapper>
+					<RouterWrapper initialEntries={["/?modal=CONFIRM&other=value"]}>
+						{children}
+					</RouterWrapper>
 				),
 			});
 
@@ -269,7 +286,7 @@ describe("useOverlayShare Hook", () => {
 			});
 
 			expect(mockWriteText).toHaveBeenCalledWith(
-				expect.stringContaining("modal=INFO")
+				expect.stringContaining("modal=INFO"),
 			);
 		});
 
@@ -295,9 +312,12 @@ describe("useOverlayShare Hook", () => {
 
 	describe("Configuration", () => {
 		it("should respect configuration options", () => {
-			const { result } = renderHook(() => useOverlayShare({ includeId: true, includeProps: false }), {
-				wrapper: RouterWrapper,
-			});
+			const { result } = renderHook(
+				() => useOverlayShare({ includeId: true, includeProps: false }),
+				{
+					wrapper: RouterWrapper,
+				},
+			);
 
 			const mockOverlay: OverlayEntry = {
 				id: "test-id",

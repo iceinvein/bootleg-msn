@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
-import { describe, expect, it, vi } from "vitest";
-import schema from "./schema";
+import { describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Import all Convex function modules for convex-test
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
@@ -77,7 +77,9 @@ describe("Invitations Database Operations", () => {
 				return await ctx.db
 					.query("invitations")
 					.withIndex("by_inviter_and_email", (q) =>
-						q.eq("inviterUserId", inviterId).eq("inviteeEmail", "bob@example.com"),
+						q
+							.eq("inviterUserId", inviterId)
+							.eq("inviteeEmail", "bob@example.com"),
 					)
 					.filter((q) => q.eq(q.field("status"), "pending"))
 					.first();
@@ -123,7 +125,9 @@ describe("Invitations Database Operations", () => {
 			});
 
 			// Get sent invitations
-			const invitations = await t.withIdentity({ subject: inviterId }).query(api.invitations.getSentInvitations, {});
+			const invitations = await t
+				.withIdentity({ subject: inviterId })
+				.query(api.invitations.getSentInvitations, {});
 
 			expect(invitations).toHaveLength(2);
 			expect(invitations[0].inviteeEmail).toBe("charlie@example.com"); // Most recent first (desc order)
@@ -173,9 +177,11 @@ describe("Invitations Database Operations", () => {
 			});
 
 			// Accept invitation
-			await t.withIdentity({ subject: inviteeId }).mutation(api.invitations.acceptInvitation, {
-				token: "test-token-123",
-			});
+			await t
+				.withIdentity({ subject: inviteeId })
+				.mutation(api.invitations.acceptInvitation, {
+					token: "test-token-123",
+				});
 
 			// Verify invitation status updated
 			const invitation = await t.run(async (ctx) => {
@@ -219,9 +225,11 @@ describe("Invitations Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.invitations.acceptInvitation, {
-					token: "invalid-token",
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.invitations.acceptInvitation, {
+						token: "invalid-token",
+					}),
 			).rejects.toThrow("Invitation not found");
 		});
 
@@ -258,9 +266,11 @@ describe("Invitations Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: inviteeId }).mutation(api.invitations.acceptInvitation, {
-					token: "expired-token",
-				})
+				t
+					.withIdentity({ subject: inviteeId })
+					.mutation(api.invitations.acceptInvitation, {
+						token: "expired-token",
+					}),
 			).rejects.toThrow("Invitation has expired");
 		});
 	});
@@ -291,9 +301,11 @@ describe("Invitations Database Operations", () => {
 			});
 
 			// Cancel invitation
-			await t.withIdentity({ subject: inviterId }).mutation(api.invitations.cancelInvitation, {
-				invitationId,
-			});
+			await t
+				.withIdentity({ subject: inviterId })
+				.mutation(api.invitations.cancelInvitation, {
+					invitationId,
+				});
 
 			// Verify invitation status updated
 			const invitation = await t.run(async (ctx) => {
@@ -336,9 +348,11 @@ describe("Invitations Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: otherUserId }).mutation(api.invitations.cancelInvitation, {
-					invitationId,
-				})
+				t
+					.withIdentity({ subject: otherUserId })
+					.mutation(api.invitations.cancelInvitation, {
+						invitationId,
+					}),
 			).rejects.toThrow("You can only cancel your own invitations");
 		});
 	});

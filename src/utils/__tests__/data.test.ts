@@ -2,7 +2,7 @@
  * Tests for data utility functions
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { formatTime } from "../data";
 
 describe("data utilities", () => {
@@ -99,7 +99,7 @@ describe("data utilities", () => {
 
 		it("should handle edge cases", () => {
 			const now = Date.now();
-			
+
 			// Exactly 1 minute ago
 			const exactlyOneMinute = now - 60 * 1000;
 			expect(formatTime(exactlyOneMinute)).toBe("1m ago");

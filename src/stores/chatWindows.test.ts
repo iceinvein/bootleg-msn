@@ -1,5 +1,9 @@
-import { describe, it, expect, beforeEach } from "vitest";
-import { $activeChatWindows, $mainWindowActiveChat, chatWindowHelpers } from "./chatWindows";
+import { beforeEach, describe, expect, it } from "vitest";
+import {
+	$activeChatWindows,
+	$mainWindowActiveChat,
+	chatWindowHelpers,
+} from "./chatWindows";
 
 describe("chatWindows store", () => {
 	beforeEach(() => {
@@ -10,7 +14,10 @@ describe("chatWindows store", () => {
 
 	describe("chatWindowHelpers", () => {
 		it("should generate correct chat keys", () => {
-			const contactKey = chatWindowHelpers.getChatKey("contact", "user123" as any);
+			const contactKey = chatWindowHelpers.getChatKey(
+				"contact",
+				"user123" as any,
+			);
 			const groupKey = chatWindowHelpers.getChatKey("group", "group456" as any);
 
 			expect(contactKey).toBe("contact:user123");
@@ -50,17 +57,27 @@ describe("chatWindows store", () => {
 			const groupId = "group456" as any;
 
 			// Initially not active
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(false);
-			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(false);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(
+				false,
+			);
+			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(
+				false,
+			);
 
 			// Add contact chat window
 			chatWindowHelpers.addChatWindow("contact", userId);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(true);
-			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(false);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(
+				true,
+			);
+			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(
+				false,
+			);
 
 			// Add group chat window
 			chatWindowHelpers.addChatWindow("group", groupId);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(true);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(
+				true,
+			);
 			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(true);
 		});
 
@@ -79,25 +96,39 @@ describe("chatWindows store", () => {
 
 			// Initially null
 			expect($mainWindowActiveChat.get()).toBe(null);
-			expect(chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any)).toBe(false);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any),
+			).toBe(false);
 
 			// Set contact chat as active
 			chatWindowHelpers.setMainWindowActiveChat(contactChat);
 			expect($mainWindowActiveChat.get()).toEqual(contactChat);
-			expect(chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any)).toBe(true);
-			expect(chatWindowHelpers.isMainWindowChatActive("group", "group456" as any)).toBe(false);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any),
+			).toBe(true);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("group", "group456" as any),
+			).toBe(false);
 
 			// Set group chat as active
 			chatWindowHelpers.setMainWindowActiveChat(groupChat);
 			expect($mainWindowActiveChat.get()).toEqual(groupChat);
-			expect(chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any)).toBe(false);
-			expect(chatWindowHelpers.isMainWindowChatActive("group", "group456" as any)).toBe(true);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any),
+			).toBe(false);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("group", "group456" as any),
+			).toBe(true);
 
 			// Clear active chat
 			chatWindowHelpers.setMainWindowActiveChat(null);
 			expect($mainWindowActiveChat.get()).toBe(null);
-			expect(chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any)).toBe(false);
-			expect(chatWindowHelpers.isMainWindowChatActive("group", "group456" as any)).toBe(false);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("contact", "user123" as any),
+			).toBe(false);
+			expect(
+				chatWindowHelpers.isMainWindowChatActive("group", "group456" as any),
+			).toBe(false);
 		});
 
 		it("should check if chat is active anywhere", () => {
@@ -105,13 +136,21 @@ describe("chatWindows store", () => {
 			const groupId = "group456" as any;
 
 			// Initially not active anywhere
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(false);
-			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(false);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				false,
+			);
+			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(
+				false,
+			);
 
 			// Add to separate chat window
 			chatWindowHelpers.addChatWindow("contact", userId);
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(true);
-			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(false);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				true,
+			);
+			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(
+				false,
+			);
 
 			// Set as main window active chat (should still be true)
 			chatWindowHelpers.setMainWindowActiveChat({
@@ -119,15 +158,21 @@ describe("chatWindows store", () => {
 				id: userId,
 				name: "Alice",
 			});
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(true);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				true,
+			);
 
 			// Remove from separate chat window (should still be true due to main window)
 			chatWindowHelpers.removeChatWindow("contact", userId);
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(true);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				true,
+			);
 
 			// Clear main window active chat
 			chatWindowHelpers.setMainWindowActiveChat(null);
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(false);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				false,
+			);
 
 			// Test group chat in main window only
 			chatWindowHelpers.setMainWindowActiveChat({
@@ -135,8 +180,12 @@ describe("chatWindows store", () => {
 				id: groupId,
 				name: "Test Group",
 			});
-			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(true);
-			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(false);
+			expect(chatWindowHelpers.isChatActiveAnywhere("group", groupId)).toBe(
+				true,
+			);
+			expect(chatWindowHelpers.isChatActiveAnywhere("contact", userId)).toBe(
+				false,
+			);
 		});
 
 		it("should clear all chat windows", () => {
@@ -154,9 +203,15 @@ describe("chatWindows store", () => {
 			// Clear all
 			chatWindowHelpers.clearAllChatWindows();
 			expect($activeChatWindows.get().size).toBe(0);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId1)).toBe(false);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId2)).toBe(false);
-			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(false);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId1)).toBe(
+				false,
+			);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId2)).toBe(
+				false,
+			);
+			expect(chatWindowHelpers.isChatWindowActive("group", groupId)).toBe(
+				false,
+			);
 		});
 
 		it("should handle duplicate additions gracefully", () => {
@@ -169,7 +224,9 @@ describe("chatWindows store", () => {
 
 			// Should only be added once
 			expect($activeChatWindows.get().size).toBe(1);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(true);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(
+				true,
+			);
 		});
 
 		it("should handle removal of non-existent chat windows gracefully", () => {
@@ -180,7 +237,9 @@ describe("chatWindows store", () => {
 
 			// Should not cause errors
 			expect($activeChatWindows.get().size).toBe(0);
-			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(false);
+			expect(chatWindowHelpers.isChatWindowActive("contact", userId)).toBe(
+				false,
+			);
 		});
 
 		it("should distinguish between different chat types with same ID", () => {

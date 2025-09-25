@@ -121,11 +121,11 @@ describe("useMobile", () => {
 			await vi.waitFor(() => {
 				expect(mockKeyboard.addListener).toHaveBeenCalledWith(
 					"keyboardWillShow",
-					expect.any(Function)
+					expect.any(Function),
 				);
 				expect(mockKeyboard.addListener).toHaveBeenCalledWith(
 					"keyboardWillHide",
-					expect.any(Function)
+					expect.any(Function),
 				);
 			});
 		});
@@ -204,7 +204,7 @@ describe("useMobile", () => {
 			await vi.waitFor(() => {
 				expect(mockApp.addListener).toHaveBeenCalledWith(
 					"appStateChange",
-					expect.any(Function)
+					expect.any(Function),
 				);
 			});
 		});
@@ -307,7 +307,9 @@ describe("useMobile", () => {
 				await result.current.setStatusBarColor("#0078d4");
 			});
 
-			expect(mockStatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: "#0078d4" });
+			expect(mockStatusBar.setBackgroundColor).toHaveBeenCalledWith({
+				color: "#0078d4",
+			});
 		});
 
 		it("should not set status bar color on iOS", async () => {
@@ -346,7 +348,10 @@ describe("useMobile", () => {
 				await result.current.setStatusBarStyle("light");
 			});
 
-			expect(consoleSpy).toHaveBeenCalledWith("Failed to set status bar style:", expect.any(Error));
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Failed to set status bar style:",
+				expect.any(Error),
+			);
 
 			consoleSpy.mockRestore();
 		});
@@ -388,7 +393,10 @@ describe("useMobile", () => {
 				await result.current.exitApp();
 			});
 
-			expect(consoleSpy).toHaveBeenCalledWith("Failed to exit app:", expect.any(Error));
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Failed to exit app:",
+				expect.any(Error),
+			);
 
 			consoleSpy.mockRestore();
 		});

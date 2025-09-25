@@ -11,7 +11,10 @@ vi.mock("@tauri-apps/api/event", () => ({
 
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { TauriNotificationService, getTauriNotifications } from "./tauri-notifications";
+import {
+	getTauriNotifications,
+	TauriNotificationService,
+} from "./tauri-notifications";
 
 const mockInvoke = vi.mocked(invoke);
 const mockListen = vi.mocked(listen);
@@ -28,19 +31,19 @@ describe("TauriNotificationService", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
 		mockListen.mockResolvedValue(() => {});
-		
+
 		// Reset singleton instance for clean state
-		// @ts-ignore - accessing private static property for testing
+		// @ts-expect-error - accessing private static property for testing
 		TauriNotificationService.instance = undefined;
-		
+
 		service = TauriNotificationService.getInstance();
 	});
 
 	afterEach(() => {
 		vi.resetAllMocks();
-		
+
 		// Reset singleton instance
-		// @ts-ignore - accessing private static property for testing
+		// @ts-expect-error - accessing private static property for testing
 		TauriNotificationService.instance = undefined;
 	});
 
@@ -52,13 +55,13 @@ describe("TauriNotificationService", () => {
 		it("should detect non-Tauri environment correctly", () => {
 			// Temporarily remove __TAURI__ property
 			const originalTauri = window.__TAURI__;
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = undefined;
 
 			expect(TauriNotificationService.isTauriEnvironment()).toBe(false);
 
 			// Restore for other tests
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = originalTauri;
 		});
 	});
@@ -305,7 +308,7 @@ describe("TauriNotificationService", () => {
 			const callback = vi.fn();
 
 			service.on("test-event", callback);
-			// @ts-ignore - accessing private method for testing
+			// @ts-expect-error - accessing private method for testing
 			service.emit("test-event", { data: "test" });
 
 			expect(callback).toHaveBeenCalledWith({ data: "test" });
@@ -316,7 +319,7 @@ describe("TauriNotificationService", () => {
 
 			service.on("test-event", callback);
 			service.off("test-event", callback);
-			// @ts-ignore - accessing private method for testing
+			// @ts-expect-error - accessing private method for testing
 			service.emit("test-event", { data: "test" });
 
 			expect(callback).not.toHaveBeenCalled();
@@ -341,14 +344,14 @@ describe("TauriNotificationService", () => {
 		it("should return null in non-Tauri environment", () => {
 			// Temporarily remove __TAURI__ property
 			const originalTauri = window.__TAURI__;
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = undefined;
 
 			const service = getTauriNotifications();
 			expect(service).toBeNull();
 
 			// Restore for other tests
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = originalTauri;
 		});
 
@@ -366,24 +369,24 @@ describe("TauriNotificationService", () => {
 		beforeEach(() => {
 			// Save original and remove __TAURI__ property
 			originalTauri = window.__TAURI__;
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = undefined;
-			
+
 			// Reset singleton instance to test non-Tauri behavior
-			// @ts-ignore - accessing private static property for testing
+			// @ts-expect-error - accessing private static property for testing
 			TauriNotificationService.instance = undefined;
-			
+
 			// Create service instance for testing fallback behavior
 			nonTauriService = TauriNotificationService.getInstance();
 		});
 
 		afterEach(() => {
 			// Restore __TAURI__ property
-			// @ts-ignore
+			// @ts-expect-error
 			window.__TAURI__ = originalTauri;
-			
+
 			// Reset singleton instance
-			// @ts-ignore - accessing private static property for testing
+			// @ts-expect-error - accessing private static property for testing
 			TauriNotificationService.instance = undefined;
 		});
 
@@ -427,7 +430,7 @@ describe("TauriNotificationService", () => {
 				getItem: vi.fn(),
 				setItem: vi.fn(),
 			};
-			Object.defineProperty(window, 'localStorage', {
+			Object.defineProperty(window, "localStorage", {
 				value: localStorageMock,
 				writable: true,
 			});
@@ -436,14 +439,16 @@ describe("TauriNotificationService", () => {
 			await nonTauriService.saveSettings(settings);
 			expect(localStorageMock.setItem).toHaveBeenCalledWith(
 				"tauri-notification-settings",
-				JSON.stringify(settings)
+				JSON.stringify(settings),
 			);
 			expect(mockInvoke).not.toHaveBeenCalled();
 
 			// Load settings should use localStorage
 			localStorageMock.getItem.mockReturnValue(JSON.stringify(settings));
 			const loadedSettings = await nonTauriService.loadSettings();
-			expect(localStorageMock.getItem).toHaveBeenCalledWith("tauri-notification-settings");
+			expect(localStorageMock.getItem).toHaveBeenCalledWith(
+				"tauri-notification-settings",
+			);
 			expect(loadedSettings).toEqual(settings);
 			expect(mockInvoke).not.toHaveBeenCalled();
 		});
@@ -453,7 +458,7 @@ describe("TauriNotificationService", () => {
 				getItem: vi.fn().mockReturnValue(null),
 				setItem: vi.fn(),
 			};
-			Object.defineProperty(window, 'localStorage', {
+			Object.defineProperty(window, "localStorage", {
 				value: localStorageMock,
 				writable: true,
 			});

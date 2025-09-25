@@ -10,8 +10,8 @@
  * - Error handling and edge cases
  */
 
-import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ThemeProvider, useTheme } from "../theme-provider";
 
 // Mock localStorage
@@ -35,7 +35,7 @@ Object.defineProperty(window, "matchMedia", {
 // Test component that uses the theme hook
 function TestThemeComponent() {
 	const { theme, setTheme } = useTheme();
-	
+
 	return (
 		<div>
 			<div data-testid="current-theme">{theme}</div>
@@ -53,7 +53,7 @@ function TestThemeComponent() {
 }
 
 // Component to test theme hook outside provider
-function ThemeHookWithoutProvider() {
+function _ThemeHookWithoutProvider() {
 	const { theme } = useTheme();
 	return <div data-testid="theme">{theme}</div>;
 }
@@ -61,7 +61,7 @@ function ThemeHookWithoutProvider() {
 describe("ThemeProvider", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Reset DOM classes
 		document.documentElement.className = "";
 		document.body.className = "";
@@ -69,10 +69,10 @@ describe("ThemeProvider", () => {
 		document.body.removeAttribute("data-theme");
 		document.documentElement.style.colorScheme = "";
 		document.body.style.colorScheme = "";
-		
+
 		// Default localStorage mock
 		mockLocalStorage.getItem.mockReturnValue(null);
-		
+
 		// Default matchMedia mock (light theme)
 		mockMatchMedia.mockReturnValue({
 			matches: false,
@@ -90,9 +90,9 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider>
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("system");
 		});
 
@@ -100,34 +100,34 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider defaultTheme="dark">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("dark");
 		});
 
 		it("should load theme from localStorage", () => {
 			mockLocalStorage.getItem.mockReturnValue("light");
-			
+
 			render(
 				<ThemeProvider>
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
 			expect(mockLocalStorage.getItem).toHaveBeenCalledWith("vite-ui-theme");
 		});
 
 		it("should use custom storage key", () => {
 			mockLocalStorage.getItem.mockReturnValue("dark");
-			
+
 			render(
 				<ThemeProvider storageKey="custom-theme-key">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(mockLocalStorage.getItem).toHaveBeenCalledWith("custom-theme-key");
 		});
 	});
@@ -137,39 +137,48 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider>
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			fireEvent.click(screen.getByTestId("set-light"));
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("light");
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "light");
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"light",
+			);
 		});
 
 		it("should switch to dark theme", () => {
 			render(
 				<ThemeProvider>
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			fireEvent.click(screen.getByTestId("set-dark"));
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("dark");
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "dark");
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"dark",
+			);
 		});
 
 		it("should switch to system theme", () => {
 			render(
 				<ThemeProvider defaultTheme="light">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			fireEvent.click(screen.getByTestId("set-system"));
-			
+
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("system");
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "system");
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"system",
+			);
 		});
 	});
 
@@ -178,9 +187,9 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider defaultTheme="light">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(document.documentElement.classList.contains("light")).toBe(true);
 			expect(document.body.classList.contains("light")).toBe(true);
 			expect(document.documentElement.getAttribute("data-theme")).toBe("light");
@@ -193,9 +202,9 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider defaultTheme="dark">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(document.documentElement.classList.contains("dark")).toBe(true);
 			expect(document.body.classList.contains("dark")).toBe(true);
 			expect(document.documentElement.getAttribute("data-theme")).toBe("dark");
@@ -208,16 +217,16 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider defaultTheme="light">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			// Initially light
 			expect(document.documentElement.classList.contains("light")).toBe(true);
 			expect(document.documentElement.classList.contains("dark")).toBe(false);
-			
+
 			// Switch to dark
 			fireEvent.click(screen.getByTestId("set-dark"));
-			
+
 			expect(document.documentElement.classList.contains("light")).toBe(false);
 			expect(document.documentElement.classList.contains("dark")).toBe(true);
 		});
@@ -230,13 +239,13 @@ describe("ThemeProvider", () => {
 				addEventListener: vi.fn(),
 				removeEventListener: vi.fn(),
 			});
-			
+
 			render(
 				<ThemeProvider defaultTheme="system">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(document.documentElement.classList.contains("light")).toBe(true);
 			expect(document.documentElement.classList.contains("dark")).toBe(false);
 		});
@@ -247,13 +256,13 @@ describe("ThemeProvider", () => {
 				addEventListener: vi.fn(),
 				removeEventListener: vi.fn(),
 			});
-			
+
 			render(
 				<ThemeProvider defaultTheme="system">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(document.documentElement.classList.contains("dark")).toBe(true);
 			expect(document.documentElement.classList.contains("light")).toBe(false);
 		});
@@ -261,42 +270,50 @@ describe("ThemeProvider", () => {
 		it("should listen for system theme changes", () => {
 			const mockAddEventListener = vi.fn();
 			const mockRemoveEventListener = vi.fn();
-			
+
 			mockMatchMedia.mockReturnValue({
 				matches: false,
 				addEventListener: mockAddEventListener,
 				removeEventListener: mockRemoveEventListener,
 			});
-			
+
 			const { unmount } = render(
 				<ThemeProvider defaultTheme="system">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
-			expect(mockMatchMedia).toHaveBeenCalledWith("(prefers-color-scheme: dark)");
-			expect(mockAddEventListener).toHaveBeenCalledWith("change", expect.any(Function));
-			
+
+			expect(mockMatchMedia).toHaveBeenCalledWith(
+				"(prefers-color-scheme: dark)",
+			);
+			expect(mockAddEventListener).toHaveBeenCalledWith(
+				"change",
+				expect.any(Function),
+			);
+
 			// Cleanup on unmount
 			unmount();
-			expect(mockRemoveEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+			expect(mockRemoveEventListener).toHaveBeenCalledWith(
+				"change",
+				expect.any(Function),
+			);
 		});
 
 		it("should not listen for system theme changes when not in system mode", () => {
 			const mockAddEventListener = vi.fn();
-			
+
 			mockMatchMedia.mockReturnValue({
 				matches: false,
 				addEventListener: mockAddEventListener,
 				removeEventListener: vi.fn(),
 			});
-			
+
 			render(
 				<ThemeProvider defaultTheme="light">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(mockAddEventListener).not.toHaveBeenCalled();
 		});
 	});
@@ -304,13 +321,15 @@ describe("ThemeProvider", () => {
 	describe("Error Handling", () => {
 		it("should throw error when useTheme is used outside provider", () => {
 			// Suppress console.error for this test
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			// In the test environment, React error boundaries don't work the same way
 			// This test verifies the hook throws an error, but we can't easily catch it in render
 			// So we'll test the hook directly
 			expect(() => {
-				const TestComponent = () => {
+				const _TestComponent = () => {
 					useTheme(); // This should throw
 					return <div>Test</div>;
 				};
@@ -326,13 +345,15 @@ describe("ThemeProvider", () => {
 			});
 
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			// Should not crash and use default theme
 			render(
 				<ThemeProvider>
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
 
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("system");
@@ -348,7 +369,7 @@ describe("ThemeProvider", () => {
 			render(
 				<ThemeProvider defaultTheme="light">
 					<TestThemeComponent />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
 
 			expect(screen.getByTestId("current-theme")).toHaveTextContent("light");

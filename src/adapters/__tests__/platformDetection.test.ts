@@ -1,14 +1,12 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
 	detectPlatform,
 	getPlatformCapabilities,
-	isAndroidCapacitor,
-	isIOSCapacitor,
-	isMobile,
-	isDesktop,
 	getPlatformClasses,
-	platformSupports,
 	getPlatformConfig,
+	isDesktop,
+	isMobile,
+	platformSupports,
 	platformSwitch,
 } from "../platformDetection";
 
@@ -38,17 +36,18 @@ Object.defineProperty(global, "navigator", {
 describe("Platform Detection", () => {
 	beforeEach(() => {
 		// Reset mocks - completely clear the window object
-		Object.keys(mockWindow).forEach(key => {
+		Object.keys(mockWindow).forEach((key) => {
 			delete mockWindow[key];
 		});
-		mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+		mockNavigator.userAgent =
+			"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
 		vi.clearAllMocks();
 	});
 
 	describe("detectPlatform", () => {
 		it("should detect web platform by default", () => {
 			const detection = detectPlatform();
-			
+
 			expect(detection.platform).toBe("web");
 			expect(detection.userAgent).toBe(mockNavigator.userAgent);
 			expect(detection.isDevelopment).toBe(false); // NODE_ENV is test, not development
@@ -57,9 +56,9 @@ describe("Platform Detection", () => {
 
 		it("should detect Tauri platform", () => {
 			mockWindow.__TAURI__ = { app: { getVersion: () => "1.0.0" } };
-			
+
 			const detection = detectPlatform();
-			
+
 			expect(detection.platform).toBe("tauri");
 			expect(detection.metadata?.tauri).toBeDefined();
 		});
@@ -69,9 +68,9 @@ describe("Platform Detection", () => {
 				getPlatform: () => "android",
 				isNativePlatform: () => true,
 			};
-			
+
 			const detection = detectPlatform();
-			
+
 			expect(detection.platform).toBe("capacitor");
 			expect(detection.version).toBe("android");
 			expect(detection.metadata?.capacitor).toBeDefined();
@@ -82,7 +81,7 @@ describe("Platform Detection", () => {
 	describe("getPlatformCapabilities", () => {
 		it("should return web capabilities", () => {
 			const capabilities = getPlatformCapabilities("web");
-			
+
 			expect(capabilities.hasHardwareBackButton).toBe(false);
 			expect(capabilities.hasSystemOverlays).toBe(false);
 			expect(capabilities.hasDeepLinking).toBe(true);
@@ -92,7 +91,7 @@ describe("Platform Detection", () => {
 
 		it("should return Capacitor capabilities", () => {
 			const capabilities = getPlatformCapabilities("capacitor");
-			
+
 			expect(capabilities.hasHardwareBackButton).toBe(false); // Depends on isAndroidCapacitor
 			expect(capabilities.hasSystemOverlays).toBe(true);
 			expect(capabilities.hasDeepLinking).toBe(true);
@@ -102,7 +101,7 @@ describe("Platform Detection", () => {
 
 		it("should return Tauri capabilities", () => {
 			const capabilities = getPlatformCapabilities("tauri");
-			
+
 			expect(capabilities.hasHardwareBackButton).toBe(false);
 			expect(capabilities.hasSystemOverlays).toBe(true);
 			expect(capabilities.hasDeepLinking).toBe(true);
@@ -115,19 +114,21 @@ describe("Platform Detection", () => {
 	describe("Mobile Detection", () => {
 		it("should detect mobile from Capacitor", () => {
 			mockWindow.Capacitor = { getPlatform: () => "android" };
-			
+
 			expect(isMobile()).toBe(true);
 		});
 
 		it("should detect mobile from user agent", () => {
-			mockNavigator.userAgent = "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)";
-			
+			mockNavigator.userAgent =
+				"Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)";
+
 			expect(isMobile()).toBe(true);
 		});
 
 		it("should not detect mobile for desktop user agent", () => {
-			mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
-			
+			mockNavigator.userAgent =
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+
 			expect(isMobile()).toBe(false);
 		});
 	});
@@ -135,19 +136,20 @@ describe("Platform Detection", () => {
 	describe("Desktop Detection", () => {
 		it("should detect desktop from Tauri", () => {
 			mockWindow.__TAURI__ = {};
-			
+
 			expect(isDesktop()).toBe(true);
 		});
 
 		it("should detect desktop from web on desktop", () => {
-			mockNavigator.userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
-			
+			mockNavigator.userAgent =
+				"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+
 			expect(isDesktop()).toBe(true);
 		});
 
 		it("should not detect desktop for mobile", () => {
 			mockWindow.Capacitor = { getPlatform: () => "android" };
-			
+
 			expect(isDesktop()).toBe(false);
 		});
 	});
@@ -155,7 +157,7 @@ describe("Platform Detection", () => {
 	describe("Platform Classes", () => {
 		it("should return web platform classes", () => {
 			const classes = getPlatformClasses("web");
-			
+
 			expect(classes).toContain("platform-web");
 			expect(classes).toContain("platform-desktop");
 		});
@@ -163,7 +165,7 @@ describe("Platform Detection", () => {
 		it("should return Capacitor platform classes", () => {
 			mockWindow.Capacitor = { getPlatform: () => "android" };
 			const classes = getPlatformClasses("capacitor");
-			
+
 			expect(classes).toContain("platform-capacitor");
 			expect(classes).toContain("platform-mobile");
 			expect(classes).toContain("platform-android");
@@ -171,7 +173,7 @@ describe("Platform Detection", () => {
 
 		it("should return Tauri platform classes", () => {
 			const classes = getPlatformClasses("tauri");
-			
+
 			expect(classes).toContain("platform-tauri");
 			expect(classes).toContain("platform-desktop");
 		});
@@ -193,9 +195,11 @@ describe("Platform Detection", () => {
 				capacitor: { theme: "dark" },
 				tauri: { theme: "system" },
 			};
-			
+
 			expect(getPlatformConfig(configs, "web")).toEqual({ theme: "light" });
-			expect(getPlatformConfig(configs, "capacitor")).toEqual({ theme: "dark" });
+			expect(getPlatformConfig(configs, "capacitor")).toEqual({
+				theme: "dark",
+			});
 			expect(getPlatformConfig(configs, "tauri")).toEqual({ theme: "system" });
 		});
 	});
@@ -205,13 +209,16 @@ describe("Platform Detection", () => {
 			const webHandler = vi.fn(() => "web-result");
 			const capacitorHandler = vi.fn(() => "capacitor-result");
 			const defaultHandler = vi.fn(() => "default-result");
-			
+
 			// Mock web platform
-			const result = platformSwitch({
-				web: webHandler,
-				capacitor: capacitorHandler,
-			}, defaultHandler);
-			
+			const result = platformSwitch(
+				{
+					web: webHandler,
+					capacitor: capacitorHandler,
+				},
+				defaultHandler,
+			);
+
 			expect(result).toBe("web-result");
 			expect(webHandler).toHaveBeenCalled();
 			expect(capacitorHandler).not.toHaveBeenCalled();
@@ -221,12 +228,15 @@ describe("Platform Detection", () => {
 		it("should use default handler when platform not found", () => {
 			const capacitorHandler = vi.fn(() => "capacitor-result");
 			const defaultHandler = vi.fn(() => "default-result");
-			
+
 			// Mock web platform, but only provide capacitor handler
-			const result = platformSwitch({
-				capacitor: capacitorHandler,
-			}, defaultHandler);
-			
+			const result = platformSwitch(
+				{
+					capacitor: capacitorHandler,
+				},
+				defaultHandler,
+			);
+
 			expect(result).toBe("default-result");
 			expect(capacitorHandler).not.toHaveBeenCalled();
 			expect(defaultHandler).toHaveBeenCalled();

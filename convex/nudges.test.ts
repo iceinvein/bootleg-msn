@@ -1,6 +1,6 @@
 /**
  * Integration tests for nudge system using convex-test
- * 
+ *
  * Tests cover:
  * - Sending nudges and buzzes
  * - Nudge cooldown system (30 seconds)
@@ -12,7 +12,7 @@
  */
 
 import { convexTest } from "convex-test";
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -45,11 +45,13 @@ describe("Nudge System", () => {
 			});
 
 			// Send a nudge
-			const nudgeId = await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "nudge",
-				conversationType: "direct",
-			});
+			const nudgeId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "nudge",
+					conversationType: "direct",
+				});
 
 			expect(nudgeId).toBeDefined();
 			expect(nudgeId).not.toBeNull();
@@ -86,11 +88,13 @@ describe("Nudge System", () => {
 			});
 
 			// Send a buzz
-			const nudgeId = await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "buzz",
-				conversationType: "direct",
-			});
+			const nudgeId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "buzz",
+					conversationType: "direct",
+				});
 
 			expect(nudgeId).toBeDefined();
 			expect(nudgeId).not.toBeNull();
@@ -127,11 +131,13 @@ describe("Nudge System", () => {
 			});
 
 			// Send first nudge
-			const firstNudgeId = await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "nudge",
-				conversationType: "direct",
-			});
+			const firstNudgeId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "nudge",
+					conversationType: "direct",
+				});
 
 			expect(firstNudgeId).toBeDefined();
 
@@ -141,7 +147,7 @@ describe("Nudge System", () => {
 					toUserId: receiverId,
 					nudgeType: "buzz",
 					conversationType: "direct",
-				})
+				}),
 			).rejects.toThrow("Please wait before sending another nudge");
 		});
 
@@ -172,20 +178,24 @@ describe("Nudge System", () => {
 			});
 
 			// Send nudge to first user
-			const firstNudgeId = await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiver1Id,
-				nudgeType: "nudge",
-				conversationType: "direct",
-			});
+			const firstNudgeId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiver1Id,
+					nudgeType: "nudge",
+					conversationType: "direct",
+				});
 
 			expect(firstNudgeId).toBeDefined();
 
 			// Send nudge to second user immediately - should succeed
-			const secondNudgeId = await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiver2Id,
-				nudgeType: "buzz",
-				conversationType: "direct",
-			});
+			const secondNudgeId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiver2Id,
+					nudgeType: "buzz",
+					conversationType: "direct",
+				});
 
 			expect(secondNudgeId).toBeDefined();
 			expect(secondNudgeId).not.toEqual(firstNudgeId);
@@ -233,7 +243,7 @@ describe("Nudge System", () => {
 					toUserId: receiverId,
 					nudgeType: "nudge",
 					conversationType: "direct",
-				})
+				}),
 			).rejects.toThrow("User has disabled nudge notifications");
 		});
 
@@ -244,7 +254,7 @@ describe("Nudge System", () => {
 					toUserId: "fake-user-id" as any,
 					nudgeType: "nudge",
 					conversationType: "direct",
-				})
+				}),
 			).rejects.toThrow();
 		});
 	});
@@ -269,14 +279,18 @@ describe("Nudge System", () => {
 			});
 
 			// Send a nudge
-			await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "nudge",
-				conversationType: "direct",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "nudge",
+					conversationType: "direct",
+				});
 
 			// Get received nudges
-			const receivedNudges = await t.withIdentity({ subject: receiverId }).query(api.nudges.getReceivedNudges, {});
+			const receivedNudges = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.nudges.getReceivedNudges, {});
 
 			expect(receivedNudges).toHaveLength(1);
 			expect(receivedNudges[0]).toMatchObject({
@@ -302,7 +316,9 @@ describe("Nudge System", () => {
 			});
 
 			// Get received nudges
-			const receivedNudges = await t.withIdentity({ subject: userId }).query(api.nudges.getReceivedNudges, {});
+			const receivedNudges = await t
+				.withIdentity({ subject: userId })
+				.query(api.nudges.getReceivedNudges, {});
 
 			expect(receivedNudges).toEqual([]);
 		});
@@ -353,18 +369,18 @@ describe("Nudge System", () => {
 			});
 
 			// Get received nudges with limit
-			const receivedNudges = await t.withIdentity({ subject: receiverId }).query(api.nudges.getReceivedNudges, {
-				limit: 2,
-			});
+			const receivedNudges = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.nudges.getReceivedNudges, {
+					limit: 2,
+				});
 
 			expect(receivedNudges).toHaveLength(2);
 		});
 
 		it("should require authentication", async () => {
 			// Try to get received nudges without authentication
-			await expect(
-				t.query(api.nudges.getReceivedNudges, {})
-			).rejects.toThrow();
+			await expect(t.query(api.nudges.getReceivedNudges, {})).rejects.toThrow();
 		});
 	});
 
@@ -388,14 +404,18 @@ describe("Nudge System", () => {
 			});
 
 			// Send a nudge
-			await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "buzz",
-				conversationType: "direct",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "buzz",
+					conversationType: "direct",
+				});
 
 			// Get sent nudges
-			const sentNudges = await t.withIdentity({ subject: senderId }).query(api.nudges.getSentNudges, {});
+			const sentNudges = await t
+				.withIdentity({ subject: senderId })
+				.query(api.nudges.getSentNudges, {});
 
 			expect(sentNudges).toHaveLength(1);
 			expect(sentNudges[0]).toMatchObject({
@@ -421,16 +441,16 @@ describe("Nudge System", () => {
 			});
 
 			// Get sent nudges
-			const sentNudges = await t.withIdentity({ subject: userId }).query(api.nudges.getSentNudges, {});
+			const sentNudges = await t
+				.withIdentity({ subject: userId })
+				.query(api.nudges.getSentNudges, {});
 
 			expect(sentNudges).toEqual([]);
 		});
 
 		it("should require authentication", async () => {
 			// Try to get sent nudges without authentication
-			await expect(
-				t.query(api.nudges.getSentNudges, {})
-			).rejects.toThrow();
+			await expect(t.query(api.nudges.getSentNudges, {})).rejects.toThrow();
 		});
 	});
 
@@ -473,9 +493,11 @@ describe("Nudge System", () => {
 			});
 
 			// Get conversation nudges from user1's perspective
-			const conversationNudges = await t.withIdentity({ subject: user1Id }).query(api.nudges.getConversationNudges, {
-				otherUserId: user2Id,
-			});
+			const conversationNudges = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.nudges.getConversationNudges, {
+					otherUserId: user2Id,
+				});
 
 			expect(conversationNudges).toHaveLength(2);
 
@@ -507,7 +529,9 @@ describe("Nudge System", () => {
 			});
 
 			// Get conversation nudges without specifying conversation
-			const conversationNudges = await t.withIdentity({ subject: userId }).query(api.nudges.getConversationNudges, {});
+			const conversationNudges = await t
+				.withIdentity({ subject: userId })
+				.query(api.nudges.getConversationNudges, {});
 
 			expect(conversationNudges).toEqual([]);
 		});
@@ -517,7 +541,7 @@ describe("Nudge System", () => {
 			await expect(
 				t.query(api.nudges.getConversationNudges, {
 					otherUserId: "fake-user-id" as any,
-				})
+				}),
 			).rejects.toThrow();
 		});
 	});
@@ -542,9 +566,11 @@ describe("Nudge System", () => {
 			});
 
 			// Check if can send nudge
-			const canSend = await t.withIdentity({ subject: senderId }).query(api.nudges.canSendNudgeToUser, {
-				toUserId: receiverId,
-			});
+			const canSend = await t
+				.withIdentity({ subject: senderId })
+				.query(api.nudges.canSendNudgeToUser, {
+					toUserId: receiverId,
+				});
 
 			expect(canSend).toEqual({
 				canSend: true,
@@ -570,16 +596,20 @@ describe("Nudge System", () => {
 			});
 
 			// Send a nudge first
-			await t.withIdentity({ subject: senderId }).mutation(api.nudges.sendNudge, {
-				toUserId: receiverId,
-				nudgeType: "nudge",
-				conversationType: "direct",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.nudges.sendNudge, {
+					toUserId: receiverId,
+					nudgeType: "nudge",
+					conversationType: "direct",
+				});
 
 			// Check if can send another nudge immediately
-			const canSend = await t.withIdentity({ subject: senderId }).query(api.nudges.canSendNudgeToUser, {
-				toUserId: receiverId,
-			});
+			const canSend = await t
+				.withIdentity({ subject: senderId })
+				.query(api.nudges.canSendNudgeToUser, {
+					toUserId: receiverId,
+				});
 
 			expect(canSend).toEqual({
 				canSend: false,
@@ -624,9 +654,11 @@ describe("Nudge System", () => {
 			});
 
 			// Check if can send nudge
-			const canSend = await t.withIdentity({ subject: senderId }).query(api.nudges.canSendNudgeToUser, {
-				toUserId: receiverId,
-			});
+			const canSend = await t
+				.withIdentity({ subject: senderId })
+				.query(api.nudges.canSendNudgeToUser, {
+					toUserId: receiverId,
+				});
 
 			expect(canSend).toEqual({
 				canSend: false,
@@ -639,7 +671,7 @@ describe("Nudge System", () => {
 			await expect(
 				t.query(api.nudges.canSendNudgeToUser, {
 					toUserId: "fake-user-id" as any,
-				})
+				}),
 			).rejects.toThrow();
 		});
 	});

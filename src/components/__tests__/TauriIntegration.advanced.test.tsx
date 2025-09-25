@@ -2,9 +2,9 @@
  * Advanced tests for TauriIntegration component functionality
  */
 
-import { render, screen, act, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TauriIntegration } from "../TauriIntegration";
 
 // Mock Tauri hooks
@@ -29,18 +29,19 @@ vi.mock("@/hooks/useTauri", () => ({
 }));
 
 // Helper function to render components with router context
-const renderWithRouter = (component: React.ReactElement, initialEntries: string[] = ["/"]) => {
+const renderWithRouter = (
+	component: React.ReactElement,
+	initialEntries: string[] = ["/"],
+) => {
 	return render(
-		<MemoryRouter initialEntries={initialEntries}>
-			{component}
-		</MemoryRouter>
+		<MemoryRouter initialEntries={initialEntries}>{component}</MemoryRouter>,
 	);
 };
 
 describe("TauriIntegration - Advanced Functionality", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Default mock implementations
 		mockUseTauri.mockReturnValue({
 			isTauri: true,
@@ -68,16 +69,16 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				restoreWindowState: vi.fn(),
 			},
 		});
-		
+
 		mockUseWindowState.mockReturnValue({
 			saveState: vi.fn(),
 			restoreState: vi.fn(),
 		});
-		
+
 		mockUseUnreadCount.mockReturnValue({
 			updateUnreadCount: mockUpdateUnreadCount,
 		});
-		
+
 		mockUseDeepLinks.mockReturnValue({
 			handleDeepLink: mockHandleDeepLink,
 		});
@@ -88,7 +89,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Should render successfully with window state integration
@@ -108,7 +109,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Should render successfully even when not in Tauri
@@ -121,7 +122,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Should use all the required hooks
@@ -163,7 +164,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Should still render but not add platform classes when not ready
@@ -176,7 +177,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Deep link hook should be used
@@ -189,7 +190,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 			renderWithRouter(
 				<TauriIntegration>
 					<div>Test Content</div>
-				</TauriIntegration>
+				</TauriIntegration>,
 			);
 
 			// Unread count hook should be used
@@ -204,7 +205,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>,
-				["/?deeplink=msn://chat/user123"]
+				["/?deeplink=msn://chat/user123"],
 			);
 
 			// Should handle deep link
@@ -217,7 +218,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				<TauriIntegration>
 					<div>Test Content</div>
 				</TauriIntegration>,
-				["/"]
+				["/"],
 			);
 
 			// Should not call handleDeepLink
@@ -229,7 +230,7 @@ describe("TauriIntegration - Advanced Functionality", () => {
 		it("should handle different platforms correctly", () => {
 			const platforms = ["windows", "macos", "linux"] as const;
 
-			platforms.forEach(platform => {
+			platforms.forEach((platform) => {
 				// Clear previous classes
 				document.body.className = "";
 
@@ -263,10 +264,12 @@ describe("TauriIntegration - Advanced Functionality", () => {
 				const { unmount } = renderWithRouter(
 					<TauriIntegration>
 						<div>Test Content</div>
-					</TauriIntegration>
+					</TauriIntegration>,
 				);
 
-				expect(document.body.classList.contains(`platform-${platform}`)).toBe(true);
+				expect(document.body.classList.contains(`platform-${platform}`)).toBe(
+					true,
+				);
 
 				unmount();
 			});

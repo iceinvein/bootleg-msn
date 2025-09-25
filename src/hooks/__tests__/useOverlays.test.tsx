@@ -1,7 +1,11 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useOverlays, useOverlayState, useOverlayActions } from "../useOverlays";
+import { act, renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { resetOverlaySystem } from "@/stores/overlays";
+import {
+	useOverlayActions,
+	useOverlayState,
+	useOverlays,
+} from "../useOverlays";
 
 // Mock nanoid to have predictable but unique IDs in tests
 let idCounter = 0;

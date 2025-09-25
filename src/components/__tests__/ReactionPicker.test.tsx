@@ -10,10 +10,10 @@
  * - Popover open/close behavior
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ReactionPicker } from "../ReactionPicker";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ReactionType } from "../ReactionPicker";
+import { ReactionPicker } from "../ReactionPicker";
 
 // Mock UI components
 vi.mock("../ui/responsive-popover", () => ({
@@ -23,7 +23,11 @@ vi.mock("../ui/responsive-popover", () => ({
 		</div>
 	),
 	ResponsivePopoverTrigger: ({ children, disabled, className }: any) => (
-		<div data-testid="popover-trigger" data-disabled={disabled} className={className}>
+		<div
+			data-testid="popover-trigger"
+			data-disabled={disabled}
+			className={className}
+		>
 			{children}
 		</div>
 	),
@@ -35,7 +39,14 @@ vi.mock("../ui/responsive-popover", () => ({
 }));
 
 vi.mock("../ui/button", () => ({
-	Button: ({ children, onClick, disabled, className, title, ...props }: any) => (
+	Button: ({
+		children,
+		onClick,
+		disabled,
+		className,
+		title,
+		...props
+	}: any) => (
 		<button
 			onClick={onClick}
 			disabled={disabled}
@@ -78,9 +89,9 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			expect(screen.getByTestId("trigger-button")).toBeInTheDocument();
 			expect(screen.getByTestId("trigger-button")).toHaveTextContent("React");
 		});
@@ -89,18 +100,18 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover by clicking trigger
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Should show common reaction buttons
 			const reactionButtons = screen.getAllByTestId("reaction-button");
 			expect(reactionButtons.length).toBeGreaterThan(0);
-			
+
 			// Check for common reactions
-			const buttonTexts = reactionButtons.map(btn => btn.textContent);
+			const buttonTexts = reactionButtons.map((btn) => btn.textContent);
 			expect(buttonTexts).toContain("👍");
 			expect(buttonTexts).toContain("❤️");
 			expect(buttonTexts).toContain("😂");
@@ -110,12 +121,12 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Should have a plus icon for more reactions
 			expect(screen.getByTestId("plus-icon")).toBeInTheDocument();
 		});
@@ -127,12 +138,12 @@ describe("ReactionPicker Component", () => {
 					currentUserReaction="thumbs_up"
 				>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// The thumbs up button should have highlighting (in className)
 			const reactionButtons = screen.getAllByTestId("reaction-button");
 			expect(reactionButtons.length).toBeGreaterThan(0);
@@ -144,21 +155,26 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Click the first reaction (thumbs up)
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			const thumbsUpButton = reactionButtons.find(btn => btn.textContent?.includes("👍"));
-			
+			const thumbsUpButton = reactionButtons.find((btn) =>
+				btn.textContent?.includes("👍"),
+			);
+
 			if (thumbsUpButton) {
 				fireEvent.click(thumbsUpButton);
-				
+
 				await waitFor(() => {
-					expect(mockOnReactionSelect).toHaveBeenCalledWith("thumbs_up", undefined);
+					expect(mockOnReactionSelect).toHaveBeenCalledWith(
+						"thumbs_up",
+						undefined,
+					);
 				});
 			}
 		});
@@ -167,7 +183,7 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
 
 			// Open the popover
@@ -186,7 +202,7 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
 
 			// Open the popover
@@ -207,19 +223,21 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Click a reaction
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			const thumbsUpButton = reactionButtons.find(btn => btn.textContent?.includes("👍"));
-			
+			const thumbsUpButton = reactionButtons.find((btn) =>
+				btn.textContent?.includes("👍"),
+			);
+
 			if (thumbsUpButton) {
 				fireEvent.click(thumbsUpButton);
-				
+
 				await waitFor(() => {
 					expect(mockOnReactionSelect).toHaveBeenCalled();
 				});
@@ -230,14 +248,11 @@ describe("ReactionPicker Component", () => {
 	describe("Loading and Disabled States", () => {
 		it("should disable trigger when disabled prop is true", () => {
 			render(
-				<ReactionPicker
-					onReactionSelect={mockOnReactionSelect}
-					disabled={true}
-				>
+				<ReactionPicker onReactionSelect={mockOnReactionSelect} disabled={true}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			const trigger = screen.getByTestId("popover-trigger");
 			expect(trigger).toHaveAttribute("data-disabled", "true");
 		});
@@ -249,63 +264,64 @@ describe("ReactionPicker Component", () => {
 					isLoading={true}
 				>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open the popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// All reaction buttons should be disabled
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			reactionButtons.forEach(button => {
+			reactionButtons.forEach((button) => {
 				expect(button).toBeDisabled();
 			});
 		});
 
 		it("should not call onReactionSelect when disabled", () => {
 			render(
-				<ReactionPicker
-					onReactionSelect={mockOnReactionSelect}
-					disabled={true}
-				>
+				<ReactionPicker onReactionSelect={mockOnReactionSelect} disabled={true}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Try to open popover and click reaction
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
 			if (reactionButtons.length > 0) {
 				fireEvent.click(reactionButtons[0]);
 			}
-			
+
 			expect(mockOnReactionSelect).not.toHaveBeenCalled();
 		});
 
 		it("should show pending state during async operations", async () => {
-			const slowOnReactionSelect = vi.fn().mockImplementation(
-				() => new Promise(resolve => setTimeout(resolve, 100))
-			);
-			
+			const slowOnReactionSelect = vi
+				.fn()
+				.mockImplementation(
+					() => new Promise((resolve) => setTimeout(resolve, 100)),
+				);
+
 			render(
 				<ReactionPicker onReactionSelect={slowOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover and click reaction
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			const thumbsUpButton = reactionButtons.find(btn => btn.textContent?.includes("👍"));
-			
+			const thumbsUpButton = reactionButtons.find((btn) =>
+				btn.textContent?.includes("👍"),
+			);
+
 			if (thumbsUpButton) {
 				fireEvent.click(thumbsUpButton);
-				
+
 				// Should show pending state (button disabled during operation)
 				expect(thumbsUpButton).toBeDisabled();
-				
+
 				await waitFor(() => {
 					expect(slowOnReactionSelect).toHaveBeenCalled();
 				});
@@ -321,7 +337,7 @@ describe("ReactionPicker Component", () => {
 					className="custom-picker"
 				>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
 
 			// The className is applied to the ResponsivePopoverTrigger
@@ -330,82 +346,102 @@ describe("ReactionPicker Component", () => {
 		});
 
 		it("should handle all reaction types correctly", async () => {
-			const reactionTypes: ReactionType[] = ["thumbs_up", "heart", "laugh", "wow", "sad", "angry"];
-			
+			const reactionTypes: ReactionType[] = [
+				"thumbs_up",
+				"heart",
+				"laugh",
+				"wow",
+				"sad",
+				"angry",
+			];
+
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			
+
 			// Should have buttons for all common reaction types
-			expect(reactionButtons.length).toBeGreaterThanOrEqual(reactionTypes.length);
+			expect(reactionButtons.length).toBeGreaterThanOrEqual(
+				reactionTypes.length,
+			);
 		});
 	});
 
 	describe("Error Handling", () => {
 		it("should handle onReactionSelect errors gracefully", async () => {
-			const mockOnReactionSelectError = vi.fn().mockRejectedValue(new Error("Network error"));
-			
+			const mockOnReactionSelectError = vi
+				.fn()
+				.mockRejectedValue(new Error("Network error"));
+
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-			
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelectError}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover and click reaction
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
 			if (reactionButtons.length > 0) {
 				fireEvent.click(reactionButtons[0]);
-				
+
 				await waitFor(() => {
 					expect(mockOnReactionSelectError).toHaveBeenCalled();
 				});
-				
+
 				// Should handle error gracefully
-				expect(consoleSpy).toHaveBeenCalledWith("Failed to add reaction:", expect.any(Error));
+				expect(consoleSpy).toHaveBeenCalledWith(
+					"Failed to add reaction:",
+					expect.any(Error),
+				);
 			}
-			
+
 			consoleSpy.mockRestore();
 		});
 
 		it("should reset pending state after error", async () => {
-			const mockOnReactionSelectError = vi.fn().mockRejectedValue(new Error("Network error"));
-			
+			const mockOnReactionSelectError = vi
+				.fn()
+				.mockRejectedValue(new Error("Network error"));
+
 			// Mock console.error
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-			
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelectError}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover and click reaction
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
 			if (reactionButtons.length > 0) {
 				fireEvent.click(reactionButtons[0]);
-				
+
 				await waitFor(() => {
 					expect(mockOnReactionSelectError).toHaveBeenCalled();
 				});
-				
+
 				// Button should be enabled again after error
 				expect(reactionButtons[0]).not.toBeDisabled();
 			}
-			
+
 			consoleSpy.mockRestore();
 		});
 	});
@@ -415,14 +451,14 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			reactionButtons.forEach(button => {
+			reactionButtons.forEach((button) => {
 				expect(button).toHaveAttribute("title");
 			});
 		});
@@ -431,12 +467,12 @@ describe("ReactionPicker Component", () => {
 			render(
 				<ReactionPicker onReactionSelect={mockOnReactionSelect}>
 					{mockTrigger}
-				</ReactionPicker>
+				</ReactionPicker>,
 			);
-			
+
 			// Open popover
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const popoverContent = screen.getByTestId("popover-content");
 			expect(popoverContent).toHaveAttribute("title", "React to message");
 		});

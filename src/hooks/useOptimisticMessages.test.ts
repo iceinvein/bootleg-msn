@@ -1,6 +1,6 @@
 /**
  * Tests for useOptimisticMessages hook
- * 
+ *
  * Tests cover:
  * - Adding optimistic messages
  * - Marking messages as sent/failed
@@ -10,10 +10,10 @@
  * - Message combining and sorting
  */
 
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useOptimisticMessages } from "./useOptimisticMessages";
 import type { Id } from "@convex/_generated/dataModel";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useOptimisticMessages } from "./useOptimisticMessages";
 
 // Mock Convex
 const mockUseQuery = vi.hoisted(() => vi.fn());
@@ -79,7 +79,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			expect(result.current.messages).toEqual([]);
@@ -96,7 +96,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			expect(result.current.isLoading).toBe(true);
@@ -112,7 +112,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			expect(result.current.messages).toHaveLength(1);
@@ -131,7 +131,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -141,7 +141,7 @@ describe("useOptimisticMessages", () => {
 
 			expect(optimisticId).toBeTruthy();
 			expect(result.current.messages).toHaveLength(1);
-			
+
 			const message = result.current.messages[0];
 			expect(message).toMatchObject({
 				content: "Test message",
@@ -164,7 +164,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			const fileData = {
@@ -179,7 +179,7 @@ describe("useOptimisticMessages", () => {
 			});
 
 			expect(result.current.messages).toHaveLength(1);
-			
+
 			const message = result.current.messages[0];
 			expect(message).toMatchObject({
 				content: "File message",
@@ -198,7 +198,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: undefined,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -220,7 +220,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let id1: string | null = null;
@@ -247,7 +247,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -281,7 +281,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -290,7 +290,10 @@ describe("useOptimisticMessages", () => {
 			});
 
 			act(() => {
-				result.current.markOptimisticMessageFailed(optimisticId!, "Network error");
+				result.current.markOptimisticMessageFailed(
+					optimisticId!,
+					"Network error",
+				);
 			});
 
 			expect(result.current.messages[0]).toMatchObject({
@@ -310,7 +313,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -339,7 +342,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			let optimisticId: string | null = null;
@@ -349,7 +352,10 @@ describe("useOptimisticMessages", () => {
 
 			// Mark as failed
 			act(() => {
-				result.current.markOptimisticMessageFailed(optimisticId!, "Network error");
+				result.current.markOptimisticMessageFailed(
+					optimisticId!,
+					"Network error",
+				);
 			});
 
 			expect(result.current.messages[0]).toMatchObject({
@@ -382,13 +388,13 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			// Add optimistic message
-			let optimisticId: string | null = null;
+			let _optimisticId: string | null = null;
 			act(() => {
-				optimisticId = result.current.addOptimisticMessage("Test message");
+				_optimisticId = result.current.addOptimisticMessage("Test message");
 			});
 
 			expect(result.current.messages).toHaveLength(1);
@@ -436,14 +442,17 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			// Add optimistic message and mark as failed
 			let optimisticId: string | null = null;
 			act(() => {
 				optimisticId = result.current.addOptimisticMessage("Failed message");
-				result.current.markOptimisticMessageFailed(optimisticId!, "Network error");
+				result.current.markOptimisticMessageFailed(
+					optimisticId!,
+					"Network error",
+				);
 			});
 
 			// Add server message with different content
@@ -466,8 +475,12 @@ describe("useOptimisticMessages", () => {
 				expect(result.current.messages).toHaveLength(2);
 
 				// Should have both server message and failed optimistic message
-				const serverMsg = result.current.messages.find(m => m.content === "Different message");
-				const optimisticMsg = result.current.messages.find(m => m.content === "Failed message");
+				const serverMsg = result.current.messages.find(
+					(m) => m.content === "Different message",
+				);
+				const optimisticMsg = result.current.messages.find(
+					(m) => m.content === "Failed message",
+				);
 
 				expect(serverMsg).toBeDefined();
 				expect(optimisticMsg).toBeDefined();
@@ -514,7 +527,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			// Add optimistic message between server messages
@@ -548,7 +561,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			const optimisticTime = Date.now();
@@ -600,7 +613,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					// No otherUserId or groupId provided
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			expect(result.current.isLoading).toBe(false);
@@ -617,7 +630,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					groupId: mockGroupId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			act(() => {
@@ -643,7 +656,7 @@ describe("useOptimisticMessages", () => {
 				useOptimisticMessages({
 					otherUserId: mockOtherUserId,
 					currentUserId: mockCurrentUserId,
-				})
+				}),
 			);
 
 			// Add optimistic message

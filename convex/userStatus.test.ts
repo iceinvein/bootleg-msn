@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import schema from "./schema";
 import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Import all Convex function modules for convex-test
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
@@ -30,10 +30,12 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Update status
-			await t.withIdentity({ subject: userId }).mutation(api.userStatus.updateStatus, {
-				status: "online",
-				statusMessage: "Working on tests",
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.userStatus.updateStatus, {
+					status: "online",
+					statusMessage: "Working on tests",
+				});
 
 			// Verify status was updated
 			const userStatus = await t.run(async (ctx) => {
@@ -54,7 +56,7 @@ describe("User Status Database Operations", () => {
 			await expect(
 				t.mutation(api.userStatus.updateStatus, {
 					status: "online",
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 	});
@@ -72,7 +74,9 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Initialize user status
-			await t.withIdentity({ subject: userId }).mutation(api.userStatus.initializeUserStatus, {});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.userStatus.initializeUserStatus, {});
 
 			// Verify status was created
 			const userStatus = await t.run(async (ctx) => {
@@ -108,7 +112,9 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Try to initialize again - this should not change the existing status
-			await t.withIdentity({ subject: userId }).mutation(api.userStatus.initializeUserStatus, {});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.userStatus.initializeUserStatus, {});
 
 			// Verify status was not changed (but initializeUserStatus might still update it to "online")
 			const userStatus = await t.run(async (ctx) => {
@@ -147,7 +153,9 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Update last seen
-			await t.withIdentity({ subject: userId }).mutation(api.userStatus.updateLastSeen, {});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.userStatus.updateLastSeen, {});
 
 			// Verify last seen was updated
 			const userStatus = await t.run(async (ctx) => {
@@ -189,10 +197,12 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Set typing status
-			await t.withIdentity({ subject: user1Id }).mutation(api.userStatus.setTyping, {
-				chatWithUserId: user2Id,
-				isTyping: true,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.userStatus.setTyping, {
+					chatWithUserId: user2Id,
+					isTyping: true,
+				});
 
 			// Verify typing status was set
 			const typingStatus = await t.run(async (ctx) => {
@@ -230,10 +240,12 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Set typing status for group
-			await t.withIdentity({ subject: userId }).mutation(api.userStatus.setTyping, {
-				groupId,
-				isTyping: true,
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.userStatus.setTyping, {
+					groupId,
+					isTyping: true,
+				});
 
 			// Verify typing status was set
 			const typingStatus = await t.run(async (ctx) => {
@@ -278,10 +290,12 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Clear typing status
-			await t.withIdentity({ subject: user1Id }).mutation(api.userStatus.setTyping, {
-				chatWithUserId: user2Id,
-				isTyping: false,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.userStatus.setTyping, {
+					chatWithUserId: user2Id,
+					isTyping: false,
+				});
 
 			// Verify typing status was updated to false (not deleted)
 			const typingStatus = await t.run(async (ctx) => {
@@ -322,9 +336,11 @@ describe("User Status Database Operations", () => {
 			});
 
 			// Get typing indicator
-			const indicator = await t.withIdentity({ subject: user2Id }).query(api.userStatus.getTypingIndicator, {
-				otherUserId: user1Id,
-			});
+			const indicator = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.userStatus.getTypingIndicator, {
+					otherUserId: user1Id,
+				});
 
 			expect(indicator).toBeTruthy();
 			expect(indicator?.isTyping).toBe(true);

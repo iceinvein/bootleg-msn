@@ -13,9 +13,9 @@
  * and validation logic rather than the complete file upload flow.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Id } from "@convex/_generated/dataModel";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { DragDropZone } from "../DragDropZone";
 
 // Mock Convex mutations
@@ -58,7 +58,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -69,15 +69,20 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
 			expect(dropZone).toBeInTheDocument();
-			expect(dropZone).toHaveAttribute("aria-describedby", "drop-zone-description");
+			expect(dropZone).toHaveAttribute(
+				"aria-describedby",
+				"drop-zone-description",
+			);
 
 			// Accessibility description should be present (but visually hidden)
-			const description = screen.getByText(/drag and drop files here to upload/i);
+			const description = screen.getByText(
+				/drag and drop files here to upload/i,
+			);
 			expect(description).toBeInTheDocument();
 			expect(description).toHaveAttribute("id", "drop-zone-description");
 		});
@@ -86,7 +91,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -96,7 +101,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone groupId={mockGroupId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -104,9 +109,12 @@ describe("DragDropZone Component", () => {
 
 		it("should render with onFileUploaded callback", () => {
 			render(
-				<DragDropZone receiverId={mockReceiverId} onFileUploaded={mockOnFileUploaded}>
+				<DragDropZone
+					receiverId={mockReceiverId}
+					onFileUploaded={mockOnFileUploaded}
+				>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -118,7 +126,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
@@ -140,7 +148,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
@@ -168,7 +176,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
@@ -186,7 +194,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
@@ -236,7 +244,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
@@ -266,7 +274,7 @@ describe("DragDropZone Component", () => {
 			const { rerender } = render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -276,7 +284,7 @@ describe("DragDropZone Component", () => {
 			rerender(
 				<DragDropZone receiverId={newReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -286,7 +294,7 @@ describe("DragDropZone Component", () => {
 			const { rerender } = render(
 				<DragDropZone groupId={mockGroupId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -296,7 +304,7 @@ describe("DragDropZone Component", () => {
 			rerender(
 				<DragDropZone groupId={newGroupId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -306,7 +314,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId} groupId={mockGroupId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -316,7 +324,7 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("content")).toBeInTheDocument();
@@ -331,14 +339,19 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropZone = screen.getByRole("region", { name: /file drop zone/i });
 			expect(dropZone).toHaveAttribute("aria-label", "File drop zone");
-			expect(dropZone).toHaveAttribute("aria-describedby", "drop-zone-description");
+			expect(dropZone).toHaveAttribute(
+				"aria-describedby",
+				"drop-zone-description",
+			);
 
-			const description = screen.getByText(/drag and drop files here to upload/i);
+			const description = screen.getByText(
+				/drag and drop files here to upload/i,
+			);
 			expect(description).toHaveAttribute("id", "drop-zone-description");
 		});
 
@@ -346,10 +359,12 @@ describe("DragDropZone Component", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="content">Content</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
-			const description = screen.getByText(/drag and drop files here to upload them\. maximum file size is 10mb\./i);
+			const description = screen.getByText(
+				/drag and drop files here to upload them\. maximum file size is 10mb\./i,
+			);
 			expect(description).toBeInTheDocument();
 			expect(description).toHaveAttribute("id", "drop-zone-description");
 		});
@@ -361,7 +376,7 @@ describe("DragDropZone Component", () => {
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="child1">Child 1</div>
 					<div data-testid="child2">Child 2</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("child1")).toBeInTheDocument();
@@ -373,9 +388,11 @@ describe("DragDropZone Component", () => {
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="parent">
 						<span data-testid="nested">Nested content</span>
-						<button type="button" data-testid="button">Button</button>
+						<button type="button" data-testid="button">
+							Button
+						</button>
 					</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			expect(screen.getByTestId("parent")).toBeInTheDocument();

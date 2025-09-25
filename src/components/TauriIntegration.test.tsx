@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TauriIntegration, TauriStyles } from "./TauriIntegration";
 
 // Mock Tauri hooks
@@ -49,11 +49,12 @@ import { useTauri } from "@/hooks/useTauri";
 const mockUseTauri = vi.mocked(useTauri);
 
 // Helper function to render components with router context
-const renderWithRouter = (component: React.ReactElement, initialEntries: string[] = ["/"]) => {
+const renderWithRouter = (
+	component: React.ReactElement,
+	initialEntries: string[] = ["/"],
+) => {
 	return render(
-		<MemoryRouter initialEntries={initialEntries}>
-			{component}
-		</MemoryRouter>
+		<MemoryRouter initialEntries={initialEntries}>{component}</MemoryRouter>,
 	);
 };
 
@@ -153,7 +154,7 @@ describe("TauriIntegration", () => {
 	it("should handle different platforms correctly", () => {
 		const platforms = ["windows", "macos", "linux"] as const;
 
-		platforms.forEach(platform => {
+		platforms.forEach((platform) => {
 			// Clear previous classes
 			document.body.className = "";
 
@@ -191,7 +192,9 @@ describe("TauriIntegration", () => {
 			);
 
 			expect(document.body.classList.contains("tauri-app")).toBe(true);
-			expect(document.body.classList.contains(`platform-${platform}`)).toBe(true);
+			expect(document.body.classList.contains(`platform-${platform}`)).toBe(
+				true,
+			);
 
 			unmount();
 		});
@@ -295,7 +298,7 @@ describe("TauriStyles", () => {
 	it("should render different styles for different platforms", () => {
 		const platforms = ["windows", "macos", "linux"] as const;
 
-		platforms.forEach(platform => {
+		platforms.forEach((platform) => {
 			mockUseTauri.mockReturnValue({
 				isTauri: true,
 				platform,

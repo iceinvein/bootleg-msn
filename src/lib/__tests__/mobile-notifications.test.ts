@@ -57,22 +57,38 @@ describe("MobileNotificationManager", () => {
 
 		// Get mocked modules
 		mockCapacitor = vi.mocked(await import("@capacitor/core")).Capacitor;
-		mockLocalNotifications = vi.mocked(await import("@capacitor/local-notifications")).LocalNotifications;
-		mockPushNotifications = vi.mocked(await import("@capacitor/push-notifications")).PushNotifications;
-		mockBrowserNotifications = vi.mocked(await import("../browser-notifications")).browserNotifications;
+		mockLocalNotifications = vi.mocked(
+			await import("@capacitor/local-notifications"),
+		).LocalNotifications;
+		mockPushNotifications = vi.mocked(
+			await import("@capacitor/push-notifications"),
+		).PushNotifications;
+		mockBrowserNotifications = vi.mocked(
+			await import("../browser-notifications"),
+		).browserNotifications;
 
 		// Default mock implementations
 		mockCapacitor.isNativePlatform.mockReturnValue(false);
 		mockLocalNotifications.schedule.mockResolvedValue(undefined);
-		mockLocalNotifications.removeAllDeliveredNotifications.mockResolvedValue(undefined);
+		mockLocalNotifications.removeAllDeliveredNotifications.mockResolvedValue(
+			undefined,
+		);
 		mockLocalNotifications.addListener.mockReturnValue({ remove: vi.fn() });
-		mockLocalNotifications.requestPermissions.mockResolvedValue({ display: "granted" });
-		mockLocalNotifications.checkPermissions.mockResolvedValue({ display: "granted" });
+		mockLocalNotifications.requestPermissions.mockResolvedValue({
+			display: "granted",
+		});
+		mockLocalNotifications.checkPermissions.mockResolvedValue({
+			display: "granted",
+		});
 
-		mockPushNotifications.requestPermissions.mockResolvedValue({ receive: "granted" });
+		mockPushNotifications.requestPermissions.mockResolvedValue({
+			receive: "granted",
+		});
 		mockPushNotifications.register.mockResolvedValue(undefined);
 		mockPushNotifications.addListener.mockReturnValue({ remove: vi.fn() });
-		mockPushNotifications.removeAllDeliveredNotifications.mockResolvedValue(undefined);
+		mockPushNotifications.removeAllDeliveredNotifications.mockResolvedValue(
+			undefined,
+		);
 
 		mockBrowserNotifications.showNotification.mockResolvedValue(undefined);
 
@@ -117,7 +133,9 @@ describe("MobileNotificationManager", () => {
 
 			await mobileNotifications.clearAllNotifications();
 
-			expect(mockLocalNotifications.removeAllDeliveredNotifications).not.toHaveBeenCalled();
+			expect(
+				mockLocalNotifications.removeAllDeliveredNotifications,
+			).not.toHaveBeenCalled();
 		});
 	});
 
@@ -131,7 +149,9 @@ describe("MobileNotificationManager", () => {
 			mockCapacitor.isNativePlatform.mockReturnValue(true);
 
 			// Re-import to get fresh instance with native platform
-			const { mobileNotifications: nativeMobileNotifications } = await import("../mobile-notifications");
+			const { mobileNotifications: nativeMobileNotifications } = await import(
+				"../mobile-notifications"
+			);
 
 			await nativeMobileNotifications.showLocalNotification({
 				title: "Test Title",
@@ -159,20 +179,28 @@ describe("MobileNotificationManager", () => {
 			mockCapacitor.isNativePlatform.mockReturnValue(true);
 
 			// Re-import to get fresh instance with native platform
-			const { mobileNotifications: nativeMobileNotifications } = await import("../mobile-notifications");
+			const { mobileNotifications: nativeMobileNotifications } = await import(
+				"../mobile-notifications"
+			);
 
 			await nativeMobileNotifications.clearAllNotifications();
 
-			expect(mockLocalNotifications.removeAllDeliveredNotifications).toHaveBeenCalledTimes(1);
+			expect(
+				mockLocalNotifications.removeAllDeliveredNotifications,
+			).toHaveBeenCalledTimes(1);
 		});
 	});
 
 	describe("Error Handling", () => {
 		it("should handle errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			// Test that errors don't crash the application
-			mockBrowserNotifications.showNotification.mockRejectedValue(new Error("Notification failed"));
+			mockBrowserNotifications.showNotification.mockRejectedValue(
+				new Error("Notification failed"),
+			);
 
 			await mobileNotifications.showLocalNotification({
 				title: "Test Title",

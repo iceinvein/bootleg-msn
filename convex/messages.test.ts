@@ -1,6 +1,6 @@
 /**
  * Integration tests for message system using convex-test
- * 
+ *
  * Tests cover:
  * - Message sending (direct and group)
  * - Message retrieval with proper access control
@@ -11,7 +11,7 @@
  */
 
 import { convexTest } from "convex-test";
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -37,23 +37,27 @@ describe("Messages System", () => {
 
 			const receiverId = await t.run(async (ctx) => {
 				return await ctx.db.insert("users", {
-					email: "receiver@test.com", 
+					email: "receiver@test.com",
 					name: "Receiver User",
 					isAnonymous: false,
 				});
 			});
 
 			// Send message as sender
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Hello, this is a test message!",
-				messageType: "text",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello, this is a test message!",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Verify message was created
-			const messages = await t.withIdentity({ subject: senderId }).query(api.messages.getMessages, {
-				otherUserId: receiverId,
-			});
+			const messages = await t
+				.withIdentity({ subject: senderId })
+				.query(api.messages.getMessages, {
+					otherUserId: receiverId,
+				});
 
 			expect(messages).toHaveLength(1);
 			expect(messages[0]).toMatchObject({
@@ -74,7 +78,7 @@ describe("Messages System", () => {
 			const senderId = await t.run(async (ctx) => {
 				return await ctx.db.insert("users", {
 					email: "sender@test.com",
-					name: "Sender User", 
+					name: "Sender User",
 					isAnonymous: false,
 				});
 			});
@@ -99,16 +103,20 @@ describe("Messages System", () => {
 			});
 
 			// Send group message
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Hello group!",
-				messageType: "text",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello group!",
+					messageType: "text",
+					groupId,
+				});
 
 			// Verify message was created
-			const messages = await t.withIdentity({ subject: senderId }).query(api.messages.getMessages, {
-				groupId,
-			});
+			const messages = await t
+				.withIdentity({ subject: senderId })
+				.query(api.messages.getMessages, {
+					groupId,
+				});
 
 			expect(messages).toHaveLength(1);
 			expect(messages[0]).toMatchObject({
@@ -139,16 +147,20 @@ describe("Messages System", () => {
 			});
 
 			// Send emoji message
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "🎉🎊✨",
-				messageType: "emoji",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "🎉🎊✨",
+					messageType: "emoji",
+					receiverId,
+				});
 
 			// Verify emoji message was created
-			const messages = await t.withIdentity({ subject: senderId }).query(api.messages.getMessages, {
-				otherUserId: receiverId,
-			});
+			const messages = await t
+				.withIdentity({ subject: senderId })
+				.query(api.messages.getMessages, {
+					otherUserId: receiverId,
+				});
 
 			expect(messages).toHaveLength(1);
 			expect(messages[0]).toMatchObject({
@@ -187,16 +199,20 @@ describe("Messages System", () => {
 			});
 
 			// Send system message
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "User joined the group",
-				messageType: "system",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "User joined the group",
+					messageType: "system",
+					groupId,
+				});
 
 			// Verify system message was created
-			const messages = await t.withIdentity({ subject: senderId }).query(api.messages.getMessages, {
-				groupId,
-			});
+			const messages = await t
+				.withIdentity({ subject: senderId })
+				.query(api.messages.getMessages, {
+					groupId,
+				});
 
 			expect(messages).toHaveLength(1);
 			expect(messages[0]).toMatchObject({
@@ -211,7 +227,7 @@ describe("Messages System", () => {
 				t.mutation(api.messages.sendMessage, {
 					content: "Unauthorized message",
 					messageType: "text",
-				})
+				}),
 			).rejects.toThrow();
 		});
 
@@ -226,11 +242,15 @@ describe("Messages System", () => {
 
 			// Try to send message without receiverId or groupId - this should throw an error
 			await expect(
-				t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-					content: "Message without recipient",
-					messageType: "text",
-				})
-			).rejects.toThrow("Must specify either receiverId or groupId, but not both");
+				t
+					.withIdentity({ subject: senderId })
+					.mutation(api.messages.sendMessage, {
+						content: "Message without recipient",
+						messageType: "text",
+					}),
+			).rejects.toThrow(
+				"Must specify either receiverId or groupId, but not both",
+			);
 		});
 
 		it("should not allow both receiverId and groupId", async () => {
@@ -261,13 +281,17 @@ describe("Messages System", () => {
 
 			// Try to send message with both receiverId and groupId - this should throw an error
 			await expect(
-				t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-					content: "Message with both recipients",
-					messageType: "text",
-					receiverId,
-					groupId,
-				})
-			).rejects.toThrow("Must specify either receiverId or groupId, but not both");
+				t
+					.withIdentity({ subject: senderId })
+					.mutation(api.messages.sendMessage, {
+						content: "Message with both recipients",
+						messageType: "text",
+						receiverId,
+						groupId,
+					}),
+			).rejects.toThrow(
+				"Must specify either receiverId or groupId, but not both",
+			);
 		});
 	});
 
@@ -284,38 +308,46 @@ describe("Messages System", () => {
 
 			const user2Id = await t.run(async (ctx) => {
 				return await ctx.db.insert("users", {
-					email: "user2@test.com", 
+					email: "user2@test.com",
 					name: "User Two",
 					isAnonymous: false,
 				});
 			});
 
 			// Send messages in both directions
-			await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Hello from User 1",
-				messageType: "text",
-				receiverId: user2Id,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello from User 1",
+					messageType: "text",
+					receiverId: user2Id,
+				});
 
-			await t.withIdentity({ subject: user2Id }).mutation(api.messages.sendMessage, {
-				content: "Hello back from User 2",
-				messageType: "text", 
-				receiverId: user1Id,
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello back from User 2",
+					messageType: "text",
+					receiverId: user1Id,
+				});
 
 			// Get messages from User 1's perspective
-			const messagesForUser1 = await t.withIdentity({ subject: user1Id }).query(api.messages.getMessages, {
-				otherUserId: user2Id,
-			});
+			const messagesForUser1 = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.messages.getMessages, {
+					otherUserId: user2Id,
+				});
 
 			expect(messagesForUser1).toHaveLength(2);
 			expect(messagesForUser1[0].isFromMe).toBe(true);
 			expect(messagesForUser1[1].isFromMe).toBe(false);
 
 			// Get messages from User 2's perspective
-			const messagesForUser2 = await t.withIdentity({ subject: user2Id }).query(api.messages.getMessages, {
-				otherUserId: user1Id,
-			});
+			const messagesForUser2 = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.messages.getMessages, {
+					otherUserId: user1Id,
+				});
 
 			expect(messagesForUser2).toHaveLength(2);
 			expect(messagesForUser2[0].isFromMe).toBe(false);
@@ -335,7 +367,7 @@ describe("Messages System", () => {
 			const user2Id = await t.run(async (ctx) => {
 				return await ctx.db.insert("users", {
 					email: "user2@test.com",
-					name: "User Two", 
+					name: "User Two",
 					isAnonymous: false,
 				});
 			});
@@ -367,22 +399,28 @@ describe("Messages System", () => {
 			});
 
 			// Send group messages
-			await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Hello group from User 1",
-				messageType: "text",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello group from User 1",
+					messageType: "text",
+					groupId,
+				});
 
-			await t.withIdentity({ subject: user2Id }).mutation(api.messages.sendMessage, {
-				content: "Hello group from User 2", 
-				messageType: "text",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello group from User 2",
+					messageType: "text",
+					groupId,
+				});
 
 			// Get group messages
-			const groupMessages = await t.withIdentity({ subject: user1Id }).query(api.messages.getMessages, {
-				groupId,
-			});
+			const groupMessages = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.messages.getMessages, {
+					groupId,
+				});
 
 			expect(groupMessages).toHaveLength(2);
 			expect(groupMessages[0].groupId).toBe(groupId);
@@ -413,28 +451,36 @@ describe("Messages System", () => {
 			});
 
 			// Send multiple messages with slight delays
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "First message",
-				messageType: "text",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "First message",
+					messageType: "text",
+					receiverId,
+				});
 
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Second message",
-				messageType: "text", 
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Second message",
+					messageType: "text",
+					receiverId,
+				});
 
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Third message",
-				messageType: "text",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Third message",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Get messages and verify order
-			const messages = await t.withIdentity({ subject: senderId }).query(api.messages.getMessages, {
-				otherUserId: receiverId,
-			});
+			const messages = await t
+				.withIdentity({ subject: senderId })
+				.query(api.messages.getMessages, {
+					otherUserId: receiverId,
+				});
 
 			expect(messages).toHaveLength(3);
 			expect(messages[0].content).toBe("First message");
@@ -442,8 +488,12 @@ describe("Messages System", () => {
 			expect(messages[2].content).toBe("Third message");
 
 			// Verify timestamps are in ascending order
-			expect(messages[0]._creationTime).toBeLessThanOrEqual(messages[1]._creationTime);
-			expect(messages[1]._creationTime).toBeLessThanOrEqual(messages[2]._creationTime);
+			expect(messages[0]._creationTime).toBeLessThanOrEqual(
+				messages[1]._creationTime,
+			);
+			expect(messages[1]._creationTime).toBeLessThanOrEqual(
+				messages[2]._creationTime,
+			);
 		});
 	});
 
@@ -467,36 +517,46 @@ describe("Messages System", () => {
 			});
 
 			// Send messages
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Unread message 1",
-				messageType: "text",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Unread message 1",
+					messageType: "text",
+					receiverId,
+				});
 
-			await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Unread message 2",
-				messageType: "text",
-				receiverId,
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Unread message 2",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Verify messages are initially unread
-			const unreadMessages = await t.withIdentity({ subject: receiverId }).query(api.messages.getMessages, {
-				otherUserId: senderId,
-			});
+			const unreadMessages = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.messages.getMessages, {
+					otherUserId: senderId,
+				});
 
-			expect(unreadMessages.every(msg => !msg.isRead)).toBe(true);
+			expect(unreadMessages.every((msg) => !msg.isRead)).toBe(true);
 
 			// Mark messages as read
-			await t.withIdentity({ subject: receiverId }).mutation(api.messages.markMessagesAsRead, {
-				otherUserId: senderId,
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.messages.markMessagesAsRead, {
+					otherUserId: senderId,
+				});
 
 			// Verify messages are now read
-			const readMessages = await t.withIdentity({ subject: receiverId }).query(api.messages.getMessages, {
-				otherUserId: senderId,
-			});
+			const readMessages = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.messages.getMessages, {
+					otherUserId: senderId,
+				});
 
-			expect(readMessages.every(msg => msg.isRead)).toBe(true);
+			expect(readMessages.every((msg) => msg.isRead)).toBe(true);
 		});
 
 		it("should mark group messages as read", async () => {
@@ -544,35 +604,43 @@ describe("Messages System", () => {
 			});
 
 			// Send group messages
-			await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Group message 1",
-				messageType: "text",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Group message 1",
+					messageType: "text",
+					groupId,
+				});
 
-			await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Group message 2",
-				messageType: "text",
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Group message 2",
+					messageType: "text",
+					groupId,
+				});
 
 			// Mark messages as read for user2
-			await t.withIdentity({ subject: user2Id }).mutation(api.messages.markMessagesAsRead, {
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.messages.markMessagesAsRead, {
+					groupId,
+				});
 
 			// Verify messages are marked as read
-			const messages = await t.withIdentity({ subject: user2Id }).query(api.messages.getMessages, {
-				groupId,
-			});
+			const messages = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.messages.getMessages, {
+					groupId,
+				});
 
-			expect(messages.every(msg => msg.isRead)).toBe(true);
+			expect(messages.every((msg) => msg.isRead)).toBe(true);
 		});
 
 		it("should require authentication", async () => {
 			// Try to mark messages as read without authentication
 			await expect(
-				t.mutation(api.messages.markMessagesAsRead, {})
+				t.mutation(api.messages.markMessagesAsRead, {}),
 			).rejects.toThrow();
 		});
 
@@ -586,7 +654,9 @@ describe("Messages System", () => {
 			});
 
 			// Try to mark messages as read without specifying conversation - this should return null, not throw
-			const result = await t.withIdentity({ subject: userId }).mutation(api.messages.markMessagesAsRead, {});
+			const result = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.messages.markMessagesAsRead, {});
 
 			// The function returns null when no conversation is specified
 			expect(result).toBeNull();
@@ -619,21 +689,27 @@ describe("Messages System", () => {
 			});
 
 			// Send messages from user1 to user2
-			await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Message to user2",
-				messageType: "text",
-				receiverId: user2Id,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Message to user2",
+					messageType: "text",
+					receiverId: user2Id,
+				});
 
 			// User3 tries to mark messages as read for user1-user2 conversation
-			await t.withIdentity({ subject: user3Id }).mutation(api.messages.markMessagesAsRead, {
-				otherUserId: user1Id,
-			});
+			await t
+				.withIdentity({ subject: user3Id })
+				.mutation(api.messages.markMessagesAsRead, {
+					otherUserId: user1Id,
+				});
 
 			// Verify message is still unread for user2
-			const messagesForUser2 = await t.withIdentity({ subject: user2Id }).query(api.messages.getMessages, {
-				otherUserId: user1Id,
-			});
+			const messagesForUser2 = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.messages.getMessages, {
+					otherUserId: user1Id,
+				});
 
 			expect(messagesForUser2[0].isRead).toBe(false);
 		});

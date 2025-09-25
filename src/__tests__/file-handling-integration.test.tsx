@@ -1,6 +1,6 @@
 /**
  * Integration tests for file handling functionality
- * 
+ *
  * Tests cover:
  * - Complete file upload flow from UI to backend
  * - File message display and interaction
@@ -10,26 +10,32 @@
  * - Cross-component integration
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Id } from "@convex/_generated/dataModel";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock Convex functions and API - use vi.hoisted to avoid hoisting issues
-const { mockGenerateUploadUrl, mockSendFileMessage, mockUseQuery, mockApi } = vi.hoisted(() => {
-	const mockGenerateUploadUrl = vi.fn();
-	const mockSendFileMessage = vi.fn();
-	const mockUseQuery = vi.fn();
+const { mockGenerateUploadUrl, mockSendFileMessage, mockUseQuery, mockApi } =
+	vi.hoisted(() => {
+		const mockGenerateUploadUrl = vi.fn();
+		const mockSendFileMessage = vi.fn();
+		const mockUseQuery = vi.fn();
 
-	const mockApi = {
-		files: {
-			generateUploadUrl: mockGenerateUploadUrl,
-			sendFileMessage: mockSendFileMessage,
-			getFileUrl: vi.fn(),
-		},
-	};
+		const mockApi = {
+			files: {
+				generateUploadUrl: mockGenerateUploadUrl,
+				sendFileMessage: mockSendFileMessage,
+				getFileUrl: vi.fn(),
+			},
+		};
 
-	return { mockGenerateUploadUrl, mockSendFileMessage, mockUseQuery, mockApi };
-});
+		return {
+			mockGenerateUploadUrl,
+			mockSendFileMessage,
+			mockUseQuery,
+			mockApi,
+		};
+	});
 
 vi.mock("convex/react", () => ({
 	useMutation: vi.fn((mutation) => {
@@ -65,21 +71,23 @@ vi.mock("sonner", () => ({
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
+import { DragDropZone } from "../components/DragDropZone";
+import { FileMessage } from "../components/FileMessage";
 // Import components after mocks
 import { FileUpload } from "../components/FileUpload";
-import { FileMessage } from "../components/FileMessage";
-import { DragDropZone } from "../components/DragDropZone";
 
 describe("File Handling Integration", () => {
 	const mockReceiverId = "user123" as Id<"users">;
-	const mockGroupId = "group456" as Id<"groups">;
+	const _mockGroupId = "group456" as Id<"groups">;
 	const mockFileId = "file789" as Id<"_storage">;
 
 	beforeEach(() => {
 		vi.clearAllMocks();
 
 		// Default successful mocks
-		mockGenerateUploadUrl.mockResolvedValue("https://upload.example.com/upload-url");
+		mockGenerateUploadUrl.mockResolvedValue(
+			"https://upload.example.com/upload-url",
+		);
 		mockSendFileMessage.mockResolvedValue(undefined);
 		mockFetch.mockResolvedValue({
 			ok: true,
@@ -91,26 +99,34 @@ describe("File Handling Integration", () => {
 	describe("Complete File Upload Flow", () => {
 		it("should handle complete file upload and display flow", async () => {
 			const onFileUploaded = vi.fn();
-			
+
 			// Render FileUpload component
 			const { rerender } = render(
-				<FileUpload receiverId={mockReceiverId} onFileUploaded={onFileUploaded} />
+				<FileUpload
+					receiverId={mockReceiverId}
+					onFileUploaded={onFileUploaded}
+				/>,
 			);
-			
+
 			// Step 1: User selects file
 			const fileInput = screen.getByLabelText("Upload file");
-			const file = new File(["test content"], "test-document.pdf", { type: "application/pdf" });
-			
+			const file = new File(["test content"], "test-document.pdf", {
+				type: "application/pdf",
+			});
+
 			fireEvent.change(fileInput, { target: { files: [file] } });
 
 			// Step 2: Verify upload flow
 			await waitFor(() => {
 				expect(mockGenerateUploadUrl).toHaveBeenCalled();
-				expect(mockFetch).toHaveBeenCalledWith("https://upload.example.com/upload-url", {
-					method: "POST",
-					headers: { "Content-Type": "application/pdf" },
-					body: file,
-				});
+				expect(mockFetch).toHaveBeenCalledWith(
+					"https://upload.example.com/upload-url",
+					{
+						method: "POST",
+						headers: { "Content-Type": "application/pdf" },
+						body: file,
+					},
+				);
 				expect(mockSendFileMessage).toHaveBeenCalledWith({
 					receiverId: mockReceiverId,
 					groupId: undefined,
@@ -119,7 +135,9 @@ describe("File Handling Integration", () => {
 					fileType: "application/pdf",
 					fileSize: file.size,
 				});
-				expect(mockToastSuccess).toHaveBeenCalledWith("File uploaded successfully!");
+				expect(mockToastSuccess).toHaveBeenCalledWith(
+					"File uploaded successfully!",
+				);
 				expect(onFileUploaded).toHaveBeenCalled();
 			});
 
@@ -130,31 +148,35 @@ describe("File Handling Integration", () => {
 					fileName="test-document.pdf"
 					fileType="application/pdf"
 					fileSize={file.size}
-				/>
+				/>,
 			);
 
 			// Step 4: Verify file message display
 			await waitFor(() => {
 				expect(screen.getByText("test-document.pdf")).toBeInTheDocument();
-				expect(mockUseQuery).toHaveBeenCalledWith(
-					expect.anything(),
-					{ fileId: mockFileId }
-				);
+				expect(mockUseQuery).toHaveBeenCalledWith(expect.anything(), {
+					fileId: mockFileId,
+				});
 			});
 		});
 
 		it("should handle drag and drop upload flow", async () => {
 			const onFileUploaded = vi.fn();
-			
+
 			// Render DragDropZone component
 			render(
-				<DragDropZone receiverId={mockReceiverId} onFileUploaded={onFileUploaded}>
+				<DragDropZone
+					receiverId={mockReceiverId}
+					onFileUploaded={onFileUploaded}
+				>
 					<div data-testid="drop-area">Drop files here</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
-			
+
 			const dropArea = screen.getByTestId("drop-area").parentElement;
-			const file = new File(["image data"], "photo.jpg", { type: "image/jpeg" });
+			const file = new File(["image data"], "photo.jpg", {
+				type: "image/jpeg",
+			});
 
 			// Create proper drag and drop events
 			fireEvent.drop(dropArea!, {
@@ -174,7 +196,9 @@ describe("File Handling Integration", () => {
 					fileType: "image/jpeg",
 					fileSize: file.size,
 				});
-				expect(mockToastSuccess).toHaveBeenCalledWith('File "photo.jpg" uploaded successfully!');
+				expect(mockToastSuccess).toHaveBeenCalledWith(
+					'File "photo.jpg" uploaded successfully!',
+				);
 				expect(onFileUploaded).toHaveBeenCalled();
 			});
 		});
@@ -188,7 +212,7 @@ describe("File Handling Integration", () => {
 					fileName="photo.jpg"
 					fileType="image/jpeg"
 					fileSize={1024 * 1024}
-				/>
+				/>,
 			);
 
 			await waitFor(() => {
@@ -205,7 +229,7 @@ describe("File Handling Integration", () => {
 					fileName="video.mp4"
 					fileType="video/mp4"
 					fileSize={5 * 1024 * 1024}
-				/>
+				/>,
 			);
 
 			await waitFor(() => {
@@ -223,14 +247,19 @@ describe("File Handling Integration", () => {
 					fileName="document.pdf"
 					fileType="application/pdf"
 					fileSize={2 * 1024 * 1024}
-				/>
+				/>,
 			);
 
 			await waitFor(() => {
 				expect(screen.getByText("document.pdf")).toBeInTheDocument();
-				const downloadLink = screen.getByRole("link", { name: /download document.pdf/i });
+				const downloadLink = screen.getByRole("link", {
+					name: /download document.pdf/i,
+				});
 				expect(downloadLink).toBeInTheDocument();
-				expect(downloadLink).toHaveAttribute("href", "https://example.com/file-url");
+				expect(downloadLink).toHaveAttribute(
+					"href",
+					"https://example.com/file-url",
+				);
 				expect(downloadLink).toHaveAttribute("download", "document.pdf");
 			});
 		});
@@ -242,13 +271,15 @@ describe("File Handling Integration", () => {
 					fileName="data.txt"
 					fileType="text/plain"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			await waitFor(() => {
 				expect(screen.getByText("data.txt")).toBeInTheDocument();
 				expect(screen.getByText("1 KB")).toBeInTheDocument();
-				const downloadLink = screen.getByRole("link", { name: /download data.txt/i });
+				const downloadLink = screen.getByRole("link", {
+					name: /download data.txt/i,
+				});
 				expect(downloadLink).toBeInTheDocument();
 			});
 		});
@@ -279,10 +310,10 @@ describe("File Handling Integration", () => {
 			});
 
 			render(<FileUpload receiverId={mockReceiverId} />);
-			
+
 			const fileInput = screen.getByLabelText("Upload file");
 			const file = new File(["test"], "test.txt", { type: "text/plain" });
-			
+
 			fireEvent.change(fileInput, { target: { files: [file] } });
 
 			await waitFor(() => {
@@ -316,11 +347,13 @@ describe("File Handling Integration", () => {
 					fileName="test.txt"
 					fileType="text/plain"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			// Should show loading skeleton when URL is not available
-			expect(document.querySelector(".max-w-xs.rounded-lg.border")).toBeInTheDocument(); // Loading skeleton container
+			expect(
+				document.querySelector(".max-w-xs.rounded-lg.border"),
+			).toBeInTheDocument(); // Loading skeleton container
 			expect(document.querySelector(".animate-pulse")).toBeInTheDocument();
 		});
 	});
@@ -330,17 +363,19 @@ describe("File Handling Integration", () => {
 			const largeFile = new File(
 				[new ArrayBuffer(11 * 1024 * 1024)], // 11MB
 				"large-file.txt",
-				{ type: "text/plain" }
+				{ type: "text/plain" },
 			);
 
 			// Test FileUpload component
 			const { rerender } = render(<FileUpload receiverId={mockReceiverId} />);
-			
+
 			const fileInput = screen.getByLabelText("Upload file");
 			fireEvent.change(fileInput, { target: { files: [largeFile] } });
 
 			await waitFor(() => {
-				expect(mockToastError).toHaveBeenCalledWith("File size must be less than 10MB");
+				expect(mockToastError).toHaveBeenCalledWith(
+					"File size must be less than 10MB",
+				);
 				expect(mockGenerateUploadUrl).not.toHaveBeenCalled();
 			});
 
@@ -350,7 +385,7 @@ describe("File Handling Integration", () => {
 			rerender(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="drop-area">Drop files here</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropArea = screen.getByTestId("drop-area").parentElement;
@@ -363,7 +398,7 @@ describe("File Handling Integration", () => {
 
 			await waitFor(() => {
 				expect(mockToastError).toHaveBeenCalledWith(
-					'File "large-file.txt" is too large. Maximum size is 10MB.'
+					'File "large-file.txt" is too large. Maximum size is 10MB.',
 				);
 				expect(mockGenerateUploadUrl).not.toHaveBeenCalled();
 			});
@@ -381,7 +416,7 @@ describe("File Handling Integration", () => {
 			render(
 				<DragDropZone receiverId={mockReceiverId}>
 					<div data-testid="drop-area">Drop files here</div>
-				</DragDropZone>
+				</DragDropZone>,
 			);
 
 			const dropArea = screen.getByTestId("drop-area").parentElement;

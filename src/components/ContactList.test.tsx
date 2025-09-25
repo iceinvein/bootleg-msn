@@ -1,5 +1,5 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ContactList } from "./ContactList";
 
 // Mock dependencies
@@ -41,7 +41,13 @@ vi.mock("convex/react", () => ({
 }));
 
 vi.mock("@/components/ui/avatar", () => ({
-	Avatar: ({ children, className }: { children: React.ReactNode; className?: string }) => (
+	Avatar: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => (
 		<div className={className} data-testid="avatar">
 			{children}
 		</div>
@@ -55,7 +61,13 @@ vi.mock("@/components/ui/avatar", () => ({
 }));
 
 vi.mock("@/components/ui/badge", () => ({
-	Badge: ({ children, variant }: { children: React.ReactNode; variant?: string }) => (
+	Badge: ({
+		children,
+		variant,
+	}: {
+		children: React.ReactNode;
+		variant?: string;
+	}) => (
 		<span data-testid="badge" data-variant={variant}>
 			{children}
 		</span>
@@ -64,7 +76,12 @@ vi.mock("@/components/ui/badge", () => ({
 
 vi.mock("@/components/ui/button", () => ({
 	Button: ({ children, onClick, variant, size }: any) => (
-		<button onClick={onClick} data-testid="button" data-variant={variant} data-size={size}>
+		<button
+			onClick={onClick}
+			data-testid="button"
+			data-variant={variant}
+			data-size={size}
+		>
 			{children}
 		</button>
 	),
@@ -109,10 +126,10 @@ vi.mock("lucide-react", () => ({
 	User: () => <div data-testid="user-icon" />,
 }));
 
-import { useQuery, useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 
 const mockUseQuery = useQuery as any;
-const mockUseMutation = useMutation as any;
+const _mockUseMutation = useMutation as any;
 
 describe("ContactList", () => {
 	beforeEach(() => {

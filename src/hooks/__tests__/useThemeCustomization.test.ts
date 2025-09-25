@@ -11,8 +11,8 @@
  * - Error handling and validation
  */
 
-import { renderHook, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { act, renderHook } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { useThemeCustomization } from "../useThemeCustomization";
 
 // Mock localStorage
@@ -81,7 +81,7 @@ describe("useThemeCustomization", () => {
 	describe("Initialization", () => {
 		it("should initialize with default config when no saved config exists", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			expect(result.current.config).toEqual({
 				preset: "classic",
 				colors: {
@@ -111,11 +111,11 @@ describe("useThemeCustomization", () => {
 					blur: "lg",
 				},
 			};
-			
+
 			mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedConfig));
-			
+
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			expect(result.current.config).toEqual(savedConfig);
 			expect(mockLocalStorage.getItem).toHaveBeenCalledWith("msn-theme-config");
 		});
@@ -124,7 +124,9 @@ describe("useThemeCustomization", () => {
 			mockLocalStorage.getItem.mockReturnValue("invalid-json");
 
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			const { result } = renderHook(() => useThemeCustomization());
 
@@ -149,29 +151,29 @@ describe("useThemeCustomization", () => {
 
 		it("should apply preset correctly", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.applyPreset("modern");
 			});
-			
+
 			expect(result.current.config.preset).toBe("modern");
 			expect(result.current.config.colors.primary).toBe("#0066cc");
 			expect(result.current.config.colors.secondary).toBe("#4f46e5");
 			expect(result.current.config.colors.accent).toBe("#7c3aed");
 			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
 				"msn-theme-config",
-				expect.stringContaining('"preset":"modern"')
+				expect.stringContaining('"preset":"modern"'),
 			);
 		});
 
 		it("should ignore invalid preset names", () => {
 			const { result } = renderHook(() => useThemeCustomization());
 			const originalConfig = result.current.config;
-			
+
 			act(() => {
 				result.current.applyPreset("invalid-preset");
 			});
-			
+
 			// Config should remain unchanged
 			expect(result.current.config).toEqual(originalConfig);
 		});
@@ -180,7 +182,7 @@ describe("useThemeCustomization", () => {
 	describe("Configuration Updates", () => {
 		it("should update colors correctly", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.updateConfig({
 					colors: {
@@ -190,7 +192,7 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			expect(result.current.config.colors.primary).toBe("#ff0000");
 			expect(result.current.config.colors.secondary).toBe("#00ff00");
 			expect(result.current.config.colors.accent).toBe("#0000ff");
@@ -198,7 +200,7 @@ describe("useThemeCustomization", () => {
 
 		it("should update glassmorphism settings correctly", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.updateConfig({
 					glassmorphism: {
@@ -208,7 +210,7 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			expect(result.current.config.glassmorphism.enabled).toBe(false);
 			expect(result.current.config.glassmorphism.intensity).toBe("subtle");
 			expect(result.current.config.glassmorphism.blur).toBe("sm");
@@ -217,7 +219,7 @@ describe("useThemeCustomization", () => {
 		it("should merge partial updates with existing config", () => {
 			const { result } = renderHook(() => useThemeCustomization());
 			const originalColors = result.current.config.colors;
-			
+
 			act(() => {
 				result.current.updateConfig({
 					colors: {
@@ -226,15 +228,17 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			expect(result.current.config.colors.primary).toBe("#ff0000");
-			expect(result.current.config.colors.secondary).toBe(originalColors.secondary);
+			expect(result.current.config.colors.secondary).toBe(
+				originalColors.secondary,
+			);
 			expect(result.current.config.colors.accent).toBe(originalColors.accent);
 		});
 
 		it("should persist updates to localStorage", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.updateConfig({
 					colors: {
@@ -244,10 +248,10 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
 				"msn-theme-config",
-				expect.stringContaining('"primary":"#ff0000"')
+				expect.stringContaining('"primary":"#ff0000"'),
 			);
 		});
 	});
@@ -255,7 +259,7 @@ describe("useThemeCustomization", () => {
 	describe("CSS Variable Application", () => {
 		it("should apply color variables to document root", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.updateConfig({
 					colors: {
@@ -265,10 +269,19 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-blue", "#ff0000");
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-purple", "#0000ff");
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--primary", "#ff0000");
+
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-blue",
+				"#ff0000",
+			);
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-purple",
+				"#0000ff",
+			);
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--primary",
+				"#ff0000",
+			);
 		});
 
 		it("should apply glassmorphism variables", () => {
@@ -284,14 +297,22 @@ describe("useThemeCustomization", () => {
 				});
 			});
 
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--glass-blur", "24px");
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--glass-bg", "rgb(255, 255, 255) / 0.9");
-			expect(mockDocumentElement.classList.add).toHaveBeenCalledWith("glassmorphism-enabled");
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--glass-blur",
+				"24px",
+			);
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--glass-bg",
+				"rgb(255, 255, 255) / 0.9",
+			);
+			expect(mockDocumentElement.classList.add).toHaveBeenCalledWith(
+				"glassmorphism-enabled",
+			);
 		});
 
 		it("should apply gradient variables", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			act(() => {
 				result.current.updateConfig({
 					colors: {
@@ -301,10 +322,10 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
 				"--msn-gradient",
-				"linear-gradient(135deg, #ff0000 0%, #0000ff 100%)"
+				"linear-gradient(135deg, #ff0000 0%, #0000ff 100%)",
 			);
 		});
 	});
@@ -312,7 +333,7 @@ describe("useThemeCustomization", () => {
 	describe("Reset Functionality", () => {
 		it("should reset to default configuration", () => {
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			// First, change the config
 			act(() => {
 				result.current.updateConfig({
@@ -323,12 +344,12 @@ describe("useThemeCustomization", () => {
 					},
 				});
 			});
-			
+
 			// Then reset
 			act(() => {
 				result.current.resetToDefault();
 			});
-			
+
 			expect(result.current.config.preset).toBe("classic");
 			expect(result.current.config.colors.primary).toBe("#0078d4");
 			expect(result.current.config.colors.secondary).toBe("#106ebe");
@@ -339,18 +360,21 @@ describe("useThemeCustomization", () => {
 	describe("Glassmorphism Support Detection", () => {
 		it("should detect glassmorphism support when CSS.supports returns true", () => {
 			(window.CSS.supports as any).mockReturnValue(true);
-			
+
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			expect(result.current.isGlassmorphismSupported).toBe(true);
-			expect(window.CSS.supports).toHaveBeenCalledWith("backdrop-filter", "blur(1px)");
+			expect(window.CSS.supports).toHaveBeenCalledWith(
+				"backdrop-filter",
+				"blur(1px)",
+			);
 		});
 
 		it("should detect no glassmorphism support when CSS.supports returns false", () => {
 			(window.CSS.supports as any).mockReturnValue(false);
-			
+
 			const { result } = renderHook(() => useThemeCustomization());
-			
+
 			expect(result.current.isGlassmorphismSupported).toBe(false);
 		});
 	});
@@ -358,10 +382,16 @@ describe("useThemeCustomization", () => {
 	describe("Theme Application on Mount", () => {
 		it("should apply theme on initial mount", () => {
 			renderHook(() => useThemeCustomization());
-			
+
 			// Should apply default theme variables
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-blue", "#0078d4");
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-purple", "#8b5cf6");
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-blue",
+				"#0078d4",
+			);
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-purple",
+				"#8b5cf6",
+			);
 		});
 
 		it("should apply saved theme on mount", () => {
@@ -378,13 +408,19 @@ describe("useThemeCustomization", () => {
 					blur: "lg",
 				},
 			};
-			
+
 			mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedConfig));
-			
+
 			renderHook(() => useThemeCustomization());
-			
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-blue", "#0066cc");
-			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith("--msn-purple", "#7c3aed");
+
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-blue",
+				"#0066cc",
+			);
+			expect(mockDocumentElement.style.setProperty).toHaveBeenCalledWith(
+				"--msn-purple",
+				"#7c3aed",
+			);
 		});
 	});
 });

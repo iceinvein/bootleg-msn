@@ -2,11 +2,14 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { OverlayRenderer, isOverlayTypeSupported, getSupportedOverlayTypes } from "../OverlayRenderer";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OverlayEntry } from "@/types/overlay";
+import {
+	getSupportedOverlayTypes,
+	isOverlayTypeSupported,
+	OverlayRenderer,
+} from "../OverlayRenderer";
 
 // Mock the overlay hooks
 vi.mock("@/hooks/useOverlays", () => ({
@@ -147,7 +150,6 @@ describe("OverlayRenderer", () => {
 			topOverlay: null,
 			state: { stack: [], config: {} },
 		});
-
 	});
 
 	it("renders CONFIRM overlay correctly", () => {
@@ -188,7 +190,9 @@ describe("OverlayRenderer", () => {
 
 		render(<OverlayRenderer entry={entry} zIndex={1500} isTopmost={true} />);
 
-		const container = document.querySelector('[data-overlay-id="test-overlay"]');
+		const container = document.querySelector(
+			'[data-overlay-id="test-overlay"]',
+		);
 		expect(container).toBeInTheDocument();
 		expect(container).toHaveAttribute("data-overlay-type", "CONFIRM");
 		expect(container).toHaveAttribute("data-overlay-topmost", "true");
@@ -211,7 +215,9 @@ describe("OverlayRenderer", () => {
 
 		render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />);
 
-		const container = document.querySelector('[data-overlay-id="non-closable-overlay"]');
+		const container = document.querySelector(
+			'[data-overlay-id="non-closable-overlay"]',
+		);
 		expect(container).toBeInTheDocument();
 
 		// Click the backdrop
@@ -236,7 +242,9 @@ describe("OverlayRenderer", () => {
 
 		render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={false} />);
 
-		const container = document.querySelector('[data-overlay-id="non-topmost-overlay"]');
+		const container = document.querySelector(
+			'[data-overlay-id="non-topmost-overlay"]',
+		);
 		expect(container).toBeInTheDocument();
 
 		// Press escape key
@@ -273,10 +281,14 @@ describe("OverlayRenderer", () => {
 
 		const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
-		const { container } = render(<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />);
+		const { container } = render(
+			<OverlayRenderer entry={entry} zIndex={1000} isTopmost={true} />,
+		);
 
 		expect(container).toBeEmptyDOMElement();
-		expect(consoleSpy).toHaveBeenCalledWith("[OverlayRenderer] Unknown overlay type: UNKNOWN_TYPE");
+		expect(consoleSpy).toHaveBeenCalledWith(
+			"[OverlayRenderer] Unknown overlay type: UNKNOWN_TYPE",
+		);
 
 		consoleSpy.mockRestore();
 	});

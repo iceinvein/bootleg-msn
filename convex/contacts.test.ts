@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import schema from "./schema";
 import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Import all Convex function modules for convex-test
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
@@ -27,10 +27,12 @@ describe("Contacts Database Operations", () => {
 			});
 
 			// Send contact request
-			const result = await t.withIdentity({ subject: user1Id }).mutation(api.contacts.sendContactRequest, {
-				contactEmail: "bob@example.com",
-				nickname: "Bobby",
-			});
+			const result = await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.contacts.sendContactRequest, {
+					contactEmail: "bob@example.com",
+					nickname: "Bobby",
+				});
 
 			expect(result).toEqual({ autoAccepted: false });
 
@@ -77,10 +79,12 @@ describe("Contacts Database Operations", () => {
 			});
 
 			// User1 sends request to User2 (should auto-accept)
-			const result = await t.withIdentity({ subject: user1Id }).mutation(api.contacts.sendContactRequest, {
-				contactEmail: "bob@example.com",
-				nickname: "Bobby",
-			});
+			const result = await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.contacts.sendContactRequest, {
+					contactEmail: "bob@example.com",
+					nickname: "Bobby",
+				});
 
 			expect(result).toEqual({ autoAccepted: true });
 
@@ -118,9 +122,11 @@ describe("Contacts Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.contacts.sendContactRequest, {
-					contactEmail: "nonexistent@example.com",
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.contacts.sendContactRequest, {
+						contactEmail: "nonexistent@example.com",
+					}),
 			).rejects.toThrow("User has not signed up yet");
 		});
 
@@ -135,9 +141,11 @@ describe("Contacts Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.contacts.sendContactRequest, {
-					contactEmail: "alice@example.com",
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.contacts.sendContactRequest, {
+						contactEmail: "alice@example.com",
+					}),
 			).rejects.toThrow("Cannot add yourself as a contact");
 		});
 
@@ -168,9 +176,11 @@ describe("Contacts Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: user1Id }).mutation(api.contacts.sendContactRequest, {
-					contactEmail: "bob@example.com",
-				})
+				t
+					.withIdentity({ subject: user1Id })
+					.mutation(api.contacts.sendContactRequest, {
+						contactEmail: "bob@example.com",
+					}),
 			).rejects.toThrow("Contact request already sent");
 		});
 		it("should throw error when not authenticated", async () => {
@@ -179,7 +189,7 @@ describe("Contacts Database Operations", () => {
 			await expect(
 				t.mutation(api.contacts.sendContactRequest, {
 					contactEmail: "bob@example.com",
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 	});
@@ -213,9 +223,11 @@ describe("Contacts Database Operations", () => {
 			});
 
 			// Accept the request
-			await t.withIdentity({ subject: user2Id }).mutation(api.contacts.acceptContactRequest, {
-				contactId,
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.contacts.acceptContactRequest, {
+					contactId,
+				});
 
 			// Verify contact is accepted
 			const contact = await t.run(async (ctx) => {
@@ -256,7 +268,7 @@ describe("Contacts Database Operations", () => {
 			await expect(
 				t.mutation(api.contacts.acceptContactRequest, {
 					contactId,
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 	});
@@ -291,7 +303,9 @@ describe("Contacts Database Operations", () => {
 			});
 
 			// Get contacts
-			const contacts = await t.withIdentity({ subject: user1Id }).query(api.contacts.getContacts, {});
+			const contacts = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.contacts.getContacts, {});
 
 			expect(contacts).toHaveLength(1);
 			expect(contacts[0].user?.name).toBe("Bob");

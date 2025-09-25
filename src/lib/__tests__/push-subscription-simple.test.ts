@@ -2,8 +2,11 @@
  * Simplified tests for push-subscription utilities
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { urlBase64ToUint8Array, ensurePushSubscription } from "../push-subscription";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import {
+	ensurePushSubscription,
+	urlBase64ToUint8Array,
+} from "../push-subscription";
 
 describe("Push Subscription Utilities - Core Functionality", () => {
 	describe("urlBase64ToUint8Array", () => {
@@ -69,7 +72,9 @@ describe("Push Subscription Utilities - Core Functionality", () => {
 				}),
 			};
 
-			mockRegistration.pushManager.getSubscription.mockResolvedValue(existingSubscription);
+			mockRegistration.pushManager.getSubscription.mockResolvedValue(
+				existingSubscription,
+			);
 
 			const result = await ensurePushSubscription("test-vapid-key");
 
@@ -136,7 +141,9 @@ describe("Push Subscription Utilities - Core Functionality", () => {
 		it("should throw error when subscription has missing toJSON method", async () => {
 			const invalidSubscription = {}; // Missing toJSON method
 
-			mockRegistration.pushManager.getSubscription.mockResolvedValue(invalidSubscription);
+			mockRegistration.pushManager.getSubscription.mockResolvedValue(
+				invalidSubscription,
+			);
 
 			// The function will throw an error when trying to call toJSON()
 			await expect(ensurePushSubscription("test-vapid-key")).rejects.toThrow();

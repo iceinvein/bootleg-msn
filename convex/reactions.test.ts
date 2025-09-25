@@ -1,6 +1,6 @@
 /**
  * Integration tests for message reactions system using convex-test
- * 
+ *
  * Tests cover:
  * - Adding message reactions
  * - Removing message reactions
@@ -10,7 +10,7 @@
  */
 
 import { convexTest } from "convex-test";
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import schema from "./schema";
 
@@ -43,22 +43,28 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send a message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Hello, this is a test message!",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello, this is a test message!",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Add reaction to the message
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
 			// Get reaction summary
-			const reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -113,23 +119,29 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send group message
-			const messageId = await t.withIdentity({ subject: user1Id }).mutation(api.messages.sendMessage, {
-				content: "Hello group!",
-				messageType: "text",
-				groupId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.messages.sendMessage, {
+					content: "Hello group!",
+					messageType: "text",
+					groupId,
+				});
 
 			// Add custom emoji reaction to the group message
-			await t.withIdentity({ subject: user2Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "custom",
-				customEmoji: "🎉",
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "custom",
+					customEmoji: "🎉",
+				});
 
 			// Get reaction summary
-			const reactionSummary = await t.withIdentity({ subject: user2Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -200,27 +212,35 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send group message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Great news everyone!",
-				messageType: "text",
-				groupId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Great news everyone!",
+					messageType: "text",
+					groupId,
+				});
 
 			// Multiple users react with the same reaction type
-			await t.withIdentity({ subject: user1Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "heart",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "heart",
+				});
 
-			await t.withIdentity({ subject: user2Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "heart",
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "heart",
+				});
 
 			// Get reaction summary from user1's perspective
-			const reactionSummary = await t.withIdentity({ subject: user1Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -230,9 +250,11 @@ describe("Message Reactions System", () => {
 			});
 
 			// Get reaction summary from sender's perspective (hasn't reacted)
-			const senderReactionSummary = await t.withIdentity({ subject: senderId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const senderReactionSummary = await t
+				.withIdentity({ subject: senderId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(senderReactionSummary).toHaveLength(1);
 			expect(senderReactionSummary[0]).toMatchObject({
@@ -261,40 +283,52 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send a message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Check out this amazing feature!",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Check out this amazing feature!",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Receiver adds thumbs up reaction
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
 			// Sender adds thumbs up reaction (same type, different user)
-			await t.withIdentity({ subject: senderId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
 			// Receiver changes their reaction to custom fire emoji (updates existing reaction)
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "custom",
-				customEmoji: "🔥",
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "custom",
+					customEmoji: "🔥",
+				});
 
 			// Get reaction summary from receiver's perspective
-			const reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(2);
 
 			// Find thumbs up reaction (only sender has it now)
-			const thumbsUp = reactionSummary.find(r => r.reactionType === "thumbs_up");
+			const thumbsUp = reactionSummary.find(
+				(r) => r.reactionType === "thumbs_up",
+			);
 			expect(thumbsUp).toMatchObject({
 				reactionType: "thumbs_up",
 				count: 1,
@@ -302,7 +336,9 @@ describe("Message Reactions System", () => {
 			});
 
 			// Find fire reaction (only receiver has it)
-			const fire = reactionSummary.find(r => r.reactionType === "custom" && r.customEmoji === "🔥");
+			const fire = reactionSummary.find(
+				(r) => r.reactionType === "custom" && r.customEmoji === "🔥",
+			);
 			expect(fire).toMatchObject({
 				reactionType: "custom",
 				customEmoji: "🔥",
@@ -317,7 +353,7 @@ describe("Message Reactions System", () => {
 				t.mutation(api.reactions.addMessageReaction, {
 					messageId: "fake-message-id" as any,
 					reactionType: "thumbs_up",
-				})
+				}),
 			).rejects.toThrow();
 		});
 	});
@@ -342,35 +378,45 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send a message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Test message for reaction removal",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Test message for reaction removal",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Add reaction
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
 			// Verify reaction was added
-			let reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			let reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0].hasCurrentUserReacted).toBe(true);
 
 			// Remove reaction
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.removeMessageReaction, {
-				messageId: messageId!,
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.removeMessageReaction, {
+					messageId: messageId!,
+				});
 
 			// Verify reaction was removed
-			reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(0);
 		});
@@ -435,27 +481,35 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send group message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Test message for selective reaction removal",
-				messageType: "text",
-				groupId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Test message for selective reaction removal",
+					messageType: "text",
+					groupId,
+				});
 
 			// Both users react with the same reaction type
-			await t.withIdentity({ subject: user1Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
-			await t.withIdentity({ subject: user2Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
 			// Verify both reactions exist
-			let reactionSummary = await t.withIdentity({ subject: user1Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			let reactionSummary = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -465,14 +519,18 @@ describe("Message Reactions System", () => {
 			});
 
 			// User1 removes their reaction
-			await t.withIdentity({ subject: user1Id }).mutation(api.reactions.removeMessageReaction, {
-				messageId: messageId!,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.reactions.removeMessageReaction, {
+					messageId: messageId!,
+				});
 
 			// Verify only user1's reaction was removed
-			reactionSummary = await t.withIdentity({ subject: user1Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			reactionSummary = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -482,9 +540,11 @@ describe("Message Reactions System", () => {
 			});
 
 			// Verify user2 still has their reaction
-			reactionSummary = await t.withIdentity({ subject: user2Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			reactionSummary = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(1);
 			expect(reactionSummary[0]).toMatchObject({
@@ -513,21 +573,27 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send a message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Test message without reactions",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Test message without reactions",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Try to remove a reaction that doesn't exist - should not throw
-			await t.withIdentity({ subject: receiverId }).mutation(api.reactions.removeMessageReaction, {
-				messageId: messageId!,
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.reactions.removeMessageReaction, {
+					messageId: messageId!,
+				});
 
 			// Verify no reactions exist
-			const reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(0);
 		});
@@ -537,7 +603,7 @@ describe("Message Reactions System", () => {
 			await expect(
 				t.mutation(api.reactions.removeMessageReaction, {
 					messageId: "fake-message-id" as any,
-				})
+				}),
 			).rejects.toThrow();
 		});
 	});
@@ -562,16 +628,20 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send a message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Message with no reactions",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Message with no reactions",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Get reaction summary
-			const reactionSummary = await t.withIdentity({ subject: receiverId }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: receiverId })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toEqual([]);
 		});
@@ -594,17 +664,19 @@ describe("Message Reactions System", () => {
 				});
 			});
 
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Message for unauthenticated test",
-				messageType: "text",
-				receiverId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Message for unauthenticated test",
+					messageType: "text",
+					receiverId,
+				});
 
 			// Try to get reaction summary without authentication - should throw
 			await expect(
 				t.query(api.reactions.getMessageReactionSummary, {
 					messageId: messageId!,
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 
@@ -668,32 +740,42 @@ describe("Message Reactions System", () => {
 			});
 
 			// Send group message
-			const messageId = await t.withIdentity({ subject: senderId }).mutation(api.messages.sendMessage, {
-				content: "Message for reaction ordering test",
-				messageType: "text",
-				groupId,
-			});
+			const messageId = await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.messages.sendMessage, {
+					content: "Message for reaction ordering test",
+					messageType: "text",
+					groupId,
+				});
 
 			// Add reactions - heart gets 2 reactions, thumbs_up gets 1
-			await t.withIdentity({ subject: user1Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "thumbs_up",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "thumbs_up",
+				});
 
-			await t.withIdentity({ subject: user2Id }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "heart",
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "heart",
+				});
 
-			await t.withIdentity({ subject: senderId }).mutation(api.reactions.addMessageReaction, {
-				messageId: messageId!,
-				reactionType: "heart",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.mutation(api.reactions.addMessageReaction, {
+					messageId: messageId!,
+					reactionType: "heart",
+				});
 
 			// Get reaction summary
-			const reactionSummary = await t.withIdentity({ subject: user1Id }).query(api.reactions.getMessageReactionSummary, {
-				messageId: messageId!,
-			});
+			const reactionSummary = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.reactions.getMessageReactionSummary, {
+					messageId: messageId!,
+				});
 
 			expect(reactionSummary).toHaveLength(2);
 			// Heart should be first (count: 2)

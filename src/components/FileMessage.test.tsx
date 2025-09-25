@@ -1,6 +1,6 @@
 /**
  * Tests for FileMessage component
- * 
+ *
  * Tests cover:
  * - Loading state when file URL is not available
  * - Image file rendering with click to open
@@ -10,9 +10,9 @@
  * - File size formatting
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Id } from "@convex/_generated/dataModel";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileMessage } from "./FileMessage";
 
 // Mock Convex
@@ -32,7 +32,7 @@ vi.mock("@convex/_generated/api", () => ({
 
 // Mock window.open
 const mockWindowOpen = vi.fn();
-Object.defineProperty(window, 'open', {
+Object.defineProperty(window, "open", {
 	value: mockWindowOpen,
 	writable: true,
 });
@@ -55,13 +55,13 @@ describe("FileMessage", () => {
 					fileName="test.jpg"
 					fileType="image/jpeg"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			// Should show loading skeleton
-			const skeletonElements = screen.getAllByRole("generic").filter(el =>
-				el.classList.contains("animate-pulse")
-			);
+			const skeletonElements = screen
+				.getAllByRole("generic")
+				.filter((el) => el.classList.contains("animate-pulse"));
 			expect(skeletonElements.length).toBeGreaterThan(0);
 			expect(skeletonElements[0]).toHaveClass("animate-pulse");
 		});
@@ -77,7 +77,7 @@ describe("FileMessage", () => {
 					fileName="test.jpg"
 					fileType="image/jpeg"
 					fileSize={2048}
-				/>
+				/>,
 			);
 
 			const image = screen.getByAltText("test.jpg");
@@ -104,7 +104,7 @@ describe("FileMessage", () => {
 					fileName="test.png"
 					fileType="image/png"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(screen.getByAltText("test.png")).toBeInTheDocument();
@@ -115,7 +115,7 @@ describe("FileMessage", () => {
 					fileName="test.gif"
 					fileType="image/gif"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(screen.getByAltText("test.gif")).toBeInTheDocument();
@@ -132,7 +132,7 @@ describe("FileMessage", () => {
 					fileName="test.mp4"
 					fileType="video/mp4"
 					fileSize={5242880} // 5MB
-				/>
+				/>,
 			);
 
 			const video = document.querySelector("video");
@@ -159,7 +159,7 @@ describe("FileMessage", () => {
 					fileName="test.webm"
 					fileType="video/webm"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(document.querySelector("video")).toBeInTheDocument();
@@ -170,7 +170,7 @@ describe("FileMessage", () => {
 					fileName="test.mov"
 					fileType="video/quicktime"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(document.querySelector("video")).toBeInTheDocument();
@@ -187,7 +187,7 @@ describe("FileMessage", () => {
 					fileName="document.pdf"
 					fileType="application/pdf"
 					fileSize={1048576} // 1MB
-				/>
+				/>,
 			);
 
 			const link = screen.getByRole("link");
@@ -213,7 +213,7 @@ describe("FileMessage", () => {
 					fileName="document.docx"
 					fileType="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
 					fileSize={512000}
-				/>
+				/>,
 			);
 
 			const link = screen.getByRole("link");
@@ -233,7 +233,7 @@ describe("FileMessage", () => {
 					fileName="readme.txt"
 					fileType="text/plain"
 					fileSize={256}
-				/>
+				/>,
 			);
 
 			expect(screen.getByRole("link")).toBeInTheDocument();
@@ -263,7 +263,7 @@ describe("FileMessage", () => {
 						fileName="test.txt"
 						fileType="text/plain"
 						fileSize={size}
-					/>
+					/>,
 				);
 
 				expect(screen.getByText(new RegExp(expected))).toBeInTheDocument();
@@ -284,7 +284,7 @@ describe("FileMessage", () => {
 					fileName="vacation-photo.jpg"
 					fileType="image/jpeg"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(screen.getByAltText("vacation-photo.jpg")).toBeInTheDocument();
@@ -299,11 +299,15 @@ describe("FileMessage", () => {
 					fileName="test.jpg"
 					fileType="image/jpeg"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			const button = screen.getByRole("button");
-			expect(button).toHaveClass("focus:outline-none", "focus:ring-2", "focus:ring-blue-500");
+			expect(button).toHaveClass(
+				"focus:outline-none",
+				"focus:ring-2",
+				"focus:ring-blue-500",
+			);
 		});
 
 		it("should have proper link attributes for downloads", () => {
@@ -315,7 +319,7 @@ describe("FileMessage", () => {
 					fileName="document.pdf"
 					fileType="application/pdf"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			const link = screen.getByRole("link");
@@ -326,7 +330,7 @@ describe("FileMessage", () => {
 	describe("edge cases", () => {
 		it("should handle very long file names", () => {
 			mockUseQuery.mockReturnValue(mockFileUrl);
-			const longFileName = "a".repeat(100) + ".txt";
+			const longFileName = `${"a".repeat(100)}.txt`;
 
 			render(
 				<FileMessage
@@ -334,7 +338,7 @@ describe("FileMessage", () => {
 					fileName={longFileName}
 					fileType="text/plain"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText(longFileName)).toBeInTheDocument();
@@ -349,11 +353,11 @@ describe("FileMessage", () => {
 					fileName="empty.txt"
 					fileType="text/plain"
 					fileSize={0}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText("empty.txt")).toBeInTheDocument();
-		expect(screen.getByText("0 Bytes")).toBeInTheDocument();
+			expect(screen.getByText("0 Bytes")).toBeInTheDocument();
 		});
 
 		it("should handle unknown file types", () => {
@@ -365,7 +369,7 @@ describe("FileMessage", () => {
 					fileName="unknown.xyz"
 					fileType="application/octet-stream"
 					fileSize={1024}
-				/>
+				/>,
 			);
 
 			// Should render as generic file

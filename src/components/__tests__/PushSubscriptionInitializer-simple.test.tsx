@@ -2,18 +2,18 @@
  * Simplified tests for PushSubscriptionInitializer component
  */
 
-import React from "react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render } from "@testing-library/react";
+import React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the usePushSubscription hook
 vi.mock("../../hooks/usePushSubscription", () => ({
 	usePushSubscription: vi.fn(),
 }));
 
+import { usePushSubscription } from "../../hooks/usePushSubscription";
 // Import after mocking
 import { PushSubscriptionInitializer } from "../PushSubscriptionInitializer";
-import { usePushSubscription } from "../../hooks/usePushSubscription";
 
 // Get the mocked function
 const mockUsePushSubscription = vi.mocked(usePushSubscription);
@@ -34,14 +34,14 @@ describe("PushSubscriptionInitializer Component - Basic Functionality", () => {
 
 	it("should render as null (invisible component)", () => {
 		const { container } = render(<PushSubscriptionInitializer />);
-		
+
 		// Component should render as null (no visible content)
 		expect(container.innerHTML).toBe("");
 	});
 
 	it("should call usePushSubscription hook", () => {
 		render(<PushSubscriptionInitializer />);
-		
+
 		expect(mockUsePushSubscription).toHaveBeenCalled();
 	});
 
@@ -88,7 +88,7 @@ describe("PushSubscriptionInitializer Component - Basic Functionality", () => {
 		const { container } = render(
 			<ErrorBoundary>
 				<PushSubscriptionInitializer />
-			</ErrorBoundary>
+			</ErrorBoundary>,
 		);
 
 		// Should render error boundary content
@@ -108,11 +108,11 @@ describe("PushSubscriptionInitializer Component - Basic Functionality", () => {
 
 	it("should handle multiple renders", () => {
 		const { rerender } = render(<PushSubscriptionInitializer />);
-		
+
 		expect(() => {
 			rerender(<PushSubscriptionInitializer />);
 		}).not.toThrow();
-		
+
 		// Hook should be called for each render
 		expect(mockUsePushSubscription).toHaveBeenCalledTimes(2);
 	});

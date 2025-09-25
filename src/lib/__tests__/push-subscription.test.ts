@@ -4,7 +4,10 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ensurePushSubscription, urlBase64ToUint8Array } from "../push-subscription";
+import {
+	ensurePushSubscription,
+	urlBase64ToUint8Array,
+} from "../push-subscription";
 
 // Mock global APIs
 const mockSubscribe = vi.fn();
@@ -49,7 +52,9 @@ describe("push-subscription utilities", () => {
 		});
 
 		// Default mock implementations
-		mockServiceWorker.getRegistration.mockResolvedValue(mockRegistration as any);
+		mockServiceWorker.getRegistration.mockResolvedValue(
+			mockRegistration as any,
+		);
 		mockGetSubscription.mockResolvedValue(null);
 		mockSubscribe.mockResolvedValue({
 			toJSON: vi.fn().mockReturnValue({
@@ -87,7 +92,8 @@ describe("push-subscription utilities", () => {
 	});
 
 	describe("ensurePushSubscription", () => {
-		const testVapidKey = "BEl62iUYgUivxIkv69yViEuiBIa40HI80xeSNdnzPUoYmDzspHSdkJiHQOdHpzBjsrfhY6-e0NkZPw";
+		const testVapidKey =
+			"BEl62iUYgUivxIkv69yViEuiBIa40HI80xeSNdnzPUoYmDzspHSdkJiHQOdHpzBjsrfhY6-e0NkZPw";
 
 		it("should return existing subscription if available", async () => {
 			const existingSubscription = {
@@ -144,7 +150,9 @@ describe("push-subscription utilities", () => {
 			const result = await ensurePushSubscription(testVapidKey);
 
 			expect(result).toBeNull();
-			expect(consoleSpy).toHaveBeenCalledWith("Push not supported in this browser");
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Push not supported in this browser",
+			);
 
 			consoleSpy.mockRestore();
 
@@ -169,7 +177,9 @@ describe("push-subscription utilities", () => {
 			const result = await ensurePushSubscription(testVapidKey);
 
 			expect(result).toBeNull();
-			expect(consoleSpy).toHaveBeenCalledWith("Push not supported in this browser");
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Push not supported in this browser",
+			);
 
 			consoleSpy.mockRestore();
 
@@ -188,7 +198,9 @@ describe("push-subscription utilities", () => {
 			const result = await ensurePushSubscription(testVapidKey);
 
 			expect(result).toBeNull();
-			expect(consoleSpy).toHaveBeenCalledWith("Service worker not registered; cannot subscribe to push");
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Service worker not registered; cannot subscribe to push",
+			);
 
 			consoleSpy.mockRestore();
 		});
@@ -197,7 +209,9 @@ describe("push-subscription utilities", () => {
 			mockGetSubscription.mockResolvedValue(null);
 			mockSubscribe.mockRejectedValue(new Error("Subscription failed"));
 
-			await expect(ensurePushSubscription(testVapidKey)).rejects.toThrow("Subscription failed");
+			await expect(ensurePushSubscription(testVapidKey)).rejects.toThrow(
+				"Subscription failed",
+			);
 		});
 
 		it("should handle invalid VAPID key", async () => {

@@ -30,7 +30,9 @@ describe("CapacitorIntegration", () => {
 
 		// Get mocked modules
 		mockCapacitorUtils = vi.mocked(await import("@/lib/capacitor"));
-		mockMobileNotifications = vi.mocked(await import("@/lib/mobile-notifications")).mobileNotifications;
+		mockMobileNotifications = vi.mocked(
+			await import("@/lib/mobile-notifications"),
+		).mobileNotifications;
 
 		// Reset DOM classes
 		document.body.className = "";
@@ -79,9 +81,18 @@ describe("CapacitorIntegration", () => {
 
 			render(<CapacitorIntegration />);
 
-			expect(addEventListenerSpy).toHaveBeenCalledWith("app-resumed", expect.any(Function));
-			expect(addEventListenerSpy).toHaveBeenCalledWith("app-paused", expect.any(Function));
-			expect(addEventListenerSpy).toHaveBeenCalledWith("deep-link", expect.any(Function));
+			expect(addEventListenerSpy).toHaveBeenCalledWith(
+				"app-resumed",
+				expect.any(Function),
+			);
+			expect(addEventListenerSpy).toHaveBeenCalledWith(
+				"app-paused",
+				expect.any(Function),
+			);
+			expect(addEventListenerSpy).toHaveBeenCalledWith(
+				"deep-link",
+				expect.any(Function),
+			);
 		});
 
 		it("should clean up event listeners on unmount", () => {
@@ -90,9 +101,18 @@ describe("CapacitorIntegration", () => {
 			const { unmount } = render(<CapacitorIntegration />);
 			unmount();
 
-			expect(removeEventListenerSpy).toHaveBeenCalledWith("app-resumed", expect.any(Function));
-			expect(removeEventListenerSpy).toHaveBeenCalledWith("app-paused", expect.any(Function));
-			expect(removeEventListenerSpy).toHaveBeenCalledWith("deep-link", expect.any(Function));
+			expect(removeEventListenerSpy).toHaveBeenCalledWith(
+				"app-resumed",
+				expect.any(Function),
+			);
+			expect(removeEventListenerSpy).toHaveBeenCalledWith(
+				"app-paused",
+				expect.any(Function),
+			);
+			expect(removeEventListenerSpy).toHaveBeenCalledWith(
+				"deep-link",
+				expect.any(Function),
+			);
 		});
 
 		it("should handle app resume events", () => {
@@ -194,7 +214,7 @@ describe("CapacitorIntegration", () => {
 			// Test multiple platform scenarios
 			const platforms = ["ios", "android"] as const;
 
-			platforms.forEach(platform => {
+			platforms.forEach((platform) => {
 				// Clear previous classes
 				document.body.className = "";
 
@@ -204,21 +224,29 @@ describe("CapacitorIntegration", () => {
 				const { unmount } = render(<CapacitorIntegration />);
 
 				expect(document.body.classList.contains("capacitor-app")).toBe(true);
-				expect(document.body.classList.contains(`platform-${platform}`)).toBe(true);
+				expect(document.body.classList.contains(`platform-${platform}`)).toBe(
+					true,
+				);
 
 				unmount();
 
 				expect(document.body.classList.contains("capacitor-app")).toBe(false);
-				expect(document.body.classList.contains(`platform-${platform}`)).toBe(false);
+				expect(document.body.classList.contains(`platform-${platform}`)).toBe(
+					false,
+				);
 			});
 		});
 	});
 
 	describe("Error Handling", () => {
 		it("should handle initialization errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockCapacitorUtils.isNativePlatform.mockReturnValue(true);
-			mockCapacitorUtils.initializeCapacitor.mockRejectedValue(new Error("Init failed"));
+			mockCapacitorUtils.initializeCapacitor.mockRejectedValue(
+				new Error("Init failed"),
+			);
 
 			render(<CapacitorIntegration />);
 
@@ -234,9 +262,13 @@ describe("CapacitorIntegration", () => {
 		});
 
 		it("should handle notification initialization errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockCapacitorUtils.isNativePlatform.mockReturnValue(true);
-			mockMobileNotifications.initialize.mockRejectedValue(new Error("Notification init failed"));
+			mockMobileNotifications.initialize.mockRejectedValue(
+				new Error("Notification init failed"),
+			);
 
 			// Should not throw during render, but error should be caught
 			expect(() => render(<CapacitorIntegration />)).not.toThrow();
@@ -263,7 +295,7 @@ describe("CapacitorIntegration", () => {
 				<div>
 					<CapacitorIntegration />
 					<div data-testid="other-component">Other content</div>
-				</div>
+				</div>,
 			);
 
 			expect(screen.getByTestId("other-component")).toBeInTheDocument();
@@ -275,7 +307,7 @@ describe("CapacitorIntegration", () => {
 				<div>
 					<CapacitorIntegration />
 					<CapacitorIntegration />
-				</div>
+				</div>,
 			);
 
 			// Should not cause conflicts or errors

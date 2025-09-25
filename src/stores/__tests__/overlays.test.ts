@@ -1,15 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	$overlayState,
-	$overlayStack,
 	$hasOpenOverlays,
-	$topOverlay,
 	$overlayCount,
+	$overlayStack,
+	$overlayState,
+	$topOverlay,
 	overlayActions,
-	updateOverlayConfig,
 	resetOverlaySystem,
+	updateOverlayConfig,
 } from "../overlays";
-import type { OverlayEntry, OverlayType } from "@/types/overlay";
 
 // Mock nanoid to have predictable but unique IDs in tests
 let idCounter = 0;
@@ -85,7 +84,7 @@ describe("Overlay Store", () => {
 
 			const stack = $overlayStack.get();
 			expect(stack).toHaveLength(3);
-			expect(stack.map(o => o.type)).toEqual(["CONFIRM", "INFO", "SHEET"]);
+			expect(stack.map((o) => o.type)).toEqual(["CONFIRM", "INFO", "SHEET"]);
 			expect($topOverlay.get()?.type).toBe("SHEET");
 		});
 
@@ -99,7 +98,7 @@ describe("Overlay Store", () => {
 
 			const stack = $overlayStack.get();
 			expect(stack).toHaveLength(2);
-			expect(stack.map(o => o.type)).toEqual(["INFO", "SHEET"]);
+			expect(stack.map((o) => o.type)).toEqual(["INFO", "SHEET"]);
 		});
 
 		it("should set persistInUrl to false when specified", () => {
@@ -129,7 +128,7 @@ describe("Overlay Store", () => {
 
 			const newStack = $overlayStack.get();
 			expect(newStack).toHaveLength(2);
-			expect(newStack.map(o => o.type)).toEqual(["CONFIRM", "SHEET"]);
+			expect(newStack.map((o) => o.type)).toEqual(["CONFIRM", "SHEET"]);
 		});
 
 		it("should close top overlay", () => {
@@ -137,7 +136,7 @@ describe("Overlay Store", () => {
 
 			const stack = $overlayStack.get();
 			expect(stack).toHaveLength(2);
-			expect(stack.map(o => o.type)).toEqual(["CONFIRM", "INFO"]);
+			expect(stack.map((o) => o.type)).toEqual(["CONFIRM", "INFO"]);
 			expect($topOverlay.get()?.type).toBe("INFO");
 		});
 
@@ -174,7 +173,7 @@ describe("Overlay Store", () => {
 
 			const stack = $overlayStack.get();
 			expect(stack).toHaveLength(2);
-			expect(stack.map(o => o.type)).toEqual(["CONFIRM", "SHEET"]);
+			expect(stack.map((o) => o.type)).toEqual(["CONFIRM", "SHEET"]);
 			expect($topOverlay.get()?.id).toBe(newId);
 		});
 
@@ -195,7 +194,10 @@ describe("Overlay Store", () => {
 				props: { message: "Original message" },
 			});
 
-			overlayActions.updateProps(id, { message: "Updated message", title: "New title" });
+			overlayActions.updateProps(id, {
+				message: "Updated message",
+				title: "New title",
+			});
 
 			const overlay = overlayActions.getById(id);
 			expect(overlay?.props).toMatchObject({

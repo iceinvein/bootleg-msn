@@ -2,8 +2,8 @@
  * Tests for PushSubscriptionInitializer component
  */
 
-import React from "react";
 import { render } from "@testing-library/react";
+import React from "react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock the usePushSubscription hook
@@ -11,8 +11,8 @@ vi.mock("../../hooks/usePushSubscription", () => ({
 	usePushSubscription: vi.fn(),
 }));
 
-import { PushSubscriptionInitializer } from "../PushSubscriptionInitializer";
 import { usePushSubscription } from "../../hooks/usePushSubscription";
+import { PushSubscriptionInitializer } from "../PushSubscriptionInitializer";
 
 // Get the mocked function
 const mockUsePushSubscription = vi.mocked(usePushSubscription);
@@ -27,20 +27,20 @@ describe("PushSubscriptionInitializer", () => {
 	describe("Component Rendering", () => {
 		it("should render without crashing", () => {
 			const { container } = render(<PushSubscriptionInitializer />);
-			
+
 			// Should render nothing (null component)
 			expect(container.firstChild).toBeNull();
 		});
 
 		it("should call usePushSubscription hook", () => {
 			render(<PushSubscriptionInitializer />);
-			
+
 			expect(mockUsePushSubscription).toHaveBeenCalledTimes(1);
 		});
 
 		it("should not render any DOM elements", () => {
 			const { container } = render(<PushSubscriptionInitializer />);
-			
+
 			expect(container.innerHTML).toBe("");
 		});
 	});
@@ -52,16 +52,18 @@ describe("PushSubscriptionInitializer", () => {
 			});
 
 			// Should throw during render since the hook throws
-			expect(() => render(<PushSubscriptionInitializer />)).toThrow("Hook error");
+			expect(() => render(<PushSubscriptionInitializer />)).toThrow(
+				"Hook error",
+			);
 		});
 
 		it("should re-call hook on re-render", () => {
 			const { rerender } = render(<PushSubscriptionInitializer />);
-			
+
 			expect(mockUsePushSubscription).toHaveBeenCalledTimes(1);
-			
+
 			rerender(<PushSubscriptionInitializer />);
-			
+
 			expect(mockUsePushSubscription).toHaveBeenCalledTimes(2);
 		});
 	});
@@ -69,13 +71,13 @@ describe("PushSubscriptionInitializer", () => {
 	describe("Component Lifecycle", () => {
 		it("should initialize push subscription on mount", () => {
 			render(<PushSubscriptionInitializer />);
-			
+
 			expect(mockUsePushSubscription).toHaveBeenCalled();
 		});
 
 		it("should clean up properly on unmount", () => {
 			const { unmount } = render(<PushSubscriptionInitializer />);
-			
+
 			// Should not throw on unmount
 			expect(() => unmount()).not.toThrow();
 		});
@@ -87,9 +89,9 @@ describe("PushSubscriptionInitializer", () => {
 				<div>
 					<PushSubscriptionInitializer />
 					<PushSubscriptionInitializer />
-				</div>
+				</div>,
 			);
-			
+
 			// Each instance should call the hook
 			expect(mockUsePushSubscription).toHaveBeenCalledTimes(2);
 		});
@@ -127,7 +129,7 @@ describe("PushSubscriptionInitializer", () => {
 			const { container } = render(
 				<ErrorBoundary>
 					<PushSubscriptionInitializer />
-				</ErrorBoundary>
+				</ErrorBoundary>,
 			);
 
 			// Should render error boundary content

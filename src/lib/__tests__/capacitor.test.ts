@@ -65,7 +65,9 @@ describe("Capacitor Utilities", () => {
 		mockStatusBar = vi.mocked(await import("@capacitor/status-bar")).StatusBar;
 		mockKeyboard = vi.mocked(await import("@capacitor/keyboard")).Keyboard;
 		mockApp = vi.mocked(await import("@capacitor/app")).App;
-		mockSplashScreen = vi.mocked(await import("@capacitor/splash-screen")).SplashScreen;
+		mockSplashScreen = vi.mocked(
+			await import("@capacitor/splash-screen"),
+		).SplashScreen;
 
 		// Reset DOM classes
 		document.body.className = "";
@@ -139,7 +141,9 @@ describe("Capacitor Utilities", () => {
 			await initializeCapacitor();
 
 			expect(mockStatusBar.setStyle).toHaveBeenCalledWith({ style: "LIGHT" });
-			expect(mockStatusBar.setBackgroundColor).toHaveBeenCalledWith({ color: "#0078d4" });
+			expect(mockStatusBar.setBackgroundColor).toHaveBeenCalledWith({
+				color: "#0078d4",
+			});
 		});
 
 		it("should set up keyboard listeners on native platform", async () => {
@@ -147,8 +151,14 @@ describe("Capacitor Utilities", () => {
 
 			await initializeCapacitor();
 
-			expect(mockKeyboard.addListener).toHaveBeenCalledWith("keyboardWillShow", expect.any(Function));
-			expect(mockKeyboard.addListener).toHaveBeenCalledWith("keyboardWillHide", expect.any(Function));
+			expect(mockKeyboard.addListener).toHaveBeenCalledWith(
+				"keyboardWillShow",
+				expect.any(Function),
+			);
+			expect(mockKeyboard.addListener).toHaveBeenCalledWith(
+				"keyboardWillHide",
+				expect.any(Function),
+			);
 		});
 
 		it("should handle keyboard show events", async () => {
@@ -201,8 +211,14 @@ describe("Capacitor Utilities", () => {
 
 			await initializeCapacitor();
 
-			expect(mockApp.addListener).toHaveBeenCalledWith("appStateChange", expect.any(Function));
-			expect(mockApp.addListener).toHaveBeenCalledWith("appUrlOpen", expect.any(Function));
+			expect(mockApp.addListener).toHaveBeenCalledWith(
+				"appStateChange",
+				expect.any(Function),
+			);
+			expect(mockApp.addListener).toHaveBeenCalledWith(
+				"appUrlOpen",
+				expect.any(Function),
+			);
 		});
 
 		it("should handle app state change events", async () => {
@@ -246,7 +262,10 @@ describe("Capacitor Utilities", () => {
 				urlOpenHandler({ url: "msn://chat/user123" });
 			}
 
-			expect(consoleSpy).toHaveBeenCalledWith("App opened with URL:", "msn://chat/user123");
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"App opened with URL:",
+				"msn://chat/user123",
+			);
 
 			consoleSpy.mockRestore();
 		});
@@ -260,13 +279,18 @@ describe("Capacitor Utilities", () => {
 		});
 
 		it("should handle initialization errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockCapacitor.isNativePlatform.mockReturnValue(true);
 			mockStatusBar.setStyle.mockRejectedValue(new Error("Status bar error"));
 
 			await initializeCapacitor();
 
-			expect(consoleSpy).toHaveBeenCalledWith("Error initializing Capacitor:", expect.any(Error));
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Error initializing Capacitor:",
+				expect.any(Error),
+			);
 
 			consoleSpy.mockRestore();
 		});
@@ -277,7 +301,9 @@ describe("Capacitor Utilities", () => {
 
 			await initializeCapacitor();
 
-			expect(consoleSpy).toHaveBeenCalledWith("Capacitor initialized successfully");
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Capacitor initialized successfully",
+			);
 
 			consoleSpy.mockRestore();
 		});

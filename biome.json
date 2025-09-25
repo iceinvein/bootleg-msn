@@ -12,8 +12,6 @@
 			"convex/**/*",
 			"!src/components/ui/**/*",
 			"!convex/_generated/**/*",
-			"!**/*.test.*",
-			"!**/*.spec.*",
 			"!src/index.css"
 		]
 	},
@@ -134,5 +132,36 @@
 		"formatter": {
 			"enabled": false
 		}
-	}
+	},
+	"overrides": [
+		{
+			"includes": [
+				"**/*.test.ts",
+				"**/*.test.tsx",
+				"src/__tests__/**",
+				"convex/**/*.test.ts"
+			],
+			"linter": {
+				"rules": {
+					"suspicious": {
+						"noExplicitAny": "off",
+						"noArrayIndexKey": "off"
+					},
+					"correctness": {
+						"noUnusedVariables": "off",
+						"noUnusedImports": "off",
+						"useExhaustiveDependencies": "off",
+						"noUnusedFunctionParameters": "off"
+					},
+					"a11y": "off",
+					"nursery": {
+						"useSortedClasses": "off"
+					},
+					"style": {
+						"noNonNullAssertion": "off"
+					}
+				}
+			}
+		}
+	]
 }

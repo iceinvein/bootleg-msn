@@ -1,6 +1,6 @@
 /**
  * Tests for Convex file operations
- * 
+ *
  * Tests cover:
  * - File upload URL generation
  * - File URL retrieval
@@ -11,7 +11,7 @@
  */
 
 import { convexTest } from "convex-test";
-import { describe, it, expect, beforeEach } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import schema from "./schema";
@@ -83,7 +83,9 @@ describe("File Operations", () => {
 
 	describe("generateUploadUrl", () => {
 		it("should generate upload URL for authenticated users", async () => {
-			const result = await t.withIdentity({ subject: userId }).mutation(api.files.generateUploadUrl, {});
+			const result = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.files.generateUploadUrl, {});
 
 			expect(result).toBeDefined();
 			expect(typeof result).toBe("string");
@@ -91,9 +93,9 @@ describe("File Operations", () => {
 		});
 
 		it("should throw error for unauthenticated users", async () => {
-			await expect(
-				t.mutation(api.files.generateUploadUrl, {})
-			).rejects.toThrow("Not authenticated");
+			await expect(t.mutation(api.files.generateUploadUrl, {})).rejects.toThrow(
+				"Not authenticated",
+			);
 		});
 	});
 
@@ -119,7 +121,9 @@ describe("File Operations", () => {
 			});
 
 			// Should return null for deleted/non-existent files
-			const result = await t.query(api.files.getFileUrl, { fileId: tempFileId });
+			const result = await t.query(api.files.getFileUrl, {
+				fileId: tempFileId,
+			});
 			expect(result).toBeNull();
 		});
 	});
@@ -135,7 +139,9 @@ describe("File Operations", () => {
 		it("should return null for non-existent file metadata", async () => {
 			// Create a valid file ID but then delete the file to simulate non-existence
 			const tempFileId = await t.run(async (ctx: any) => {
-				const testBlob = new Blob(["metadata temp test"], { type: "text/plain" });
+				const testBlob = new Blob(["metadata temp test"], {
+					type: "text/plain",
+				});
 				return await ctx.storage.store(testBlob);
 			});
 
@@ -145,7 +151,9 @@ describe("File Operations", () => {
 			});
 
 			// Should return null for deleted/non-existent files
-			const result = await t.query(api.files.getFileMetadata, { fileId: tempFileId });
+			const result = await t.query(api.files.getFileMetadata, {
+				fileId: tempFileId,
+			});
 			expect(result).toBeNull();
 		});
 	});
@@ -159,10 +167,12 @@ describe("File Operations", () => {
 		});
 
 		it("should create file message for direct messages between contacts", async () => {
-			await t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-				...getFileMessageArgs(),
-				receiverId: contactUserId,
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.files.sendFileMessage, {
+					...getFileMessageArgs(),
+					receiverId: contactUserId,
+				});
 
 			// Verify message was created
 			const messages = await t.run(async (ctx: any) => {
@@ -187,10 +197,12 @@ describe("File Operations", () => {
 		});
 
 		it("should create file message for group messages for group members", async () => {
-			await t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-				...getFileMessageArgs(),
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.files.sendFileMessage, {
+					...getFileMessageArgs(),
+					groupId,
+				});
 
 			// Verify message was created
 			const messages = await t.run(async (ctx: any) => {
@@ -216,18 +228,26 @@ describe("File Operations", () => {
 
 		it("should throw error when neither receiverId nor groupId is provided", async () => {
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, getFileMessageArgs())
-			).rejects.toThrow("Must specify either receiverId or groupId, but not both");
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.files.sendFileMessage, getFileMessageArgs()),
+			).rejects.toThrow(
+				"Must specify either receiverId or groupId, but not both",
+			);
 		});
 
 		it("should throw error when both receiverId and groupId are provided", async () => {
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-					...getFileMessageArgs(),
-					receiverId: contactUserId,
-					groupId,
-				})
-			).rejects.toThrow("Must specify either receiverId or groupId, but not both");
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.files.sendFileMessage, {
+						...getFileMessageArgs(),
+						receiverId: contactUserId,
+						groupId,
+					}),
+			).rejects.toThrow(
+				"Must specify either receiverId or groupId, but not both",
+			);
 		});
 
 		it("should throw error for unauthenticated users", async () => {
@@ -235,7 +255,7 @@ describe("File Operations", () => {
 				t.mutation(api.files.sendFileMessage, {
 					...getFileMessageArgs(),
 					receiverId: contactUserId,
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 
@@ -249,10 +269,12 @@ describe("File Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: nonMemberUserId }).mutation(api.files.sendFileMessage, {
-					...getFileMessageArgs(),
-					groupId,
-				})
+				t
+					.withIdentity({ subject: nonMemberUserId })
+					.mutation(api.files.sendFileMessage, {
+						...getFileMessageArgs(),
+						groupId,
+					}),
 			).rejects.toThrow("You are not a member of this group");
 		});
 
@@ -266,10 +288,12 @@ describe("File Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-					...getFileMessageArgs(),
-					receiverId: nonContactUserId,
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.files.sendFileMessage, {
+						...getFileMessageArgs(),
+						receiverId: nonContactUserId,
+					}),
 			).rejects.toThrow("You can only send files to your contacts");
 		});
 
@@ -291,10 +315,12 @@ describe("File Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-					...getFileMessageArgs(),
-					receiverId: pendingContactUserId,
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.files.sendFileMessage, {
+						...getFileMessageArgs(),
+						receiverId: pendingContactUserId,
+					}),
 			).rejects.toThrow("You can only send files to your contacts");
 		});
 
@@ -311,10 +337,12 @@ describe("File Operations", () => {
 
 			const beforeTime = Date.now();
 
-			await t.withIdentity({ subject: userId }).mutation(api.files.sendFileMessage, {
-				...getFileMessageArgs(),
-				receiverId: contactUserId,
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.files.sendFileMessage, {
+					...getFileMessageArgs(),
+					receiverId: contactUserId,
+				});
 
 			// Verify user status was updated
 			const userStatus = await t.run(async (ctx: any) => {

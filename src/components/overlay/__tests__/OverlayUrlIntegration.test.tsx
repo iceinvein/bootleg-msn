@@ -2,15 +2,13 @@
  * @vitest-environment jsdom
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { describe, expect, it, vi, beforeEach } from "vitest";
-import { useEffect } from "react";
 import { MemoryRouter } from "react-router-dom";
-import { OverlayHost } from "../OverlayHost";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOverlays } from "@/hooks/useOverlays";
-import { useOverlayUrl } from "@/hooks/useOverlayUrl";
 import { resetOverlaySystem } from "@/stores/overlays";
+import { OverlayHost } from "../OverlayHost";
 
 // Mock Convex
 vi.mock("convex/react", () => ({
@@ -29,9 +27,14 @@ vi.mock("sonner", () => ({
 
 // Mock form components
 vi.mock("@/components/ui/form", () => ({
-	Form: ({ children, ...props }: any) => <div data-testid="form-wrapper" {...props}>{children}</div>,
+	Form: ({ children, ...props }: any) => (
+		<div data-testid="form-wrapper" {...props}>
+			{children}
+		</div>
+	),
 	FormControl: ({ children }: any) => <div>{children}</div>,
-	FormField: ({ render }: any) => render({ field: { onChange: vi.fn(), value: "" } }),
+	FormField: ({ render }: any) =>
+		render({ field: { onChange: vi.fn(), value: "" } }),
 	FormItem: ({ children }: any) => <div>{children}</div>,
 	FormLabel: ({ children }: any) => <label>{children}</label>,
 	FormMessage: ({ children }: any) => <div>{children}</div>,
@@ -61,7 +64,11 @@ vi.mock("@/components/ui/responsive-dialog", () => ({
 			{open && (
 				<div>
 					{children}
-					<button type="button" onClick={() => onOpenChange(false)} data-testid="dialog-close">
+					<button
+						type="button"
+						onClick={() => onOpenChange(false)}
+						data-testid="dialog-close"
+					>
 						Close
 					</button>
 				</div>
@@ -106,7 +113,13 @@ vi.mock("lucide-react", async (importOriginal) => {
 });
 
 // Test wrapper component
-function TestWrapper({ children, initialUrl = "/" }: { children: React.ReactNode; initialUrl?: string }) {
+function TestWrapper({
+	children,
+	initialUrl = "/",
+}: {
+	children: React.ReactNode;
+	initialUrl?: string;
+}) {
 	return (
 		<MemoryRouter initialEntries={[initialUrl]}>
 			{children}
@@ -139,7 +152,11 @@ describe("Overlay URL Integration", () => {
 
 			return (
 				<div>
-					<button type="button" onClick={openAddContact} data-testid="open-add-contact">
+					<button
+						type="button"
+						onClick={openAddContact}
+						data-testid="open-add-contact"
+					>
 						Add Contact
 					</button>
 				</div>
@@ -149,7 +166,7 @@ describe("Overlay URL Integration", () => {
 		render(
 			<TestWrapper>
 				<TestComponent />
-			</TestWrapper>
+			</TestWrapper>,
 		);
 
 		// Click to open the overlay
@@ -158,11 +175,16 @@ describe("Overlay URL Integration", () => {
 
 		// Verify overlay is open
 		await waitFor(() => {
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "true");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"true",
+			);
 		});
 
 		// Verify overlay content is rendered (look for the dialog title specifically)
-		expect(screen.getByRole("heading", { name: /add contact/i })).toBeInTheDocument();
+		expect(
+			screen.getByRole("heading", { name: /add contact/i }),
+		).toBeInTheDocument();
 
 		// Close the overlay using the dialog close button
 		const closeButton = screen.getByTestId("dialog-close");
@@ -170,14 +192,19 @@ describe("Overlay URL Integration", () => {
 
 		// Verify overlay is closed
 		await waitFor(() => {
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "false");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"false",
+			);
 		});
 	});
 
 	it("handles form submission and closes overlay", async () => {
 		const user = userEvent.setup();
-		const mockSendContactRequest = vi.fn().mockResolvedValue({ autoAccepted: false });
-		
+		const mockSendContactRequest = vi
+			.fn()
+			.mockResolvedValue({ autoAccepted: false });
+
 		// Mock the Convex mutation
 		const { useMutation } = await import("convex/react");
 		vi.mocked(useMutation).mockReturnValue(mockSendContactRequest);
@@ -197,7 +224,11 @@ describe("Overlay URL Integration", () => {
 
 			return (
 				<div>
-					<button type="button" onClick={openAddContact} data-testid="open-add-contact">
+					<button
+						type="button"
+						onClick={openAddContact}
+						data-testid="open-add-contact"
+					>
 						Add Contact
 					</button>
 				</div>
@@ -207,7 +238,7 @@ describe("Overlay URL Integration", () => {
 		render(
 			<TestWrapper>
 				<TestComponent />
-			</TestWrapper>
+			</TestWrapper>,
 		);
 
 		// Open the overlay
@@ -216,7 +247,10 @@ describe("Overlay URL Integration", () => {
 
 		// Wait for overlay to be open
 		await waitFor(() => {
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "true");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"true",
+			);
 		});
 
 		// Find and click the submit button (should have "Send Request" text)
@@ -233,7 +267,10 @@ describe("Overlay URL Integration", () => {
 
 		// Verify overlay closes after successful submission
 		await waitFor(() => {
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "false");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"false",
+			);
 		});
 	});
 

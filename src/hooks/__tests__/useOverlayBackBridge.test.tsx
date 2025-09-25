@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOverlayBackBridge } from "../useOverlayBackBridge";
 
 // Mock all dependencies to avoid complex interactions
@@ -30,9 +30,7 @@ vi.mock("../usePlatformHostAdapter", () => ({
 
 // Wrapper component for React Router context
 const RouterWrapper = ({ children }: { children: React.ReactNode }) => (
-	<MemoryRouter initialEntries={["/"]}>
-		{children}
-	</MemoryRouter>
+	<MemoryRouter initialEntries={["/"]}>{children}</MemoryRouter>
 );
 
 describe("useOverlayBackBridge - Simple Tests", () => {
@@ -130,13 +128,14 @@ describe("useOverlayBackBridge - Simple Tests", () => {
 	describe("Configuration", () => {
 		it("should accept custom configuration", () => {
 			const { result } = renderHook(
-				() => useOverlayBackBridge({
-					autoHandleOverlays: false,
-					integrateWithUrl: false,
-					componentName: "TestComponent",
-					debug: true,
-				}),
-				{ wrapper: RouterWrapper }
+				() =>
+					useOverlayBackBridge({
+						autoHandleOverlays: false,
+						integrateWithUrl: false,
+						componentName: "TestComponent",
+						debug: true,
+					}),
+				{ wrapper: RouterWrapper },
 			);
 
 			expect(result.current.isBackHandled).toBe(false);

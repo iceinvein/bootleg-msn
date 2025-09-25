@@ -1,11 +1,21 @@
-import { describe, it, expect, beforeEach, vi, afterEach } from "vitest";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import type React from "react";
 import { MemoryRouter } from "react-router-dom";
-import React from "react";
-import { usePlatformHostAdapter, usePlatformShare, usePlatformDetection } from "../usePlatformHostAdapter";
-import { resetOverlaySystem } from "@/stores/overlays";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { createPlatformHostAdapter } from "@/adapters/PlatformHostAdapter";
-import { detectPlatform, getPlatformCapabilities, isMobile, isDesktop, getPlatformClasses } from "@/adapters/platformDetection";
+import {
+	detectPlatform,
+	getPlatformCapabilities,
+	getPlatformClasses,
+	isDesktop,
+	isMobile,
+} from "@/adapters/platformDetection";
+import { resetOverlaySystem } from "@/stores/overlays";
+import {
+	usePlatformDetection,
+	usePlatformHostAdapter,
+	usePlatformShare,
+} from "../usePlatformHostAdapter";
 
 // Mock the platform adapters
 vi.mock("@/adapters/PlatformHostAdapter", () => ({
@@ -27,27 +37,27 @@ vi.mock("nanoid", () => ({
 }));
 
 // Mock window methods that aren't provided by jsdom
-Object.defineProperty(window, 'addEventListener', {
+Object.defineProperty(window, "addEventListener", {
 	value: vi.fn(),
 	writable: true,
 });
 
-Object.defineProperty(window, 'removeEventListener', {
+Object.defineProperty(window, "removeEventListener", {
 	value: vi.fn(),
 	writable: true,
 });
 
-Object.defineProperty(window, 'history', {
+Object.defineProperty(window, "history", {
 	value: {
 		length: 1,
 		back: vi.fn(),
 		pushState: vi.fn(),
-		replaceState: vi.fn()
+		replaceState: vi.fn(),
 	},
 	writable: true,
 });
 
-Object.defineProperty(window, 'location', {
+Object.defineProperty(window, "location", {
 	value: { href: "https://example.com" },
 	writable: true,
 });
@@ -70,11 +80,9 @@ Object.defineProperty(process, "env", {
 });
 
 // Router wrapper for hook tests
-const RouterWrapper: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-	<MemoryRouter initialEntries={["/"]}>
-		{children}
-	</MemoryRouter>
-);
+const RouterWrapper: React.FC<{ children: React.ReactNode }> = ({
+	children,
+}) => <MemoryRouter initialEntries={["/"]}>{children}</MemoryRouter>;
 
 describe("usePlatformHostAdapter Hook", () => {
 	const mockPlatformHostAdapter = {
@@ -86,7 +94,9 @@ describe("usePlatformHostAdapter Hook", () => {
 		handleEscape: vi.fn().mockResolvedValue("ignored"),
 		share: vi.fn().mockResolvedValue(true),
 		openDeepLink: vi.fn().mockResolvedValue(true),
-		get platform() { return "web" as const; },
+		get platform() {
+			return "web" as const;
+		},
 		get capabilities() {
 			return {
 				hasHardwareBackButton: false,
@@ -97,8 +107,12 @@ describe("usePlatformHostAdapter Hook", () => {
 				hasWindowManagement: false,
 			};
 		},
-		get isInitialized() { return true; },
-		get isConnected() { return false; },
+		get isInitialized() {
+			return true;
+		},
+		get isConnected() {
+			return false;
+		},
 	};
 
 	beforeEach(() => {
@@ -107,7 +121,11 @@ describe("usePlatformHostAdapter Hook", () => {
 		vi.clearAllMocks();
 
 		// Mock platform adapter factory
-		vi.mocked(createPlatformHostAdapter).mockReturnValue(mockPlatformHostAdapter as unknown as ReturnType<typeof createPlatformHostAdapter>);
+		vi.mocked(createPlatformHostAdapter).mockReturnValue(
+			mockPlatformHostAdapter as unknown as ReturnType<
+				typeof createPlatformHostAdapter
+			>,
+		);
 
 		// Mock platform detection
 		vi.mocked(detectPlatform).mockReturnValue({
@@ -115,10 +133,15 @@ describe("usePlatformHostAdapter Hook", () => {
 			userAgent: "test-agent",
 			isDevelopment: true,
 		});
-		vi.mocked(getPlatformCapabilities).mockReturnValue(mockPlatformHostAdapter.capabilities);
+		vi.mocked(getPlatformCapabilities).mockReturnValue(
+			mockPlatformHostAdapter.capabilities,
+		);
 		vi.mocked(isMobile).mockReturnValue(false);
 		vi.mocked(isDesktop).mockReturnValue(true);
-		vi.mocked(getPlatformClasses).mockReturnValue(["platform-web", "platform-desktop"]);
+		vi.mocked(getPlatformClasses).mockReturnValue([
+			"platform-web",
+			"platform-desktop",
+		]);
 	});
 
 	afterEach(() => {
@@ -127,10 +150,14 @@ describe("usePlatformHostAdapter Hook", () => {
 
 	describe("Basic Functionality", () => {
 		it("should initialize platform adapter", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoInitialize: true,
-				autoConnect: false, // Disable auto-connect for simpler testing
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoInitialize: true,
+						autoConnect: false, // Disable auto-connect for simpler testing
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			// Wait for initialization
 			await waitFor(() => {
@@ -143,9 +170,13 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should provide platform information", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -157,9 +188,13 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should provide handler functions", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -176,9 +211,13 @@ describe("usePlatformHostAdapter Hook", () => {
 
 	describe("Manual Connection", () => {
 		it("should connect and disconnect manually", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -203,9 +242,13 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should handle multiple connect/disconnect calls", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -231,9 +274,13 @@ describe("usePlatformHostAdapter Hook", () => {
 
 	describe("Event Handling", () => {
 		it("should handle back button", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -246,9 +293,13 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should handle escape key", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -261,9 +312,13 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should handle sharing", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -280,16 +335,22 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should handle deep link opening", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
 			});
 
 			await act(async () => {
-				const deepLinkResult = await result.current.openDeepLink("https://example.com/deep-link");
+				const deepLinkResult = await result.current.openDeepLink(
+					"https://example.com/deep-link",
+				);
 				expect(typeof deepLinkResult).toBe("boolean");
 			});
 		});
@@ -297,9 +358,13 @@ describe("usePlatformHostAdapter Hook", () => {
 
 	describe("Configuration", () => {
 		it("should respect autoConnect configuration", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: true,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: true,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -310,10 +375,14 @@ describe("usePlatformHostAdapter Hook", () => {
 		});
 
 		it("should respect debug configuration", async () => {
-			const { result } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-				debug: true,
-			}), { wrapper: RouterWrapper });
+			const { result } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+						debug: true,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -325,9 +394,13 @@ describe("usePlatformHostAdapter Hook", () => {
 
 	describe("Cleanup", () => {
 		it("should cleanup on unmount", async () => {
-			const { result, unmount } = renderHook(() => usePlatformHostAdapter({
-				autoConnect: false,
-			}), { wrapper: RouterWrapper });
+			const { result, unmount } = renderHook(
+				() =>
+					usePlatformHostAdapter({
+						autoConnect: false,
+					}),
+				{ wrapper: RouterWrapper },
+			);
 
 			await waitFor(() => {
 				expect(result.current.isInitialized).toBe(true);
@@ -350,7 +423,9 @@ describe("usePlatformShare Hook", () => {
 	});
 
 	it("should provide sharing functionality", async () => {
-		const { result } = renderHook(() => usePlatformShare(), { wrapper: RouterWrapper });
+		const { result } = renderHook(() => usePlatformShare(), {
+			wrapper: RouterWrapper,
+		});
 
 		await waitFor(() => {
 			expect(result.current.canShare).toBeDefined();
@@ -361,7 +436,9 @@ describe("usePlatformShare Hook", () => {
 	});
 
 	it("should handle sharing", async () => {
-		const { result } = renderHook(() => usePlatformShare(), { wrapper: RouterWrapper });
+		const { result } = renderHook(() => usePlatformShare(), {
+			wrapper: RouterWrapper,
+		});
 
 		await waitFor(() => {
 			expect(result.current.canShare).toBeDefined();
@@ -379,7 +456,9 @@ describe("usePlatformShare Hook", () => {
 
 describe("usePlatformDetection Hook", () => {
 	it("should provide platform detection information", async () => {
-		const { result } = renderHook(() => usePlatformDetection(), { wrapper: RouterWrapper });
+		const { result } = renderHook(() => usePlatformDetection(), {
+			wrapper: RouterWrapper,
+		});
 
 		await waitFor(() => {
 			expect(result.current.isInitialized).toBe(true);
@@ -395,7 +474,9 @@ describe("usePlatformDetection Hook", () => {
 	});
 
 	it("should provide boolean platform checks", async () => {
-		const { result } = renderHook(() => usePlatformDetection(), { wrapper: RouterWrapper });
+		const { result } = renderHook(() => usePlatformDetection(), {
+			wrapper: RouterWrapper,
+		});
 
 		await waitFor(() => {
 			expect(result.current.isInitialized).toBe(true);

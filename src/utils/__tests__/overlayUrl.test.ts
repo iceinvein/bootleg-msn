@@ -1,14 +1,14 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import {
-	encodeOverlayToUrl,
-	decodeOverlayFromUrl,
-	updateUrlWithOverlay,
-	hasOverlayInUrl,
-	clearOverlayFromUrl,
-	generateShareableUrl,
-	OVERLAY_URL_PARAMS,
-} from "../overlayUrl";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { OverlayEntry } from "@/types/overlay";
+import {
+	clearOverlayFromUrl,
+	decodeOverlayFromUrl,
+	encodeOverlayToUrl,
+	generateShareableUrl,
+	hasOverlayInUrl,
+	OVERLAY_URL_PARAMS,
+	updateUrlWithOverlay,
+} from "../overlayUrl";
 
 // Mock console.warn to avoid noise in tests
 const mockConsoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
@@ -117,7 +117,7 @@ describe("Overlay URL Utilities", () => {
 
 			expect(params.has(OVERLAY_URL_PARAMS.PROPS)).toBe(false);
 			expect(mockConsoleWarn).toHaveBeenCalledWith(
-				expect.stringContaining("Overlay props too long for URL")
+				expect.stringContaining("Overlay props too long for URL"),
 			);
 		});
 	});
@@ -126,7 +126,10 @@ describe("Overlay URL Utilities", () => {
 		it("should decode basic overlay from URL parameters", () => {
 			const params = new URLSearchParams();
 			params.set(OVERLAY_URL_PARAMS.MODAL, "CONFIRM");
-			params.set(OVERLAY_URL_PARAMS.PROPS, btoa(JSON.stringify({ title: "Test" })));
+			params.set(
+				OVERLAY_URL_PARAMS.PROPS,
+				btoa(JSON.stringify({ title: "Test" })),
+			);
 
 			const overlay = decodeOverlayFromUrl(params);
 
@@ -153,7 +156,7 @@ describe("Overlay URL Utilities", () => {
 
 			expect(overlay).toBeNull();
 			expect(mockConsoleWarn).toHaveBeenCalledWith(
-				expect.stringContaining("Invalid overlay type in URL")
+				expect.stringContaining("Invalid overlay type in URL"),
 			);
 		});
 
@@ -183,7 +186,7 @@ describe("Overlay URL Utilities", () => {
 			});
 			expect(mockConsoleWarn).toHaveBeenCalledWith(
 				"Failed to decode overlay props from URL:",
-				expect.any(Error)
+				expect.any(Error),
 			);
 		});
 	});
@@ -319,7 +322,10 @@ describe("Overlay URL Utilities", () => {
 			};
 
 			// Encode to URL without compression to preserve exact values
-			const params = encodeOverlayToUrl(originalOverlay, { includeId: true, compressProps: false });
+			const params = encodeOverlayToUrl(originalOverlay, {
+				includeId: true,
+				compressProps: false,
+			});
 
 			// Decode from URL
 			const decodedOverlay = decodeOverlayFromUrl(params);

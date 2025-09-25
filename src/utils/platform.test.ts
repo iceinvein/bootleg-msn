@@ -2,253 +2,253 @@
  * Unit tests for platform detection utilities
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock functions for Capacitor
 const mockIsNativePlatform = vi.fn();
 const mockGetPlatform = vi.fn();
 
-import { Platform, __resetPlatformCache, __mockCapacitor } from './platform';
+import { __mockCapacitor, __resetPlatformCache, Platform } from "./platform";
 
-describe('Platform', () => {
-  const originalWindow = global.window;
+describe("Platform", () => {
+	const originalWindow = global.window;
 
-  beforeEach(() => {
-    // Reset window object
-    global.window = { ...originalWindow } as any;
-    
-    // Clear all mocks
-    vi.clearAllMocks();
-    
-    // Reset platform cache
-    __resetPlatformCache();
-    
-    // Set default mock return values
-    mockIsNativePlatform.mockReturnValue(false);
-    mockGetPlatform.mockReturnValue('web');
-    
-    // Mock Capacitor with default values
-    __mockCapacitor({
-      Capacitor: {
-        isNativePlatform: mockIsNativePlatform,
-        getPlatform: mockGetPlatform,
-      },
-    });
-    
-    // Ensure clean window state
-    delete (global.window as any).__TAURI__;
-    delete (global.window as any).__TAURI_INTERNALS__;
-    delete (global.window as any).__TAURI_INVOKE__;
-  });
+	beforeEach(() => {
+		// Reset window object
+		global.window = { ...originalWindow } as any;
 
-  afterEach(() => {
-    // Restore original window
-    global.window = originalWindow;
-  });
+		// Clear all mocks
+		vi.clearAllMocks();
 
-  describe('isDesktop', () => {
-    it('should return true when __TAURI__ is present', () => {
-      (global.window as any).__TAURI__ = {};
+		// Reset platform cache
+		__resetPlatformCache();
 
-      expect(Platform.isDesktop()).toBe(true);
-    });
+		// Set default mock return values
+		mockIsNativePlatform.mockReturnValue(false);
+		mockGetPlatform.mockReturnValue("web");
 
-    it('should return false when __TAURI__ is not present', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
+		// Mock Capacitor with default values
+		__mockCapacitor({
+			Capacitor: {
+				isNativePlatform: mockIsNativePlatform,
+				getPlatform: mockGetPlatform,
+			},
+		});
 
-      expect(Platform.isDesktop()).toBe(false);
-    });
+		// Ensure clean window state
+		delete (global.window as any).__TAURI__;
+		delete (global.window as any).__TAURI_INTERNALS__;
+		delete (global.window as any).__TAURI_INVOKE__;
+	});
 
-    it('should return false when window is undefined', () => {
-      // @ts-ignore - Testing edge case
-      global.window = undefined;
+	afterEach(() => {
+		// Restore original window
+		global.window = originalWindow;
+	});
 
-      expect(Platform.isDesktop()).toBe(false);
-    });
-  });
+	describe("isDesktop", () => {
+		it("should return true when __TAURI__ is present", () => {
+			(global.window as any).__TAURI__ = {};
 
-  describe('isMobile', () => {
-    it('should return true when Capacitor.isNativePlatform returns true', () => {
-      mockIsNativePlatform.mockReturnValue(true);
+			expect(Platform.isDesktop()).toBe(true);
+		});
 
-      expect(Platform.isMobile()).toBe(true);
-    });
+		it("should return false when __TAURI__ is not present", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-    it('should return false when Capacitor.isNativePlatform returns false', () => {
-      mockIsNativePlatform.mockReturnValue(false);
+			expect(Platform.isDesktop()).toBe(false);
+		});
 
-      expect(Platform.isMobile()).toBe(false);
-    });
+		it("should return false when window is undefined", () => {
+			// @ts-expect-error - Testing edge case
+			global.window = undefined;
 
-    it('should return false when Capacitor is not available', () => {
-      // Mock Capacitor to return null (not available)
-      __mockCapacitor(null);
+			expect(Platform.isDesktop()).toBe(false);
+		});
+	});
 
-      expect(Platform.isMobile()).toBe(false);
-    });
-  });
+	describe("isMobile", () => {
+		it("should return true when Capacitor.isNativePlatform returns true", () => {
+			mockIsNativePlatform.mockReturnValue(true);
 
-  describe('isWeb', () => {
-    it('should return true when neither desktop nor mobile', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(false);
+			expect(Platform.isMobile()).toBe(true);
+		});
 
-      expect(Platform.isWeb()).toBe(true);
-    });
+		it("should return false when Capacitor.isNativePlatform returns false", () => {
+			mockIsNativePlatform.mockReturnValue(false);
 
-    it('should return false when desktop', () => {
-      (global.window as any).__TAURI__ = {};
+			expect(Platform.isMobile()).toBe(false);
+		});
 
-      expect(Platform.isWeb()).toBe(false);
-    });
+		it("should return false when Capacitor is not available", () => {
+			// Mock Capacitor to return null (not available)
+			__mockCapacitor(null);
 
-    it('should return false when mobile', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(true);
+			expect(Platform.isMobile()).toBe(false);
+		});
+	});
 
-      expect(Platform.isWeb()).toBe(false);
-    });
-  });
+	describe("isWeb", () => {
+		it("should return true when neither desktop nor mobile", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-  describe('getPlatform', () => {
-    it('should return "desktop" for Tauri apps', () => {
-      (global.window as any).__TAURI__ = {};
+			mockIsNativePlatform.mockReturnValue(false);
 
-      expect(Platform.getPlatform()).toBe('desktop');
-    });
+			expect(Platform.isWeb()).toBe(true);
+		});
 
-    it('should return "ios" for iOS Capacitor apps', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(true);
-      mockGetPlatform.mockReturnValue('ios');
+		it("should return false when desktop", () => {
+			(global.window as any).__TAURI__ = {};
 
-      expect(Platform.getPlatform()).toBe('ios');
-    });
+			expect(Platform.isWeb()).toBe(false);
+		});
 
-    it('should return "android" for Android Capacitor apps', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(true);
-      mockGetPlatform.mockReturnValue('android');
+		it("should return false when mobile", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-      expect(Platform.getPlatform()).toBe('android');
-    });
+			mockIsNativePlatform.mockReturnValue(true);
 
-    it('should return "mobile" when Capacitor platform detection fails', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
+			expect(Platform.isWeb()).toBe(false);
+		});
+	});
 
-      // Set up mocks for this specific test
-      mockIsNativePlatform.mockReturnValue(true);
-      mockGetPlatform.mockImplementation(() => {
-        throw new Error('Platform detection failed');
-      });
+	describe("getPlatform", () => {
+		it('should return "desktop" for Tauri apps', () => {
+			(global.window as any).__TAURI__ = {};
 
-      expect(Platform.getPlatform()).toBe('mobile');
-    });
+			expect(Platform.getPlatform()).toBe("desktop");
+		});
 
-    it('should return "web" for web browsers', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(false);
+		it('should return "ios" for iOS Capacitor apps', () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-      expect(Platform.getPlatform()).toBe('web');
-    });
-  });
+			mockIsNativePlatform.mockReturnValue(true);
+			mockGetPlatform.mockReturnValue("ios");
 
-  describe('supportsSystemBrowser', () => {
-    it('should return true for desktop platforms', () => {
-      (global.window as any).__TAURI__ = {};
+			expect(Platform.getPlatform()).toBe("ios");
+		});
 
-      expect(Platform.supportsSystemBrowser()).toBe(true);
-    });
+		it('should return "android" for Android Capacitor apps', () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-    it('should return true for mobile platforms', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(true);
+			mockIsNativePlatform.mockReturnValue(true);
+			mockGetPlatform.mockReturnValue("android");
 
-      expect(Platform.supportsSystemBrowser()).toBe(true);
-    });
+			expect(Platform.getPlatform()).toBe("android");
+		});
 
-    it('should return false for web platforms', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(false);
+		it('should return "mobile" when Capacitor platform detection fails', () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-      expect(Platform.supportsSystemBrowser()).toBe(false);
-    });
-  });
+			// Set up mocks for this specific test
+			mockIsNativePlatform.mockReturnValue(true);
+			mockGetPlatform.mockImplementation(() => {
+				throw new Error("Platform detection failed");
+			});
 
-  describe('shouldUseInAppOAuth', () => {
-    it('should return true for web platforms', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(false);
+			expect(Platform.getPlatform()).toBe("mobile");
+		});
 
-      expect(Platform.shouldUseInAppOAuth()).toBe(true);
-    });
+		it('should return "web" for web browsers', () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-    it('should return false for desktop platforms', () => {
-      (global.window as any).__TAURI__ = {};
+			mockIsNativePlatform.mockReturnValue(false);
 
-      expect(Platform.shouldUseInAppOAuth()).toBe(false);
-    });
+			expect(Platform.getPlatform()).toBe("web");
+		});
+	});
 
-    it('should return false for mobile platforms', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
-      
-      mockIsNativePlatform.mockReturnValue(true);
+	describe("supportsSystemBrowser", () => {
+		it("should return true for desktop platforms", () => {
+			(global.window as any).__TAURI__ = {};
 
-      expect(Platform.shouldUseInAppOAuth()).toBe(false);
-    });
-  });
+			expect(Platform.supportsSystemBrowser()).toBe(true);
+		});
 
-  describe('edge cases', () => {
-    it('should handle missing window object gracefully', () => {
-      // @ts-ignore - Testing edge case
-      global.window = undefined;
+		it("should return true for mobile platforms", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-      expect(Platform.isDesktop()).toBe(false);
-      expect(Platform.isWeb()).toBe(true); // Should default to web when detection fails
-      expect(Platform.getPlatform()).toBe('web');
-    });
+			mockIsNativePlatform.mockReturnValue(true);
 
-    it('should handle Capacitor import errors gracefully', () => {
-      delete (global.window as any).__TAURI__;
-      delete (global.window as any).__TAURI_INTERNALS__;
-      delete (global.window as any).__TAURI_INVOKE__;
+			expect(Platform.supportsSystemBrowser()).toBe(true);
+		});
 
-      // Mock Capacitor to return null (module not found)
-      __mockCapacitor(null);
+		it("should return false for web platforms", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
 
-      expect(Platform.isMobile()).toBe(false);
-      expect(Platform.isWeb()).toBe(true);
-      expect(Platform.getPlatform()).toBe('web');
-    });
-  });
+			mockIsNativePlatform.mockReturnValue(false);
+
+			expect(Platform.supportsSystemBrowser()).toBe(false);
+		});
+	});
+
+	describe("shouldUseInAppOAuth", () => {
+		it("should return true for web platforms", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
+
+			mockIsNativePlatform.mockReturnValue(false);
+
+			expect(Platform.shouldUseInAppOAuth()).toBe(true);
+		});
+
+		it("should return false for desktop platforms", () => {
+			(global.window as any).__TAURI__ = {};
+
+			expect(Platform.shouldUseInAppOAuth()).toBe(false);
+		});
+
+		it("should return false for mobile platforms", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
+
+			mockIsNativePlatform.mockReturnValue(true);
+
+			expect(Platform.shouldUseInAppOAuth()).toBe(false);
+		});
+	});
+
+	describe("edge cases", () => {
+		it("should handle missing window object gracefully", () => {
+			// @ts-expect-error - Testing edge case
+			global.window = undefined;
+
+			expect(Platform.isDesktop()).toBe(false);
+			expect(Platform.isWeb()).toBe(true); // Should default to web when detection fails
+			expect(Platform.getPlatform()).toBe("web");
+		});
+
+		it("should handle Capacitor import errors gracefully", () => {
+			delete (global.window as any).__TAURI__;
+			delete (global.window as any).__TAURI_INTERNALS__;
+			delete (global.window as any).__TAURI_INVOKE__;
+
+			// Mock Capacitor to return null (module not found)
+			__mockCapacitor(null);
+
+			expect(Platform.isMobile()).toBe(false);
+			expect(Platform.isWeb()).toBe(true);
+			expect(Platform.getPlatform()).toBe("web");
+		});
+	});
 });

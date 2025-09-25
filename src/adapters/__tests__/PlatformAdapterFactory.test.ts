@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 // Mock platform detection to control test environment
 vi.mock("../platformDetection", () => ({
@@ -11,19 +11,20 @@ vi.mock("../platformDetection", () => ({
 	getPlatformConfig: vi.fn(),
 	onPlatform: vi.fn(),
 }));
+
 import {
+	createAllPlatformAdapters,
+	createBestAvailablePlatformAdapter,
+	createMockPlatformAdapter,
 	createPlatformAdapter,
 	createPlatformAdapterFactory,
-	createAllPlatformAdapters,
-	isPlatformAdapterAvailable,
 	getAvailablePlatformAdapters,
-	createBestAvailablePlatformAdapter,
+	isPlatformAdapterAvailable,
 	validatePlatformAdapterConfig,
-	createMockPlatformAdapter,
 } from "../PlatformAdapterFactory";
-import { WebPlatformAdapter } from "../WebPlatformAdapter";
 import { detectPlatform, getPlatformCapabilities } from "../platformDetection";
-import type { PlatformDetection, PlatformCapabilities } from "../types";
+import type { PlatformCapabilities } from "../types";
+import { WebPlatformAdapter } from "../WebPlatformAdapter";
 
 // Mock window and platform detection
 const mockWindow = {
@@ -31,7 +32,12 @@ const mockWindow = {
 	Capacitor: undefined as any,
 	addEventListener: vi.fn(),
 	removeEventListener: vi.fn(),
-	history: { length: 1, back: vi.fn(), pushState: vi.fn(), replaceState: vi.fn() },
+	history: {
+		length: 1,
+		back: vi.fn(),
+		pushState: vi.fn(),
+		replaceState: vi.fn(),
+	},
 };
 
 Object.defineProperty(global, "window", {
@@ -111,14 +117,14 @@ describe("Platform Adapter Factory", () => {
 	describe("createPlatformAdapter", () => {
 		it("should create web adapter by default", () => {
 			const adapter = createPlatformAdapter();
-			
+
 			expect(adapter).toBeInstanceOf(WebPlatformAdapter);
 			expect(adapter.platform).toBe("web");
 		});
 
 		it("should create web adapter when specified", () => {
 			const adapter = createPlatformAdapter({ platform: "web" });
-			
+
 			expect(adapter).toBeInstanceOf(WebPlatformAdapter);
 			expect(adapter.platform).toBe("web");
 		});
@@ -181,7 +187,7 @@ describe("Platform Adapter Factory", () => {
 				debug: true,
 				preventDefaults: true,
 			});
-			
+
 			expect(adapter.platform).toBe("web");
 			// Can't directly test config, but adapter should be created successfully
 		});
@@ -191,7 +197,7 @@ describe("Platform Adapter Factory", () => {
 		it("should create factory with default config", () => {
 			const factory = createPlatformAdapterFactory({ debug: true });
 			const adapter = factory({ platform: "web" });
-			
+
 			expect(adapter).toBeInstanceOf(WebPlatformAdapter);
 			expect(adapter.platform).toBe("web");
 		});
@@ -199,7 +205,7 @@ describe("Platform Adapter Factory", () => {
 		it("should merge factory config with call config", () => {
 			const factory = createPlatformAdapterFactory({ debug: true });
 			const adapter = factory({ platform: "web", preventDefaults: true });
-			
+
 			expect(adapter).toBeInstanceOf(WebPlatformAdapter);
 		});
 	});
@@ -334,7 +340,7 @@ describe("Platform Adapter Factory", () => {
 			const adapter = createBestAvailablePlatformAdapter({ platform: "tauri" });
 			expect(adapter).toBeInstanceOf(WebPlatformAdapter);
 			expect(consoleSpy).toHaveBeenCalledWith(
-				expect.stringContaining("Requested platform 'tauri' is not available")
+				expect.stringContaining("Requested platform 'tauri' is not available"),
 			);
 
 			consoleSpy.mockRestore();
@@ -419,21 +425,21 @@ describe("Platform Adapter Factory", () => {
 	describe("createMockPlatformAdapter", () => {
 		it("should create mock adapter with default config", () => {
 			const adapter = createMockPlatformAdapter();
-			
+
 			expect(adapter.platform).toBe("web");
 			expect(adapter.isInitialized).toBe(true);
 		});
 
 		it("should create mock adapter for specific platform", () => {
 			const adapter = createMockPlatformAdapter("capacitor");
-			
+
 			expect(adapter.platform).toBe("capacitor");
 			expect(adapter.capabilities.hasNativeSharing).toBe(true);
 		});
 
 		it("should handle mock methods", async () => {
 			const adapter = createMockPlatformAdapter();
-			
+
 			expect(await adapter.handleBack()).toBe(false);
 			expect(await adapter.handleEscape()).toBe(false);
 			expect(typeof adapter.initialize).toBe("function");

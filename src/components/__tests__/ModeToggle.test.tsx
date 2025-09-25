@@ -10,8 +10,8 @@
  * - Integration with ThemeProvider
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ModeToggle } from "../mode-toggle";
 import { ThemeProvider } from "../theme-provider";
 
@@ -48,7 +48,12 @@ vi.mock("@/components/ui/responsive-dropdown-menu", () => ({
 // Mock Button component
 vi.mock("@/components/ui/button", () => ({
 	Button: ({ children, variant, size, ...props }: any) => (
-		<button data-testid="toggle-button" data-variant={variant} data-size={size} {...props}>
+		<button
+			data-testid="toggle-button"
+			data-variant={variant}
+			data-size={size}
+			{...props}
+		>
 			{children}
 		</button>
 	),
@@ -75,14 +80,14 @@ Object.defineProperty(window, "matchMedia", {
 describe("ModeToggle", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Reset DOM classes
 		document.documentElement.className = "";
 		document.body.className = "";
-		
+
 		// Default localStorage mock
 		mockLocalStorage.getItem.mockReturnValue(null);
-		
+
 		// Default matchMedia mock (light theme)
 		mockMatchMedia.mockReturnValue({
 			matches: false,
@@ -96,7 +101,7 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
 
 			expect(screen.getByTestId("toggle-button")).toBeInTheDocument();
@@ -108,9 +113,9 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(screen.getByTestId("dropdown-menu")).toBeInTheDocument();
 			expect(screen.getByTestId("dropdown-trigger")).toBeInTheDocument();
 			expect(screen.getByTestId("dropdown-content")).toBeInTheDocument();
@@ -120,12 +125,12 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const dropdownItems = screen.getAllByTestId("dropdown-item");
 			expect(dropdownItems).toHaveLength(3);
-			
+
 			expect(screen.getByText("Light")).toBeInTheDocument();
 			expect(screen.getByText("Dark")).toBeInTheDocument();
 			expect(screen.getByText("System")).toBeInTheDocument();
@@ -135,9 +140,9 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const button = screen.getByTestId("toggle-button");
 			expect(button).toHaveAttribute("data-variant", "outline");
 			expect(button).toHaveAttribute("data-size", "icon");
@@ -147,9 +152,9 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const dropdownContent = screen.getByTestId("dropdown-content");
 			expect(dropdownContent).toHaveAttribute("data-align", "end");
 			expect(dropdownContent).toHaveAttribute("data-title", "Theme");
@@ -161,13 +166,16 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const lightOption = screen.getByText("Light").closest("button");
 			fireEvent.click(lightOption!);
-			
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "light");
+
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"light",
+			);
 			expect(document.documentElement.classList.contains("light")).toBe(true);
 		});
 
@@ -175,13 +183,16 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const darkOption = screen.getByText("Dark").closest("button");
 			fireEvent.click(darkOption!);
-			
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "dark");
+
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"dark",
+			);
 			expect(document.documentElement.classList.contains("dark")).toBe(true);
 		});
 
@@ -189,13 +200,16 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const systemOption = screen.getByText("System").closest("button");
 			fireEvent.click(systemOption!);
-			
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("vite-ui-theme", "system");
+
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"vite-ui-theme",
+				"system",
+			);
 		});
 	});
 
@@ -204,12 +218,12 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider defaultTheme="light">
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
 
 			const sunIcons = screen.getAllByTestId("sun-icon");
-			const toggleSunIcon = sunIcons.find(icon =>
-				icon.classList.contains("dark:-rotate-90")
+			const toggleSunIcon = sunIcons.find((icon) =>
+				icon.classList.contains("dark:-rotate-90"),
 			);
 			expect(toggleSunIcon).toBeDefined();
 			expect(toggleSunIcon).toHaveClass("dark:-rotate-90");
@@ -225,12 +239,12 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
 
 			const moonIcons = screen.getAllByTestId("moon-icon");
-			const toggleMoonIcon = moonIcons.find(icon =>
-				icon.classList.contains("absolute")
+			const toggleMoonIcon = moonIcons.find((icon) =>
+				icon.classList.contains("absolute"),
 			);
 			expect(toggleMoonIcon).toBeDefined();
 			expect(toggleMoonIcon).toHaveClass("absolute");
@@ -249,9 +263,9 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(screen.getByText("Toggle theme")).toBeInTheDocument();
 			const srText = screen.getByText("Toggle theme");
 			expect(srText).toHaveClass("sr-only");
@@ -261,17 +275,21 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			// Light option should have sun icon
 			const lightOption = screen.getByText("Light").closest("button");
-			expect(lightOption?.querySelector('[data-testid="sun-icon"]')).toBeInTheDocument();
-			
+			expect(
+				lightOption?.querySelector('[data-testid="sun-icon"]'),
+			).toBeInTheDocument();
+
 			// Dark option should have moon icon
 			const darkOption = screen.getByText("Dark").closest("button");
-			expect(darkOption?.querySelector('[data-testid="moon-icon"]')).toBeInTheDocument();
-			
+			expect(
+				darkOption?.querySelector('[data-testid="moon-icon"]'),
+			).toBeInTheDocument();
+
 			// System option should have gear emoji
 			const systemOption = screen.getByText("System").closest("button");
 			expect(systemOption).toHaveTextContent("⚙️");
@@ -283,22 +301,25 @@ describe("ModeToggle", () => {
 			render(
 				<ThemeProvider storageKey="custom-theme">
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const lightOption = screen.getByText("Light").closest("button");
 			fireEvent.click(lightOption!);
-			
-			expect(mockLocalStorage.setItem).toHaveBeenCalledWith("custom-theme", "light");
+
+			expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+				"custom-theme",
+				"light",
+			);
 		});
 
 		it("should work with different default themes", () => {
 			render(
 				<ThemeProvider defaultTheme="dark">
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			expect(document.documentElement.classList.contains("dark")).toBe(true);
 		});
 
@@ -309,19 +330,24 @@ describe("ModeToggle", () => {
 				addEventListener: mockAddEventListener,
 				removeEventListener: vi.fn(),
 			});
-			
+
 			render(
 				<ThemeProvider defaultTheme="system">
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			// Switch to system theme
 			const systemOption = screen.getByText("System").closest("button");
 			fireEvent.click(systemOption!);
-			
-			expect(mockMatchMedia).toHaveBeenCalledWith("(prefers-color-scheme: dark)");
-			expect(mockAddEventListener).toHaveBeenCalledWith("change", expect.any(Function));
+
+			expect(mockMatchMedia).toHaveBeenCalledWith(
+				"(prefers-color-scheme: dark)",
+			);
+			expect(mockAddEventListener).toHaveBeenCalledWith(
+				"change",
+				expect.any(Function),
+			);
 		});
 	});
 
@@ -330,27 +356,29 @@ describe("ModeToggle", () => {
 			mockLocalStorage.setItem.mockImplementation(() => {
 				throw new Error("localStorage error");
 			});
-			
+
 			// Should not crash when trying to save theme
 			render(
 				<ThemeProvider>
 					<ModeToggle />
-				</ThemeProvider>
+				</ThemeProvider>,
 			);
-			
+
 			const lightOption = screen.getByText("Light").closest("button");
 			expect(() => fireEvent.click(lightOption!)).not.toThrow();
 		});
 
 		it("should handle missing theme provider gracefully", () => {
 			// Suppress console.error for this test
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			// In the test environment, React error boundaries don't work the same way
 			// This test verifies the component requires a theme provider
 			// We'll just verify the component exists and requires the provider
 			expect(() => {
-				const TestComponent = () => {
+				const _TestComponent = () => {
 					useTheme(); // This should throw when called outside provider
 					return <div>Test</div>;
 				};

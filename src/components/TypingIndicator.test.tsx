@@ -1,6 +1,6 @@
 /**
  * Tests for TypingIndicator component
- * 
+ *
  * Tests cover:
  * - Basic rendering with and without user name
  * - Accessibility attributes
@@ -10,7 +10,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { TypingIndicator } from "./TypingIndicator";
 
 // Mock framer-motion
@@ -50,11 +50,14 @@ describe("TypingIndicator", () => {
 			render(<TypingIndicator userName="Alice" />);
 
 			// Should have the typing bubble container
-			const bubble = screen.getByText("Alice is typing...").previousElementSibling;
+			const bubble =
+				screen.getByText("Alice is typing...").previousElementSibling;
 			expect(bubble).toHaveClass("message-bubble-received");
 
 			// Should have three dots (represented as divs with specific classes)
-			const dots = bubble?.querySelectorAll(".h-2.w-2.rounded-full.bg-muted-foreground");
+			const dots = bubble?.querySelectorAll(
+				".h-2.w-2.rounded-full.bg-muted-foreground",
+			);
 			expect(dots).toHaveLength(3);
 		});
 	});
@@ -72,7 +75,7 @@ describe("TypingIndicator", () => {
 
 			const statusElement = screen.getByRole("status");
 			expect(statusElement).toBeInTheDocument();
-			
+
 			// The text should be accessible
 			expect(screen.getByText("Bob is typing...")).toBeInTheDocument();
 		});
@@ -104,7 +107,8 @@ describe("TypingIndicator", () => {
 		it("should have proper typing bubble styling", () => {
 			render(<TypingIndicator userName="Alice" />);
 
-			const bubble = screen.getByText("Alice is typing...").previousElementSibling;
+			const bubble =
+				screen.getByText("Alice is typing...").previousElementSibling;
 			expect(bubble).toHaveClass(
 				"message-bubble-received",
 				"flex",
@@ -112,7 +116,7 @@ describe("TypingIndicator", () => {
 				"space-x-1",
 				"rounded-2xl",
 				"px-3",
-				"py-2"
+				"py-2",
 			);
 		});
 
@@ -120,17 +124,27 @@ describe("TypingIndicator", () => {
 			render(<TypingIndicator userName="Alice" />);
 
 			const text = screen.getByText("Alice is typing...");
-			expect(text).toHaveClass("text-muted-foreground", "text-xs", "md:text-sm");
+			expect(text).toHaveClass(
+				"text-muted-foreground",
+				"text-xs",
+				"md:text-sm",
+			);
 		});
 
 		it("should have proper dot styling", () => {
 			render(<TypingIndicator userName="Alice" />);
 
-			const bubble = screen.getByText("Alice is typing...").previousElementSibling;
+			const bubble =
+				screen.getByText("Alice is typing...").previousElementSibling;
 			const dots = bubble?.querySelectorAll("div");
-			
-			dots?.forEach(dot => {
-				expect(dot).toHaveClass("h-2", "w-2", "rounded-full", "bg-muted-foreground");
+
+			dots?.forEach((dot) => {
+				expect(dot).toHaveClass(
+					"h-2",
+					"w-2",
+					"rounded-full",
+					"bg-muted-foreground",
+				);
 			});
 		});
 	});
@@ -138,7 +152,7 @@ describe("TypingIndicator", () => {
 	describe("user name handling", () => {
 		it("should handle long user names", () => {
 			const longName = "VeryLongUserNameThatMightCauseLayoutIssues";
-			
+
 			render(<TypingIndicator userName={longName} />);
 
 			expect(screen.getByText(`${longName} is typing...`)).toBeInTheDocument();
@@ -146,10 +160,12 @@ describe("TypingIndicator", () => {
 
 		it("should handle special characters in user name", () => {
 			const specialName = "User@123!";
-			
+
 			render(<TypingIndicator userName={specialName} />);
 
-			expect(screen.getByText(`${specialName} is typing...`)).toBeInTheDocument();
+			expect(
+				screen.getByText(`${specialName} is typing...`),
+			).toBeInTheDocument();
 		});
 
 		it("should handle empty user name", () => {
@@ -168,7 +184,9 @@ describe("TypingIndicator", () => {
 			render(<TypingIndicator userName="   " />);
 
 			// The component preserves whitespace in the username
-			expect(screen.getByText((content) => content.includes("is typing..."))).toBeInTheDocument();
+			expect(
+				screen.getByText((content) => content.includes("is typing...")),
+			).toBeInTheDocument();
 		});
 	});
 
@@ -186,7 +204,9 @@ describe("TypingIndicator", () => {
 			const container = screen.getByRole("status");
 			expect(container).toHaveClass("gap-1");
 
-			const bubble = screen.getByText("Someone is typing...").previousElementSibling;
+			const bubble = screen.getByText(
+				"Someone is typing...",
+			).previousElementSibling;
 			expect(bubble).toHaveClass("space-x-1");
 		});
 	});
@@ -207,11 +227,12 @@ describe("TypingIndicator", () => {
 		it("should have dots as motion divs", () => {
 			render(<TypingIndicator userName="Alice" />);
 
-			const bubble = screen.getByText("Alice is typing...").previousElementSibling;
+			const bubble =
+				screen.getByText("Alice is typing...").previousElementSibling;
 			const dots = bubble?.querySelectorAll("div");
-			
+
 			expect(dots).toHaveLength(3);
-			dots?.forEach(dot => {
+			dots?.forEach((dot) => {
 				expect(dot.tagName).toBe("DIV");
 			});
 		});
@@ -232,7 +253,7 @@ describe("TypingIndicator", () => {
 
 		it("should handle user name with HTML entities", () => {
 			const htmlName = "User<script>alert('test')</script>";
-			
+
 			render(<TypingIndicator userName={htmlName} />);
 
 			// Should render as text, not execute HTML
@@ -241,10 +262,12 @@ describe("TypingIndicator", () => {
 
 		it("should handle very long user names gracefully", () => {
 			const veryLongName = "A".repeat(1000);
-			
+
 			render(<TypingIndicator userName={veryLongName} />);
 
-			expect(screen.getByText(`${veryLongName} is typing...`)).toBeInTheDocument();
+			expect(
+				screen.getByText(`${veryLongName} is typing...`),
+			).toBeInTheDocument();
 		});
 	});
 
@@ -254,16 +277,19 @@ describe("TypingIndicator", () => {
 
 			// Should have status container
 			expect(screen.getByRole("status")).toBeInTheDocument();
-			
+
 			// Should have typing bubble
-			const bubble = screen.getByText("Alice is typing...").previousElementSibling;
+			const bubble =
+				screen.getByText("Alice is typing...").previousElementSibling;
 			expect(bubble).toBeInTheDocument();
-			
+
 			// Should have typing text
 			expect(screen.getByText("Alice is typing...")).toBeInTheDocument();
-			
+
 			// Should have three dots
-			const dots = bubble?.querySelectorAll(".h-2.w-2.rounded-full.bg-muted-foreground");
+			const dots = bubble?.querySelectorAll(
+				".h-2.w-2.rounded-full.bg-muted-foreground",
+			);
 			expect(dots).toHaveLength(3);
 		});
 

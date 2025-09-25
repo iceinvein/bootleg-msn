@@ -1,5 +1,5 @@
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { render } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ThemeCustomizer } from "../ThemeCustomizer";
 
 // Create mock functions that can be tracked
@@ -76,12 +76,23 @@ vi.mock("@/hooks/useThemeCustomization", () => ({
 
 // Mock UI components
 vi.mock("@/components/ui/responsive-dialog", () => ({
-	ResponsiveDialog: ({ children, open }: any) => open ? <div data-testid="dialog">{children}</div> : null,
-	ResponsiveDialogTrigger: ({ children }: any) => <div data-testid="dialog-trigger">{children}</div>,
-	ResponsiveDialogContent: ({ children }: any) => <div data-testid="dialog-content">{children}</div>,
-	ResponsiveDialogHeader: ({ children }: any) => <div data-testid="dialog-header">{children}</div>,
-	ResponsiveDialogTitle: ({ children }: any) => <h2 data-testid="dialog-title">{children}</h2>,
-	ResponsiveDialogDescription: ({ children }: any) => <p data-testid="dialog-description">{children}</p>,
+	ResponsiveDialog: ({ children, open }: any) =>
+		open ? <div data-testid="dialog">{children}</div> : null,
+	ResponsiveDialogTrigger: ({ children }: any) => (
+		<div data-testid="dialog-trigger">{children}</div>
+	),
+	ResponsiveDialogContent: ({ children }: any) => (
+		<div data-testid="dialog-content">{children}</div>
+	),
+	ResponsiveDialogHeader: ({ children }: any) => (
+		<div data-testid="dialog-header">{children}</div>
+	),
+	ResponsiveDialogTitle: ({ children }: any) => (
+		<h2 data-testid="dialog-title">{children}</h2>
+	),
+	ResponsiveDialogDescription: ({ children }: any) => (
+		<p data-testid="dialog-description">{children}</p>
+	),
 }));
 
 vi.mock("@/components/ui/button", () => ({
@@ -104,16 +115,16 @@ vi.mock("@/components/ui/tabs", () => ({
 			{children}
 		</div>
 	),
-	TabsList: ({ children }: any) => <div data-testid="tabs-list">{children}</div>,
+	TabsList: ({ children }: any) => (
+		<div data-testid="tabs-list">{children}</div>
+	),
 	TabsTrigger: ({ children, value, onClick }: any) => (
 		<button data-testid={`tab-${value}`} onClick={onClick}>
 			{children}
 		</button>
 	),
 	TabsContent: ({ children, value }: any) => (
-		<div data-testid={`tab-content-${value}`}>
-			{children}
-		</div>
+		<div data-testid={`tab-content-${value}`}>{children}</div>
 	),
 }));
 
@@ -148,7 +159,9 @@ describe("ThemeCustomizer", () => {
 
 		it("handles hook errors gracefully", () => {
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			// This test ensures the component doesn't crash if hooks fail
 			expect(() => {

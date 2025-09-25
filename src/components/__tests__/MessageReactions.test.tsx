@@ -10,14 +10,16 @@
  * - Accessibility features
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MessageReactions } from "../MessageReactions";
 import type { ReactionType } from "../ReactionPicker";
 
 // Mock UI components
 vi.mock("../ui/tooltip", () => ({
-	Tooltip: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+	Tooltip: ({ children }: { children: React.ReactNode }) => (
+		<div>{children}</div>
+	),
 	TooltipContent: ({ children }: { children: React.ReactNode }) => (
 		<div data-testid="tooltip-content">{children}</div>
 	),
@@ -27,7 +29,14 @@ vi.mock("../ui/tooltip", () => ({
 }));
 
 vi.mock("../ui/button", () => ({
-	Button: ({ children, onClick, disabled, className, title, ...props }: any) => (
+	Button: ({
+		children,
+		onClick,
+		disabled,
+		className,
+		title,
+		...props
+	}: any) => (
 		<button
 			onClick={onClick}
 			disabled={disabled}
@@ -62,7 +71,7 @@ const createReactionSummary = (
 	reactionType: ReactionType,
 	count: number = 1,
 	hasCurrentUserReacted: boolean = false,
-	customEmoji?: string
+	customEmoji?: string,
 ) => ({
 	reactionType,
 	customEmoji,
@@ -85,7 +94,7 @@ describe("MessageReactions Component", () => {
 	describe("Rendering and Initial State", () => {
 		it("should render empty state when no reactions provided", () => {
 			render(<MessageReactions reactions={[]} />);
-			
+
 			// Should not render any reaction buttons
 			expect(screen.queryByTestId("reaction-button")).not.toBeInTheDocument();
 		});
@@ -129,9 +138,9 @@ describe("MessageReactions Component", () => {
 
 		it("should render custom emoji reactions correctly", () => {
 			const reactions = [createReactionSummary("custom", 3, true, "🎉")];
-			
+
 			render(<MessageReactions reactions={reactions} />);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			expect(reactionButton).toHaveTextContent("🎉");
 			expect(reactionButton).toHaveTextContent("3");
@@ -142,11 +151,11 @@ describe("MessageReactions Component", () => {
 				createReactionSummary("thumbs_up", 1, true),
 				createReactionSummary("heart", 1, false),
 			];
-			
+
 			render(<MessageReactions reactions={reactions} />);
-			
+
 			const reactionButtons = screen.getAllByTestId("reaction-button");
-			
+
 			// First reaction should have current user styling (would be in className)
 			expect(reactionButtons[0]).toBeInTheDocument();
 			expect(reactionButtons[1]).toBeInTheDocument();
@@ -156,35 +165,38 @@ describe("MessageReactions Component", () => {
 	describe("User Interaction", () => {
 		it("should call onReactionClick when reaction button is clicked", async () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
+
 			render(
 				<MessageReactions
 					reactions={reactions}
 					onReactionClick={mockOnReactionClick}
-				/>
+				/>,
 			);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			fireEvent.click(reactionButton);
-			
+
 			await waitFor(() => {
-				expect(mockOnReactionClick).toHaveBeenCalledWith("thumbs_up", undefined);
+				expect(mockOnReactionClick).toHaveBeenCalledWith(
+					"thumbs_up",
+					undefined,
+				);
 			});
 		});
 
 		it("should call onReactionClick with custom emoji", async () => {
 			const reactions = [createReactionSummary("custom", 1, false, "🚀")];
-			
+
 			render(
 				<MessageReactions
 					reactions={reactions}
 					onReactionClick={mockOnReactionClick}
-				/>
+				/>,
 			);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			fireEvent.click(reactionButton);
-			
+
 			await waitFor(() => {
 				expect(mockOnReactionClick).toHaveBeenCalledWith("custom", "🚀");
 			});
@@ -192,41 +204,41 @@ describe("MessageReactions Component", () => {
 
 		it("should not call onReactionClick when disabled", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
+
 			render(
 				<MessageReactions
 					reactions={reactions}
 					onReactionClick={mockOnReactionClick}
 					disabled={true}
-				/>
+				/>,
 			);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			fireEvent.click(reactionButton);
-			
+
 			expect(mockOnReactionClick).not.toHaveBeenCalled();
 		});
 
 		it("should not call onReactionClick when loading", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
+
 			render(
 				<MessageReactions
 					reactions={reactions}
 					onReactionClick={mockOnReactionClick}
 					isLoading={true}
-				/>
+				/>,
 			);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			fireEvent.click(reactionButton);
-			
+
 			expect(mockOnReactionClick).not.toHaveBeenCalled();
 		});
 
 		it("should handle missing onReactionClick gracefully", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
+
 			expect(() => {
 				render(<MessageReactions reactions={reactions} />);
 				const reactionButton = screen.getByTestId("reaction-button");
@@ -238,42 +250,29 @@ describe("MessageReactions Component", () => {
 	describe("Loading and Disabled States", () => {
 		it("should show disabled state correctly", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
-			render(
-				<MessageReactions
-					reactions={reactions}
-					disabled={true}
-				/>
-			);
-			
+
+			render(<MessageReactions reactions={reactions} disabled={true} />);
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			expect(reactionButton).toBeDisabled();
 		});
 
 		it("should show loading state correctly", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
-			render(
-				<MessageReactions
-					reactions={reactions}
-					isLoading={true}
-				/>
-			);
-			
+
+			render(<MessageReactions reactions={reactions} isLoading={true} />);
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			expect(reactionButton).toBeDisabled();
 		});
 
 		it("should apply custom className", () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			
+
 			render(
-				<MessageReactions
-					reactions={reactions}
-					className="custom-reactions"
-				/>
+				<MessageReactions reactions={reactions} className="custom-reactions" />,
 			);
-			
+
 			// The className would be applied to the container
 			expect(screen.getByTestId("reaction-button")).toBeInTheDocument();
 		});
@@ -323,46 +322,53 @@ describe("MessageReactions Component", () => {
 
 		it("should handle reactions with high counts", () => {
 			const reactions = [createReactionSummary("thumbs_up", 999, false)];
-			
+
 			render(<MessageReactions reactions={reactions} />);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			expect(reactionButton).toHaveTextContent("999");
 		});
 
 		it("should handle custom reactions without emoji", () => {
 			const reactions = [createReactionSummary("custom", 1, false)];
-			
+
 			render(<MessageReactions reactions={reactions} />);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			expect(reactionButton).toBeInTheDocument();
 		});
 
 		it("should handle async onReactionClick errors gracefully", async () => {
 			const reactions = [createReactionSummary("thumbs_up", 1, false)];
-			const mockOnReactionClickError = vi.fn().mockRejectedValue(new Error("Network error"));
-			
+			const mockOnReactionClickError = vi
+				.fn()
+				.mockRejectedValue(new Error("Network error"));
+
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-			
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
+
 			render(
 				<MessageReactions
 					reactions={reactions}
 					onReactionClick={mockOnReactionClickError}
-				/>
+				/>,
 			);
-			
+
 			const reactionButton = screen.getByTestId("reaction-button");
 			fireEvent.click(reactionButton);
-			
+
 			await waitFor(() => {
 				expect(mockOnReactionClickError).toHaveBeenCalled();
 			});
-			
+
 			// Should handle error gracefully
-			expect(consoleSpy).toHaveBeenCalledWith("Failed to toggle reaction:", expect.any(Error));
-			
+			expect(consoleSpy).toHaveBeenCalledWith(
+				"Failed to toggle reaction:",
+				expect.any(Error),
+			);
+
 			consoleSpy.mockRestore();
 		});
 	});

@@ -57,7 +57,7 @@ describe("useMediaQuery", () => {
 		mockMatchMedia.mockReturnValue(mockMediaQueryList);
 
 		const { result, rerender } = renderHook(() =>
-			useMediaQuery("(max-width: 768px)")
+			useMediaQuery("(max-width: 768px)"),
 		);
 
 		expect(result.current).toBe(false);
@@ -84,16 +84,14 @@ describe("useMediaQuery", () => {
 
 		expect(mockMediaQueryList.addEventListener).toHaveBeenCalledWith(
 			"change",
-			expect.any(Function)
+			expect.any(Function),
 		);
 
 		unmount();
 
 		expect(mockMediaQueryList.removeEventListener).toHaveBeenCalledWith(
 			"change",
-			expect.any(Function)
+			expect.any(Function),
 		);
 	});
-
-
 });

@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { SettingsDialog } from "./SettingsDialog";
 
 // Mock Convex hooks
@@ -39,7 +39,13 @@ vi.mock("@/hooks/useThemeCustomization", () => ({
 
 // Mock child components
 vi.mock("./AvatarEditor", () => ({
-	AvatarEditor: ({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) => (
+	AvatarEditor: ({
+		open,
+		onOpenChange,
+	}: {
+		open: boolean;
+		onOpenChange: (open: boolean) => void;
+	}) => (
 		<div data-testid="avatar-editor" data-open={open}>
 			<button onClick={() => onOpenChange(false)}>Close Avatar Editor</button>
 		</div>
@@ -59,9 +65,7 @@ vi.mock("./ThemePreview", () => ({
 }));
 
 vi.mock("./VersionInfo", () => ({
-	VersionInfo: () => (
-		<div data-testid="version-info">Version Info</div>
-	),
+	VersionInfo: () => <div data-testid="version-info">Version Info</div>,
 }));
 
 // Mock UI components
@@ -93,8 +97,12 @@ vi.mock("./ui/tabs", () => ({
 	Tabs: ({ children, value, onValueChange }: any) => (
 		<div data-testid="tabs" data-value={value}>
 			<button onClick={() => onValueChange?.("account")}>Account Tab</button>
-			<button onClick={() => onValueChange?.("notifications")}>Notifications Tab</button>
-			<button onClick={() => onValueChange?.("appearance")}>Appearance Tab</button>
+			<button onClick={() => onValueChange?.("notifications")}>
+				Notifications Tab
+			</button>
+			<button onClick={() => onValueChange?.("appearance")}>
+				Appearance Tab
+			</button>
 			<button onClick={() => onValueChange?.("about")}>About Tab</button>
 			{children}
 		</div>
@@ -103,16 +111,22 @@ vi.mock("./ui/tabs", () => ({
 		<div data-testid="tabs-list">{children}</div>
 	),
 	TabsTrigger: ({ children, value }: any) => (
-		<button data-testid={`tab-trigger-${value}`} data-value={value}>{children}</button>
+		<button data-testid={`tab-trigger-${value}`} data-value={value}>
+			{children}
+		</button>
 	),
 	TabsContent: ({ children, value }: any) => (
-		<div data-testid={`tab-content-${value}`} data-value={value}>{children}</div>
+		<div data-testid={`tab-content-${value}`} data-value={value}>
+			{children}
+		</div>
 	),
 }));
 
 vi.mock("./ui/avatar", () => ({
 	Avatar: ({ children, className }: any) => (
-		<div data-testid="avatar" className={className}>{children}</div>
+		<div data-testid="avatar" className={className}>
+			{children}
+		</div>
 	),
 	AvatarImage: ({ src }: any) => (
 		<img data-testid="avatar-image" src={src} alt="Avatar" />
@@ -132,19 +146,17 @@ vi.mock("./ui/button", () => ({
 
 vi.mock("./ui/input", () => ({
 	Input: ({ value, onChange, placeholder }: any) => (
-		<input 
-			data-testid="input" 
-			value={value} 
-			onChange={onChange} 
+		<input
+			data-testid="input"
+			value={value}
+			onChange={onChange}
 			placeholder={placeholder}
 		/>
 	),
 }));
 
 vi.mock("./ui/label", () => ({
-	Label: ({ children }: any) => (
-		<label data-testid="label">{children}</label>
-	),
+	Label: ({ children }: any) => <label data-testid="label">{children}</label>,
 }));
 
 vi.mock("./ui/separator", () => ({
@@ -153,9 +165,15 @@ vi.mock("./ui/separator", () => ({
 
 vi.mock("./ui/card", () => ({
 	Card: ({ children }: any) => <div data-testid="card">{children}</div>,
-	CardContent: ({ children }: any) => <div data-testid="card-content">{children}</div>,
-	CardHeader: ({ children }: any) => <div data-testid="card-header">{children}</div>,
-	CardTitle: ({ children }: any) => <div data-testid="card-title">{children}</div>,
+	CardContent: ({ children }: any) => (
+		<div data-testid="card-content">{children}</div>
+	),
+	CardHeader: ({ children }: any) => (
+		<div data-testid="card-header">{children}</div>
+	),
+	CardTitle: ({ children }: any) => (
+		<div data-testid="card-title">{children}</div>
+	),
 }));
 
 // Mock Lucide icons
@@ -206,7 +224,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			expect(screen.getByTestId("dialog-trigger")).toBeInTheDocument();
@@ -217,7 +235,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -232,7 +250,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -251,7 +269,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -265,7 +283,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog initialTab="appearance">
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -279,7 +297,7 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog initialTab="account">
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -305,7 +323,7 @@ describe("SettingsDialog", () => {
 			const { rerender } = render(
 				<SettingsDialog initialTab="notifications">
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
@@ -321,7 +339,7 @@ describe("SettingsDialog", () => {
 			rerender(
 				<SettingsDialog initialTab="about">
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog again
@@ -337,14 +355,14 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Open dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
 
 			// Initially on account tab
-			let tabs = screen.getByTestId("tabs");
+			const tabs = screen.getByTestId("tabs");
 			expect(tabs).toHaveAttribute("data-value", "account");
 
 			// Switch to notifications tab
@@ -366,19 +384,28 @@ describe("SettingsDialog", () => {
 			render(
 				<SettingsDialog>
 					<button>Open Settings</button>
-				</SettingsDialog>
+				</SettingsDialog>,
 			);
 
 			// Initially closed
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "false");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"false",
+			);
 
 			// Open dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "true");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"true",
+			);
 
 			// Close dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "false");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"false",
+			);
 		});
 	});
 });

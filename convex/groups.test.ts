@@ -1,7 +1,7 @@
 import { convexTest } from "convex-test";
 import { describe, expect, it } from "vitest";
-import schema from "./schema";
 import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Import all Convex function modules for convex-test
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
@@ -36,12 +36,14 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Create group
-			const groupId = await t.withIdentity({ subject: user1Id }).mutation(api.groups.createGroup, {
-				name: "Test Group",
-				description: "A test group",
-				isPrivate: false,
-				memberIds: [user2Id],
-			});
+			const groupId = await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.groups.createGroup, {
+					name: "Test Group",
+					description: "A test group",
+					isPrivate: false,
+					memberIds: [user2Id],
+				});
 
 			expect(groupId).toBeTruthy();
 
@@ -66,13 +68,13 @@ describe("Groups Database Operations", () => {
 			});
 
 			expect(members).toHaveLength(2);
-			
+
 			// Check creator is admin
-			const creatorMember = members.find(m => m.userId === user1Id);
+			const creatorMember = members.find((m) => m.userId === user1Id);
 			expect(creatorMember?.role).toBe("admin");
-			
+
 			// Check other member is member
-			const otherMember = members.find(m => m.userId === user2Id);
+			const otherMember = members.find((m) => m.userId === user2Id);
 			expect(otherMember?.role).toBe("member");
 
 			// Verify system message was created
@@ -96,7 +98,7 @@ describe("Groups Database Operations", () => {
 					name: "Test Group",
 					isPrivate: false,
 					memberIds: [],
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 	});
@@ -162,10 +164,12 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Add members
-			await t.withIdentity({ subject: user1Id }).mutation(api.groups.addGroupMembers, {
-				groupId,
-				memberIds: [user2Id, user3Id],
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.groups.addGroupMembers, {
+					groupId,
+					memberIds: [user2Id, user3Id],
+				});
 
 			// Verify members were added
 			const members = await t.run(async (ctx) => {
@@ -176,8 +180,8 @@ describe("Groups Database Operations", () => {
 			});
 
 			expect(members).toHaveLength(3);
-			expect(members.some(m => m.userId === user2Id)).toBe(true);
-			expect(members.some(m => m.userId === user3Id)).toBe(true);
+			expect(members.some((m) => m.userId === user2Id)).toBe(true);
+			expect(members.some((m) => m.userId === user3Id)).toBe(true);
 
 			// Verify system message was created
 			const messages = await t.run(async (ctx) => {
@@ -188,7 +192,11 @@ describe("Groups Database Operations", () => {
 			});
 
 			expect(messages.length).toBeGreaterThan(0);
-			expect(messages.some(m => m.messageType === "system" && m.content?.includes("added"))).toBe(true);
+			expect(
+				messages.some(
+					(m) => m.messageType === "system" && m.content?.includes("added"),
+				),
+			).toBe(true);
 		});
 
 		it("should throw error when not group admin", async () => {
@@ -230,10 +238,12 @@ describe("Groups Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: user2Id }).mutation(api.groups.addGroupMembers, {
-					groupId,
-					memberIds: [user1Id],
-				})
+				t
+					.withIdentity({ subject: user2Id })
+					.mutation(api.groups.addGroupMembers, {
+						groupId,
+						memberIds: [user1Id],
+					}),
 			).rejects.toThrow("Only group admins can add members");
 		});
 	});
@@ -272,7 +282,9 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Get groups
-			const groups = await t.withIdentity({ subject: userId }).query(api.groups.getUserGroups, {});
+			const groups = await t
+				.withIdentity({ subject: userId })
+				.query(api.groups.getUserGroups, {});
 
 			expect(groups).toHaveLength(1);
 			expect(groups[0]?.name).toBe("Test Group");
@@ -335,13 +347,15 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Get group members
-			const members = await t.withIdentity({ subject: user1Id }).query(api.groups.getGroupMembers, {
-				groupId,
-			});
+			const members = await t
+				.withIdentity({ subject: user1Id })
+				.query(api.groups.getGroupMembers, {
+					groupId,
+				});
 
 			expect(members).toHaveLength(2);
-			expect(members.some(m => m.user?.name === "Alice")).toBe(true);
-			expect(members.some(m => m.user?.name === "Bob")).toBe(true);
+			expect(members.some((m) => m.user?.name === "Alice")).toBe(true);
+			expect(members.some((m) => m.user?.name === "Bob")).toBe(true);
 		});
 
 		it("should return empty array for non-member", async () => {
@@ -383,9 +397,11 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Try to get members as non-member
-			const members = await t.withIdentity({ subject: user2Id }).query(api.groups.getGroupMembers, {
-				groupId,
-			});
+			const members = await t
+				.withIdentity({ subject: user2Id })
+				.query(api.groups.getGroupMembers, {
+					groupId,
+				});
 
 			expect(members).toEqual([]);
 		});
@@ -437,10 +453,12 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Remove member
-			await t.withIdentity({ subject: user1Id }).mutation(api.groups.removeGroupMember, {
-				groupId,
-				memberId: user2Id,
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.groups.removeGroupMember, {
+					groupId,
+					memberId: user2Id,
+				});
 
 			// Verify member was removed
 			const members = await t.run(async (ctx) => {
@@ -461,7 +479,11 @@ describe("Groups Database Operations", () => {
 					.collect();
 			});
 
-			expect(messages.some(m => m.messageType === "system" && m.content?.includes("removed"))).toBe(true);
+			expect(
+				messages.some(
+					(m) => m.messageType === "system" && m.content?.includes("removed"),
+				),
+			).toBe(true);
 		});
 
 		it("should not allow removing the last admin", async () => {
@@ -496,10 +518,12 @@ describe("Groups Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: userId }).mutation(api.groups.removeGroupMember, {
-					groupId,
-					memberId: userId,
-				})
+				t
+					.withIdentity({ subject: userId })
+					.mutation(api.groups.removeGroupMember, {
+						groupId,
+						memberId: userId,
+					}),
 			).rejects.toThrow("Cannot remove the last admin from the group");
 		});
 	});
@@ -550,9 +574,11 @@ describe("Groups Database Operations", () => {
 			});
 
 			// User2 leaves group
-			await t.withIdentity({ subject: user2Id }).mutation(api.groups.leaveGroup, {
-				groupId,
-			});
+			await t
+				.withIdentity({ subject: user2Id })
+				.mutation(api.groups.leaveGroup, {
+					groupId,
+				});
 
 			// Verify member was removed
 			const members = await t.run(async (ctx) => {
@@ -573,7 +599,11 @@ describe("Groups Database Operations", () => {
 					.collect();
 			});
 
-			expect(messages.some(m => m.messageType === "system" && m.content?.includes("left"))).toBe(true);
+			expect(
+				messages.some(
+					(m) => m.messageType === "system" && m.content?.includes("left"),
+				),
+			).toBe(true);
 		});
 
 		it("should not allow last admin to leave group", async () => {
@@ -610,7 +640,7 @@ describe("Groups Database Operations", () => {
 			await expect(
 				t.withIdentity({ subject: userId }).mutation(api.groups.leaveGroup, {
 					groupId,
-				})
+				}),
 			).rejects.toThrow("Cannot leave group: you are the last admin");
 		});
 	});
@@ -661,18 +691,20 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Promote user2 to admin
-			await t.withIdentity({ subject: user1Id }).mutation(api.groups.setMemberRole, {
-				groupId,
-				memberId: user2Id,
-				role: "admin",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.groups.setMemberRole, {
+					groupId,
+					memberId: user2Id,
+					role: "admin",
+				});
 
 			// Verify role was changed
 			const member = await t.run(async (ctx) => {
 				return await ctx.db
 					.query("groupMembers")
 					.withIndex("by_group_and_user", (q) =>
-						q.eq("groupId", groupId).eq("userId", user2Id)
+						q.eq("groupId", groupId).eq("userId", user2Id),
 					)
 					.unique();
 			});
@@ -725,18 +757,20 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Demote user2 to member
-			await t.withIdentity({ subject: user1Id }).mutation(api.groups.setMemberRole, {
-				groupId,
-				memberId: user2Id,
-				role: "member",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.groups.setMemberRole, {
+					groupId,
+					memberId: user2Id,
+					role: "member",
+				});
 
 			// Verify role was changed
 			const member = await t.run(async (ctx) => {
 				return await ctx.db
 					.query("groupMembers")
 					.withIndex("by_group_and_user", (q) =>
-						q.eq("groupId", groupId).eq("userId", user2Id)
+						q.eq("groupId", groupId).eq("userId", user2Id),
 					)
 					.unique();
 			});
@@ -780,7 +814,7 @@ describe("Groups Database Operations", () => {
 					groupId,
 					memberId: userId,
 					role: "member",
-				})
+				}),
 			).rejects.toThrow("Cannot demote the last admin");
 		});
 	});
@@ -819,11 +853,13 @@ describe("Groups Database Operations", () => {
 			});
 
 			// Update group details
-			await t.withIdentity({ subject: userId }).mutation(api.groups.updateGroupDetails, {
-				groupId,
-				name: "New Name",
-				description: "New description",
-			});
+			await t
+				.withIdentity({ subject: userId })
+				.mutation(api.groups.updateGroupDetails, {
+					groupId,
+					name: "New Name",
+					description: "New description",
+				});
 
 			// Verify updates
 			const group = await t.run(async (ctx) => {
@@ -879,10 +915,12 @@ describe("Groups Database Operations", () => {
 			});
 
 			await expect(
-				t.withIdentity({ subject: user2Id }).mutation(api.groups.updateGroupDetails, {
-					groupId,
-					name: "New Name",
-				})
+				t
+					.withIdentity({ subject: user2Id })
+					.mutation(api.groups.updateGroupDetails, {
+						groupId,
+						name: "New Name",
+					}),
 			).rejects.toThrow("Only group admins can update group details");
 		});
 	});

@@ -10,9 +10,9 @@
  * - Accessibility and user experience
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Id } from "@convex/_generated/dataModel";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { MessageReactions } from "../components/MessageReactions";
 import { ReactionPicker } from "../components/ReactionPicker";
 
@@ -41,16 +41,25 @@ vi.mock("@convex/_generated/api", () => ({
 
 // Mock components
 vi.mock("../components/MessageReactions", () => ({
-	MessageReactions: ({ reactions, onReactionClick, isLoading, disabled }: any) => (
+	MessageReactions: ({
+		reactions,
+		onReactionClick,
+		isLoading,
+		disabled,
+	}: any) => (
 		<div data-testid="message-reactions">
 			{reactions.map((reaction: any, index: number) => (
 				<button
 					key={index}
 					data-testid={`reaction-${reaction.reactionType}`}
-					onClick={() => onReactionClick?.(reaction.reactionType, reaction.customEmoji)}
+					onClick={() =>
+						onReactionClick?.(reaction.reactionType, reaction.customEmoji)
+					}
 					disabled={disabled || isLoading}
 				>
-					{reaction.reactionType === "custom" ? reaction.customEmoji : `${reaction.reactionType} (${reaction.count})`}
+					{reaction.reactionType === "custom"
+						? reaction.customEmoji
+						: `${reaction.reactionType} (${reaction.count})`}
 				</button>
 			))}
 		</div>
@@ -58,7 +67,12 @@ vi.mock("../components/MessageReactions", () => ({
 }));
 
 vi.mock("../components/ReactionPicker", () => ({
-	ReactionPicker: ({ children, onReactionSelect, disabled, isLoading }: any) => (
+	ReactionPicker: ({
+		children,
+		onReactionSelect,
+		disabled,
+		isLoading,
+	}: any) => (
 		<div data-testid="reaction-picker">
 			{children}
 			<div data-testid="picker-content">
@@ -110,15 +124,22 @@ vi.mock("@/hooks/useMediaQuery", () => ({
 }));
 
 // Test component that integrates reactions
-function TestMessageWithReactions({ messageId }: { messageId: Id<"messages"> }) {
+function TestMessageWithReactions({
+	messageId,
+}: {
+	messageId: Id<"messages">;
+}) {
 	const addReaction = mockAddReaction;
 	const removeReaction = mockRemoveReaction;
 	const reactionSummary = mockUseQuery();
 
-	const handleReactionClick = async (reactionType: string, customEmoji?: string) => {
+	const handleReactionClick = async (
+		reactionType: string,
+		customEmoji?: string,
+	) => {
 		try {
 			const existingReaction = reactionSummary?.find(
-				(r: any) => r.reactionType === reactionType && r.hasCurrentUserReacted
+				(r: any) => r.reactionType === reactionType && r.hasCurrentUserReacted,
 			);
 
 			if (existingReaction) {
@@ -126,16 +147,19 @@ function TestMessageWithReactions({ messageId }: { messageId: Id<"messages"> }) 
 			} else {
 				await addReaction({ messageId, reactionType, customEmoji });
 			}
-		} catch (error) {
+		} catch (_error) {
 			mockToastError("Failed to update reaction");
 		}
 	};
 
-	const handleReactionSelect = async (reactionType: string, customEmoji?: string) => {
+	const handleReactionSelect = async (
+		reactionType: string,
+		customEmoji?: string,
+	) => {
 		try {
 			await addReaction({ messageId, reactionType, customEmoji });
 			mockToastSuccess("Reaction added!");
-		} catch (error) {
+		} catch (_error) {
 			mockToastError("Failed to add reaction");
 		}
 	};
@@ -143,13 +167,13 @@ function TestMessageWithReactions({ messageId }: { messageId: Id<"messages"> }) 
 	return (
 		<div data-testid="test-message">
 			<div data-testid="message-content">Test message content</div>
-			
+
 			{/* Message Reactions Display */}
 			<MessageReactions
 				reactions={reactionSummary || []}
 				onReactionClick={handleReactionClick}
 			/>
-			
+
 			{/* Reaction Picker */}
 			<ReactionPicker onReactionSelect={handleReactionSelect}>
 				<button data-testid="add-reaction-button">Add Reaction</button>
@@ -167,7 +191,7 @@ describe("Reactions Integration Tests", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Setup default mocks
 		mockUseMutation.mockImplementation(() => {
 			// Return a function that can be called as a mutation
@@ -184,15 +208,15 @@ describe("Reactions Integration Tests", () => {
 	describe("Basic Reaction Flow", () => {
 		it("should add reaction when picker is used", async () => {
 			mockAddReaction.mockResolvedValue("reaction-id");
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Click add reaction button to open picker
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
-			
+
 			// Click thumbs up in picker
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalledWith({
 					messageId: mockMessageId,
@@ -200,19 +224,19 @@ describe("Reactions Integration Tests", () => {
 					customEmoji: undefined,
 				});
 			});
-			
+
 			expect(mockToastSuccess).toHaveBeenCalledWith("Reaction added!");
 		});
 
 		it("should add custom emoji reaction", async () => {
 			mockAddReaction.mockResolvedValue("reaction-id");
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Open picker and select custom emoji
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
 			fireEvent.click(screen.getByTestId("pick-custom"));
-			
+
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalledWith({
 					messageId: mockMessageId,
@@ -232,15 +256,15 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user1", name: "User 1" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(existingReactions);
 			mockRemoveReaction.mockResolvedValue(null);
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Click existing reaction to remove it
 			fireEvent.click(screen.getByTestId("reaction-thumbs_up"));
-			
+
 			await waitFor(() => {
 				expect(mockRemoveReaction).toHaveBeenCalledWith({
 					messageId: mockMessageId,
@@ -275,26 +299,30 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user4", name: "User 4" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(multipleReactions);
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Should display all reactions
-			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent("thumbs_up (2)");
-			expect(screen.getByTestId("reaction-heart")).toHaveTextContent("heart (1)");
+			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent(
+				"thumbs_up (2)",
+			);
+			expect(screen.getByTestId("reaction-heart")).toHaveTextContent(
+				"heart (1)",
+			);
 			expect(screen.getByTestId("reaction-custom")).toHaveTextContent("🔥");
 		});
 
 		it("should handle adding different reaction types", async () => {
 			mockAddReaction.mockResolvedValue("reaction-id");
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Add thumbs up
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalledWith({
 					messageId: mockMessageId,
@@ -302,10 +330,10 @@ describe("Reactions Integration Tests", () => {
 					customEmoji: undefined,
 				});
 			});
-			
+
 			// Add heart
 			fireEvent.click(screen.getByTestId("pick-heart"));
-			
+
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalledWith({
 					messageId: mockMessageId,
@@ -319,13 +347,13 @@ describe("Reactions Integration Tests", () => {
 	describe("Error Handling", () => {
 		it("should handle add reaction errors", async () => {
 			mockAddReaction.mockRejectedValue(new Error("Network error"));
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Try to add reaction
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			await waitFor(() => {
 				expect(mockToastError).toHaveBeenCalledWith("Failed to add reaction");
 			});
@@ -341,28 +369,30 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user1", name: "User 1" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(existingReactions);
 			mockRemoveReaction.mockRejectedValue(new Error("Network error"));
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Try to remove reaction
 			fireEvent.click(screen.getByTestId("reaction-thumbs_up"));
-			
+
 			await waitFor(() => {
-				expect(mockToastError).toHaveBeenCalledWith("Failed to update reaction");
+				expect(mockToastError).toHaveBeenCalledWith(
+					"Failed to update reaction",
+				);
 			});
 		});
 
 		it("should handle authentication errors", async () => {
 			mockAddReaction.mockRejectedValue(new Error("Not authenticated"));
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			await waitFor(() => {
 				expect(mockToastError).toHaveBeenCalledWith("Failed to add reaction");
 			});
@@ -371,11 +401,15 @@ describe("Reactions Integration Tests", () => {
 
 	describe("Real-time Updates", () => {
 		it("should update reactions when data changes", () => {
-			const { rerender } = render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+			const { rerender } = render(
+				<TestMessageWithReactions messageId={mockMessageId} />,
+			);
+
 			// Initially no reactions
-			expect(screen.queryByTestId("reaction-thumbs_up")).not.toBeInTheDocument();
-			
+			expect(
+				screen.queryByTestId("reaction-thumbs_up"),
+			).not.toBeInTheDocument();
+
 			// Update with new reactions
 			const newReactions = [
 				{
@@ -385,10 +419,10 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user1", name: "User 1" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(newReactions);
 			rerender(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Should show new reaction
 			expect(screen.getByTestId("reaction-thumbs_up")).toBeInTheDocument();
 		});
@@ -403,12 +437,16 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user1", name: "User 1" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(initialReactions);
-			const { rerender } = render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
-			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent("thumbs_up (1)");
-			
+			const { rerender } = render(
+				<TestMessageWithReactions messageId={mockMessageId} />,
+			);
+
+			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent(
+				"thumbs_up (1)",
+			);
+
 			// Update with increased count
 			const updatedReactions = [
 				{
@@ -422,11 +460,13 @@ describe("Reactions Integration Tests", () => {
 					],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(updatedReactions);
 			rerender(<TestMessageWithReactions messageId={mockMessageId} />);
-			
-			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent("thumbs_up (3)");
+
+			expect(screen.getByTestId("reaction-thumbs_up")).toHaveTextContent(
+				"thumbs_up (3)",
+			);
 		});
 	});
 
@@ -434,17 +474,20 @@ describe("Reactions Integration Tests", () => {
 		it("should provide immediate feedback during async operations", async () => {
 			// Mock slow reaction addition
 			mockAddReaction.mockImplementation(
-				() => new Promise(resolve => setTimeout(() => resolve("reaction-id"), 100))
+				() =>
+					new Promise((resolve) =>
+						setTimeout(() => resolve("reaction-id"), 100),
+					),
 			);
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			// Should show loading state or disable buttons during operation
 			// (Implementation would depend on component loading states)
-			
+
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalled();
 			});
@@ -452,16 +495,16 @@ describe("Reactions Integration Tests", () => {
 
 		it("should handle rapid successive clicks gracefully", async () => {
 			mockAddReaction.mockResolvedValue("reaction-id");
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			fireEvent.click(screen.getByTestId("add-reaction-button"));
-			
+
 			// Click multiple times rapidly
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
 			fireEvent.click(screen.getByTestId("pick-thumbs-up"));
-			
+
 			// Should handle gracefully (might debounce or prevent multiple calls)
 			await waitFor(() => {
 				expect(mockAddReaction).toHaveBeenCalled();
@@ -479,16 +522,16 @@ describe("Reactions Integration Tests", () => {
 					users: [{ _id: "user1", name: "User 1" }],
 				},
 			];
-			
+
 			mockUseQuery.mockReturnValue(reactions);
-			
+
 			render(<TestMessageWithReactions messageId={mockMessageId} />);
-			
+
 			// Reaction buttons should be accessible
 			const reactionButton = screen.getByTestId("reaction-thumbs_up");
 			expect(reactionButton).toBeInTheDocument();
 			expect(reactionButton).not.toBeDisabled();
-			
+
 			// Add reaction button should be accessible
 			const addButton = screen.getByTestId("add-reaction-button");
 			expect(addButton).toBeInTheDocument();

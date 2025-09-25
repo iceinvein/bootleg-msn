@@ -13,9 +13,9 @@
  * the complete file upload flow.
  */
 
-import { render, screen, fireEvent } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
 import type { Id } from "@convex/_generated/dataModel";
+import { fireEvent, render, screen } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { FileUpload } from "../FileUpload";
 
 // Mock Convex mutations
@@ -72,7 +72,10 @@ describe("FileUpload Component", () => {
 			const fileInput = screen.getByLabelText("Upload file");
 			expect(fileInput).toBeInTheDocument();
 			expect(fileInput).toHaveAttribute("type", "file");
-			expect(fileInput).toHaveAttribute("accept", "image/*,video/*,.pdf,.doc,.docx,.txt");
+			expect(fileInput).toHaveAttribute(
+				"accept",
+				"image/*,video/*,.pdf,.doc,.docx,.txt",
+			);
 			expect(fileInput).toHaveClass("hidden");
 		});
 
@@ -91,7 +94,12 @@ describe("FileUpload Component", () => {
 		});
 
 		it("should render with onFileUploaded callback", () => {
-			render(<FileUpload receiverId={mockReceiverId} onFileUploaded={mockOnFileUploaded} />);
+			render(
+				<FileUpload
+					receiverId={mockReceiverId}
+					onFileUploaded={mockOnFileUploaded}
+				/>,
+			);
 
 			const button = screen.getByRole("button", { name: /upload file/i });
 			expect(button).toBeInTheDocument();
@@ -110,7 +118,10 @@ describe("FileUpload Component", () => {
 			render(<FileUpload receiverId={mockReceiverId} />);
 
 			const fileInput = screen.getByLabelText("Upload file");
-			expect(fileInput).toHaveAttribute("accept", "image/*,video/*,.pdf,.doc,.docx,.txt");
+			expect(fileInput).toHaveAttribute(
+				"accept",
+				"image/*,video/*,.pdf,.doc,.docx,.txt",
+			);
 		});
 
 		it("should validate file size correctly", () => {
@@ -136,7 +147,9 @@ describe("FileUpload Component", () => {
 			const fileInput = screen.getByLabelText("Upload file");
 
 			// Mock the click method on the file input
-			const clickSpy = vi.spyOn(fileInput, 'click').mockImplementation(() => {});
+			const clickSpy = vi
+				.spyOn(fileInput, "click")
+				.mockImplementation(() => {});
 
 			fireEvent.click(button);
 

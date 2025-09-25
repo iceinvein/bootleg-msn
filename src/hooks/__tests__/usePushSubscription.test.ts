@@ -137,7 +137,9 @@ describe("usePushSubscription", () => {
 	describe("Error Handling", () => {
 		it("should handle subscription creation errors gracefully", async () => {
 			const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
-			mockEnsurePushSubscription.mockRejectedValue(new Error("Subscription failed"));
+			mockEnsurePushSubscription.mockRejectedValue(
+				new Error("Subscription failed"),
+			);
 
 			// Should not throw during render even if subscription setup fails
 			expect(() => {
@@ -145,10 +147,13 @@ describe("usePushSubscription", () => {
 			}).not.toThrow();
 
 			// Wait for async operations to complete
-			await waitFor(() => {
-				// The hook should handle errors gracefully, whether it logs them or not
-				expect(true).toBe(true); // Just verify no exceptions were thrown
-			}, { timeout: 200 });
+			await waitFor(
+				() => {
+					// The hook should handle errors gracefully, whether it logs them or not
+					expect(true).toBe(true); // Just verify no exceptions were thrown
+				},
+				{ timeout: 200 },
+			);
 
 			consoleSpy.mockRestore();
 		});

@@ -10,8 +10,8 @@
  * - Error handling for emoji data loading
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { EmojiPicker } from "../EmojiPicker";
 
 // Mock UI components
@@ -99,13 +99,17 @@ vi.mock("lucide-react", () => ({
 // Mock emoji data
 const mockEmojiData = [
 	{ emoji: "😀", name: "grinning face", group: "smileys-emotion" },
-	{ emoji: "😃", name: "grinning face with big eyes", group: "smileys-emotion" },
+	{
+		emoji: "😃",
+		name: "grinning face with big eyes",
+		group: "smileys-emotion",
+	},
 	{ emoji: "❤️", name: "red heart", group: "smileys-emotion" },
 	{ emoji: "🌞", name: "sun with face", group: "travel-places" },
 	{ emoji: "☕", name: "hot beverage", group: "food-drink" },
 ];
 
-const mockGroupNames = {
+const _mockGroupNames = {
 	"smileys-emotion": "Smileys & Emotion",
 	"travel-places": "Travel & Places",
 	"food-drink": "Food & Drink",
@@ -120,7 +124,7 @@ describe("EmojiPicker Component", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Mock successful fetch response
 		(global.fetch as any).mockResolvedValue({
 			ok: true,
@@ -133,14 +137,14 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
 
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
 
 			// Should show skeleton loading state (animated divs)
-			const skeletonElements = document.querySelectorAll('.animate-pulse');
+			const skeletonElements = document.querySelectorAll(".animate-pulse");
 			expect(skeletonElements.length).toBeGreaterThan(0);
 		});
 
@@ -148,17 +152,17 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Wait for emoji data to load
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Should show tabs and search
 			expect(screen.getByTestId("tabs")).toBeInTheDocument();
 			expect(screen.getByTestId("search-icon")).toBeInTheDocument();
@@ -170,18 +174,20 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			expect(screen.getByTestId("trigger-button")).toBeInTheDocument();
-			expect(screen.getByTestId("trigger-button")).toHaveTextContent("Pick Emoji");
+			expect(screen.getByTestId("trigger-button")).toHaveTextContent(
+				"Pick Emoji",
+			);
 		});
 
 		it("should render category tabs when loaded", async () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
 
 			// Open the picker
@@ -202,12 +208,12 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				const searchInput = screen.getByTestId("search-input");
 				expect(searchInput).toBeInTheDocument();
@@ -221,22 +227,22 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			// Wait for emojis to load
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Find and click an emoji button
 			const emojiButtons = screen.getAllByTestId("emoji-button");
 			if (emojiButtons.length > 0) {
 				fireEvent.click(emojiButtons[0]);
-				
+
 				expect(mockOnEmojiSelect).toHaveBeenCalledWith(expect.any(String));
 			}
 		});
@@ -245,21 +251,21 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Click an emoji
 			const emojiButtons = screen.getAllByTestId("emoji-button");
 			if (emojiButtons.length > 0) {
 				fireEvent.click(emojiButtons[0]);
-				
+
 				expect(mockOnEmojiSelect).toHaveBeenCalled();
 			}
 		});
@@ -270,20 +276,20 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Type in search input
 			const searchInput = screen.getByTestId("search-input");
 			fireEvent.change(searchInput, { target: { value: "heart" } });
-			
+
 			// Should filter emojis (implementation would show filtered results)
 			expect(searchInput).toHaveValue("heart");
 		});
@@ -292,22 +298,22 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			const searchInput = screen.getByTestId("search-input");
-			
+
 			// Type and then clear
 			fireEvent.change(searchInput, { target: { value: "heart" } });
 			fireEvent.change(searchInput, { target: { value: "" } });
-			
+
 			expect(searchInput).toHaveValue("");
 		});
 
@@ -315,20 +321,20 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Search for something that doesn't exist
 			const searchInput = screen.getByTestId("search-input");
 			fireEvent.change(searchInput, { target: { value: "nonexistent" } });
-			
+
 			// Should handle no results gracefully
 			expect(searchInput).toHaveValue("nonexistent");
 		});
@@ -339,16 +345,16 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("tabs")).toBeInTheDocument();
 			});
-			
+
 			// Click on smileys category tab
 			const smileyTab = screen.getByTestId("smile-icon").closest("button");
 			if (smileyTab) {
@@ -356,7 +362,10 @@ describe("EmojiPicker Component", () => {
 
 				// Wait for the category to change
 				await waitFor(() => {
-					expect(screen.getByTestId("tabs")).toHaveAttribute("data-value", "smileys");
+					expect(screen.getByTestId("tabs")).toHaveAttribute(
+						"data-value",
+						"smileys",
+					);
 				});
 			}
 		});
@@ -365,16 +374,16 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("tabs")).toBeInTheDocument();
 			});
-			
+
 			// Should show tab content for different categories
 			expect(screen.getByTestId("tab-content-smileys")).toBeInTheDocument();
 		});
@@ -386,19 +395,21 @@ describe("EmojiPicker Component", () => {
 			(global.fetch as any).mockRejectedValue(new Error("Network error"));
 
 			// Mock console.error to avoid test output noise
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
 
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
 
 			// Should show skeleton loading initially
-			const skeletonElements = document.querySelectorAll('.animate-pulse');
+			const skeletonElements = document.querySelectorAll(".animate-pulse");
 			expect(skeletonElements.length).toBeGreaterThan(0);
 
 			// Wait for error handling - the component might not log errors in this test environment
@@ -421,14 +432,14 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
 
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
 
 			// Should handle invalid data gracefully (show skeleton initially)
-			const skeletonElements = document.querySelectorAll('.animate-pulse');
+			const skeletonElements = document.querySelectorAll(".animate-pulse");
 			expect(skeletonElements.length).toBeGreaterThan(0);
 		});
 	});
@@ -438,21 +449,21 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Test keyboard navigation (arrow keys, enter, etc.)
 			const searchInput = screen.getByTestId("search-input");
 			fireEvent.keyDown(searchInput, { key: "ArrowDown" });
 			fireEvent.keyDown(searchInput, { key: "Enter" });
-			
+
 			// Should handle keyboard events gracefully
 			expect(searchInput).toBeInTheDocument();
 		});
@@ -463,12 +474,12 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			const popoverContent = screen.getByTestId("popover-content");
 			expect(popoverContent).toHaveAttribute("title", "Choose an emoji");
 		});
@@ -477,12 +488,12 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				const searchInput = screen.getByTestId("search-input");
 				expect(searchInput).toHaveAttribute("placeholder", "Search emojis...");
@@ -493,19 +504,19 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("search-input")).toBeInTheDocument();
 			});
-			
+
 			// Emoji buttons should be accessible
 			const emojiButtons = screen.getAllByTestId("emoji-button");
-			emojiButtons.forEach(button => {
+			emojiButtons.forEach((button) => {
 				expect(button).toBeInTheDocument();
 			});
 		});
@@ -516,16 +527,16 @@ describe("EmojiPicker Component", () => {
 			render(
 				<EmojiPicker onEmojiSelect={mockOnEmojiSelect}>
 					{mockTrigger}
-				</EmojiPicker>
+				</EmojiPicker>,
 			);
-			
+
 			// Open the picker
 			fireEvent.click(screen.getByTestId("popover-trigger"));
-			
+
 			await waitFor(() => {
 				expect(screen.getByTestId("popover-content")).toBeInTheDocument();
 			});
-			
+
 			// Should render responsive content
 			expect(screen.getByTestId("popover-content")).toBeInTheDocument();
 		});

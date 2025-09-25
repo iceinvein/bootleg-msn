@@ -4,12 +4,12 @@
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
-	tauriApi,
-	windowManager,
-	tauriEvents,
-	isTauri,
 	getPlatform,
+	isTauri,
+	tauriApi,
+	tauriEvents,
 	type WindowConfig,
+	windowManager,
 } from "../tauri";
 
 // Mock Tauri APIs
@@ -26,7 +26,9 @@ vi.mock("@tauri-apps/api/window", () => ({
 }));
 
 vi.mock("@tauri-apps/api/dpi", () => ({
-	LogicalSize: vi.fn().mockImplementation((width, height) => ({ width, height })),
+	LogicalSize: vi
+		.fn()
+		.mockImplementation((width, height) => ({ width, height })),
 	LogicalPosition: vi.fn().mockImplementation((x, y) => ({ x, y })),
 }));
 
@@ -60,7 +62,9 @@ describe("tauriApi", () => {
 			const error = new Error("Failed to create window");
 			mockInvoke.mockRejectedValue(error);
 
-			await expect(tauriApi.createChatWindow("chat-123", "John Doe")).rejects.toThrow("Failed to create window");
+			await expect(
+				tauriApi.createChatWindow("chat-123", "John Doe"),
+			).rejects.toThrow("Failed to create window");
 		});
 	});
 
@@ -188,7 +192,7 @@ describe("windowManager", () => {
 
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		mockWindow = {
 			innerSize: vi.fn(),
 			innerPosition: vi.fn(),
@@ -272,7 +276,10 @@ describe("windowManager", () => {
 
 			await windowManager.restoreWindowState("test-window");
 
-			expect(mockWindow.setSize).toHaveBeenCalledWith({ width: 800, height: 600 });
+			expect(mockWindow.setSize).toHaveBeenCalledWith({
+				width: 800,
+				height: 600,
+			});
 			expect(mockWindow.setPosition).toHaveBeenCalledWith({ x: 100, y: 50 });
 			expect(mockWindow.maximize).not.toHaveBeenCalled();
 		});
@@ -308,7 +315,10 @@ describe("windowManager", () => {
 
 			await windowManager.restoreWindowState("test-window");
 
-			expect(mockWindow.setSize).toHaveBeenCalledWith({ width: 800, height: 600 });
+			expect(mockWindow.setSize).toHaveBeenCalledWith({
+				width: 800,
+				height: 600,
+			});
 			expect(mockWindow.setPosition).not.toHaveBeenCalled();
 		});
 
@@ -337,7 +347,10 @@ describe("tauriEvents", () => {
 
 			const unlisten = await tauriEvents.onWindowClose(callback);
 
-			expect(mockListen).toHaveBeenCalledWith("tauri://close-requested", callback);
+			expect(mockListen).toHaveBeenCalledWith(
+				"tauri://close-requested",
+				callback,
+			);
 			expect(unlisten).toBe(mockUnlisten);
 		});
 	});
@@ -372,7 +385,7 @@ describe("tauriEvents", () => {
 		it("should listen for deep-link event and extract payload", async () => {
 			const callback = vi.fn();
 			const mockUnlisten = vi.fn();
-			mockListen.mockImplementation((eventName, handler) => {
+			mockListen.mockImplementation((_eventName, handler) => {
 				// Simulate event with payload
 				handler({ payload: "msn://chat/user123" });
 				return Promise.resolve(mockUnlisten);
@@ -380,7 +393,10 @@ describe("tauriEvents", () => {
 
 			const unlisten = await tauriEvents.onDeepLink(callback);
 
-			expect(mockListen).toHaveBeenCalledWith("deep-link", expect.any(Function));
+			expect(mockListen).toHaveBeenCalledWith(
+				"deep-link",
+				expect.any(Function),
+			);
 			expect(callback).toHaveBeenCalledWith("msn://chat/user123");
 			expect(unlisten).toBe(mockUnlisten);
 		});

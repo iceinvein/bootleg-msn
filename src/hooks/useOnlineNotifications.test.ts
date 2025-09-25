@@ -1,5 +1,5 @@
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useOnlineNotifications } from "./useOnlineNotifications";
 
 // Mock Convex
@@ -47,9 +47,13 @@ describe("useOnlineNotifications", () => {
 
 		// Get the mocked functions
 		const { toast } = await import("sonner");
-		const { browserNotifications } = await import("@/lib/browser-notifications");
+		const { browserNotifications } = await import(
+			"@/lib/browser-notifications"
+		);
 		mockToastSuccess = vi.mocked(toast.success);
-		mockNotifyContactOnline = vi.mocked(browserNotifications.notifyContactOnline);
+		mockNotifyContactOnline = vi.mocked(
+			browserNotifications.notifyContactOnline,
+		);
 
 		mockNotifyContactOnline.mockResolvedValue(undefined);
 	});
@@ -120,11 +124,14 @@ describe("useOnlineNotifications", () => {
 					{
 						duration: 4000,
 						description: "Your contact has signed in",
-					}
+					},
 				);
 			});
 
-			expect(mockNotifyContactOnline).toHaveBeenCalledWith("user1", "Alice Johnson");
+			expect(mockNotifyContactOnline).toHaveBeenCalledWith(
+				"user1",
+				"Alice Johnson",
+			);
 		});
 
 		it("should not notify for contacts already online", async () => {
@@ -140,7 +147,7 @@ describe("useOnlineNotifications", () => {
 			renderHook(() => useOnlineNotifications());
 
 			await act(async () => {
-				await new Promise(resolve => setTimeout(resolve, 0));
+				await new Promise((resolve) => setTimeout(resolve, 0));
 			});
 
 			expect(mockToastSuccess).not.toHaveBeenCalled();
@@ -172,7 +179,7 @@ describe("useOnlineNotifications", () => {
 			rerender();
 
 			// Both come online
-			const onlineContacts = multipleContacts.map(contact => ({
+			const onlineContacts = multipleContacts.map((contact) => ({
 				...contact,
 				status: "online",
 				lastSeen: Date.now(),
@@ -184,8 +191,14 @@ describe("useOnlineNotifications", () => {
 				expect(mockToastSuccess).toHaveBeenCalledTimes(2);
 			});
 
-			expect(mockToastSuccess).toHaveBeenCalledWith("Alice is now online", expect.any(Object));
-			expect(mockToastSuccess).toHaveBeenCalledWith("Bob is now online", expect.any(Object));
+			expect(mockToastSuccess).toHaveBeenCalledWith(
+				"Alice is now online",
+				expect.any(Object),
+			);
+			expect(mockToastSuccess).toHaveBeenCalledWith(
+				"Bob is now online",
+				expect.any(Object),
+			);
 			expect(mockNotifyContactOnline).toHaveBeenCalledTimes(2);
 		});
 
@@ -214,7 +227,7 @@ describe("useOnlineNotifications", () => {
 			rerender();
 
 			await act(async () => {
-				await new Promise(resolve => setTimeout(resolve, 0));
+				await new Promise((resolve) => setTimeout(resolve, 0));
 			});
 
 			expect(mockToastSuccess).not.toHaveBeenCalled();
@@ -281,12 +294,19 @@ describe("useOnlineNotifications", () => {
 				result.current.playOnlineSound();
 			});
 
-			expect(mockAddEventListener).toHaveBeenCalledWith("error", expect.any(Function));
+			expect(mockAddEventListener).toHaveBeenCalledWith(
+				"error",
+				expect.any(Function),
+			);
 		});
 
 		it("should respect sound settings", async () => {
-			const { browserNotifications } = await import("@/lib/browser-notifications");
-			vi.mocked(browserNotifications.getSettings).mockReturnValue({ sound: false });
+			const { browserNotifications } = await import(
+				"@/lib/browser-notifications"
+			);
+			vi.mocked(browserNotifications.getSettings).mockReturnValue({
+				sound: false,
+			});
 
 			const { result } = renderHook(() => useOnlineNotifications());
 
@@ -300,7 +320,6 @@ describe("useOnlineNotifications", () => {
 	});
 
 	describe("Duplicate Prevention", () => {
-
 		it("should not notify twice for the same sign-in event", async () => {
 			const mockContact = {
 				_id: "contact1",
@@ -335,7 +354,7 @@ describe("useOnlineNotifications", () => {
 			rerender();
 
 			await act(async () => {
-				await new Promise(resolve => setTimeout(resolve, 0));
+				await new Promise((resolve) => setTimeout(resolve, 0));
 			});
 
 			// Should still only be called once
@@ -353,7 +372,9 @@ describe("useOnlineNotifications", () => {
 				lastSeen: Date.now() - 10 * 60 * 1000,
 			};
 
-			mockNotifyContactOnline.mockRejectedValue(new Error("Notification failed"));
+			mockNotifyContactOnline.mockRejectedValue(
+				new Error("Notification failed"),
+			);
 
 			const { rerender } = renderHook(() => useOnlineNotifications());
 

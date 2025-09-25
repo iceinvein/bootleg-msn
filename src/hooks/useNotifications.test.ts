@@ -1,5 +1,5 @@
-import { renderHook, waitFor, act } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { NotificationPermission } from "@/lib/tauri-notifications";
 
 // Mock the tauri-notifications module with inline functions to avoid hoisting issues
@@ -24,12 +24,17 @@ vi.mock("@/lib/tauri-notifications", () => {
 	};
 });
 
+import {
+	getTauriNotifications,
+	TauriNotificationService,
+} from "@/lib/tauri-notifications";
 import { useNotifications } from "./useNotifications";
-import { getTauriNotifications, TauriNotificationService } from "@/lib/tauri-notifications";
 
 // Get typed mock references after import
 const mockGetTauriNotifications = vi.mocked(getTauriNotifications);
-const mockIsTauriEnvironment = vi.mocked(TauriNotificationService.isTauriEnvironment);
+const mockIsTauriEnvironment = vi.mocked(
+	TauriNotificationService.isTauriEnvironment,
+);
 const mockTauriNotifications = TauriNotificationService.getInstance();
 
 describe("useNotifications", () => {
@@ -39,9 +44,11 @@ describe("useNotifications", () => {
 		// Set up default mock behavior
 		mockIsTauriEnvironment.mockReturnValue(true);
 		mockGetTauriNotifications.mockReturnValue(mockTauriNotifications);
-		
+
 		// Reset all mock functions on the notifications instance
-		vi.mocked(mockTauriNotifications.checkPermission).mockResolvedValue("granted");
+		vi.mocked(mockTauriNotifications.checkPermission).mockResolvedValue(
+			"granted",
+		);
 		vi.mocked(mockTauriNotifications.loadSettings).mockResolvedValue({
 			enabled: true,
 			soundEnabled: true,
@@ -105,7 +112,9 @@ describe("useNotifications", () => {
 
 	describe("Permission Management", () => {
 		it("should request permission successfully", async () => {
-			vi.mocked(mockTauriNotifications.requestPermission).mockResolvedValue("granted");
+			vi.mocked(mockTauriNotifications.requestPermission).mockResolvedValue(
+				"granted",
+			);
 
 			const { result } = renderHook(() => useNotifications());
 
@@ -170,7 +179,9 @@ describe("useNotifications", () => {
 				quietHoursEnd: "08:00",
 			};
 
-			vi.mocked(mockTauriNotifications.saveSettings).mockResolvedValue(undefined);
+			vi.mocked(mockTauriNotifications.saveSettings).mockResolvedValue(
+				undefined,
+			);
 
 			const { result } = renderHook(() => useNotifications());
 
@@ -210,7 +221,7 @@ describe("useNotifications", () => {
 			await act(async () => {
 				try {
 					await result.current.updateSettings(newSettings);
-				} catch (error) {
+				} catch (_error) {
 					// Expected to throw
 				}
 			});
@@ -247,7 +258,9 @@ describe("useNotifications", () => {
 		});
 
 		it("should not send notification when permission denied", async () => {
-			vi.mocked(mockTauriNotifications.checkPermission).mockResolvedValue("denied");
+			vi.mocked(mockTauriNotifications.checkPermission).mockResolvedValue(
+				"denied",
+			);
 
 			const { result } = renderHook(() => useNotifications());
 

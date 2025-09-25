@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import type React from "react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { CreateGroupDialog } from "./CreateGroupDialog";
 
 // Mock Convex hooks
@@ -15,7 +15,15 @@ vi.mock("convex/react", () => ({
 
 // Mock UI components
 vi.mock("@/components/ui/responsive-dialog", () => ({
-	ResponsiveDialog: ({ children, open, onOpenChange }: { children: React.ReactNode; open: boolean; onOpenChange: (open: boolean) => void }) => (
+	ResponsiveDialog: ({
+		children,
+		open,
+		onOpenChange,
+	}: {
+		children: React.ReactNode;
+		open: boolean;
+		onOpenChange: (open: boolean) => void;
+	}) => (
 		<div data-testid="responsive-dialog" data-open={open}>
 			<button onClick={() => onOpenChange(!open)}>Toggle Dialog</button>
 			{children}
@@ -41,7 +49,11 @@ vi.mock("@/components/ui/responsive-dialog", () => ({
 vi.mock("@/components/ui/input", () => ({
 	Input: ({ placeholder, value, onChange, id, ...props }: any) => (
 		<input
-			data-testid={id ? `input-${id}` : `input-${placeholder?.toLowerCase().replace(/\s+/g, '-')}`}
+			data-testid={
+				id
+					? `input-${id}`
+					: `input-${placeholder?.toLowerCase().replace(/\s+/g, "-")}`
+			}
 			placeholder={placeholder}
 			value={value}
 			onChange={onChange}
@@ -66,7 +78,7 @@ vi.mock("@/components/ui/textarea", () => ({
 vi.mock("@/components/ui/button", () => ({
 	Button: ({ children, onClick, disabled, type, ...props }: any) => (
 		<button
-			data-testid={`button-${children?.toString().toLowerCase().replace(/\s+/g, '-')}`}
+			data-testid={`button-${children?.toString().toLowerCase().replace(/\s+/g, "-")}`}
 			onClick={onClick}
 			disabled={disabled}
 			type={type}
@@ -174,7 +186,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			expect(screen.getByTestId("dialog-trigger")).toBeInTheDocument();
@@ -185,7 +197,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -200,7 +212,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -208,14 +220,16 @@ describe("CreateGroupDialog", () => {
 
 			expect(screen.getByTestId("input-groupName")).toBeInTheDocument();
 			expect(screen.getByTestId("textarea-description")).toBeInTheDocument();
-			expect(screen.getByTestId("input-search-contacts...")).toBeInTheDocument();
+			expect(
+				screen.getByTestId("input-search-contacts..."),
+			).toBeInTheDocument();
 		});
 
 		it("should render contact list", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -231,7 +245,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -247,14 +261,16 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
 
 			const descriptionTextarea = screen.getByTestId("textarea-description");
-			fireEvent.change(descriptionTextarea, { target: { value: "Group description" } });
+			fireEvent.change(descriptionTextarea, {
+				target: { value: "Group description" },
+			});
 
 			expect(descriptionTextarea).toHaveValue("Group description");
 		});
@@ -263,7 +279,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -279,14 +295,15 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
 
 			// Find and click on Alice's contact
-			const aliceContact = screen.getByText("Alice").closest('button') ||
+			const aliceContact =
+				screen.getByText("Alice").closest("button") ||
 				screen.getByText("Alice").parentElement;
 
 			if (aliceContact) {
@@ -306,7 +323,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -317,10 +334,13 @@ describe("CreateGroupDialog", () => {
 			fireEvent.change(nameInput, { target: { value: "Test Group" } });
 
 			const descriptionTextarea = screen.getByTestId("textarea-description");
-			fireEvent.change(descriptionTextarea, { target: { value: "Test description" } });
+			fireEvent.change(descriptionTextarea, {
+				target: { value: "Test description" },
+			});
 
 			// Select a contact (simulate clicking on contact)
-			const aliceContact = screen.getByText("Alice").closest('button') ||
+			const aliceContact =
+				screen.getByText("Alice").closest("button") ||
 				screen.getByText("Alice").parentElement;
 			if (aliceContact) {
 				fireEvent.click(aliceContact);
@@ -350,7 +370,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -379,7 +399,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
@@ -400,12 +420,15 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog
 			fireEvent.click(screen.getByText("Toggle Dialog"));
-			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute("data-open", "true");
+			expect(screen.getByTestId("responsive-dialog")).toHaveAttribute(
+				"data-open",
+				"true",
+			);
 
 			// Fill and submit form
 			const nameInput = screen.getByTestId("input-groupName");
@@ -434,7 +457,7 @@ describe("CreateGroupDialog", () => {
 			render(
 				<CreateGroupDialog>
 					<button>Create Group</button>
-				</CreateGroupDialog>
+				</CreateGroupDialog>,
 			);
 
 			// Open dialog

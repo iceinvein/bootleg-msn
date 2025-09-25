@@ -1,6 +1,6 @@
 /**
  * Tests for NudgeMessage component
- * 
+ *
  * Tests cover:
  * - Nudge message rendering (nudge vs buzz)
  * - Own vs received message text
@@ -10,7 +10,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, beforeEach, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NudgeMessage } from "./NudgeMessage";
 
 // Mock framer-motion
@@ -47,10 +47,12 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
-			expect(screen.getByText("Alice sent you a nudge! 👋")).toBeInTheDocument();
+			expect(
+				screen.getByText("Alice sent you a nudge! 👋"),
+			).toBeInTheDocument();
 			expect(screen.getByText("02:30 PM")).toBeInTheDocument();
 		});
 
@@ -61,7 +63,7 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={true}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText("You sent a nudge 👋")).toBeInTheDocument();
@@ -77,7 +79,7 @@ describe("NudgeMessage", () => {
 					nudgeType="buzz"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText("Bob sent you a buzz! 📳")).toBeInTheDocument();
@@ -91,7 +93,7 @@ describe("NudgeMessage", () => {
 					nudgeType="buzz"
 					timestamp={mockTimestamp}
 					isOwn={true}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText("You sent a buzz 📳")).toBeInTheDocument();
@@ -127,7 +129,7 @@ describe("NudgeMessage", () => {
 						nudgeType="nudge"
 						timestamp={timestamp}
 						isOwn={false}
-					/>
+					/>,
 				);
 
 				expect(screen.getByText(expected)).toBeInTheDocument();
@@ -146,7 +148,7 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={now}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// Should render some time format
@@ -163,11 +165,13 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// Check container classes
-			const container = screen.getByText("Test sent you a nudge! 👋").closest("div");
+			const container = screen
+				.getByText("Test sent you a nudge! 👋")
+				.closest("div");
 			expect(container).toHaveClass(
 				"flex",
 				"items-center",
@@ -175,7 +179,7 @@ describe("NudgeMessage", () => {
 				"rounded-full",
 				"px-4",
 				"py-2",
-				"text-sm"
+				"text-sm",
 			);
 
 			// Check gradient background classes
@@ -183,14 +187,14 @@ describe("NudgeMessage", () => {
 				"bg-gradient-to-r",
 				"from-yellow-100",
 				"to-orange-100",
-				"text-yellow-800"
+				"text-yellow-800",
 			);
 
 			// Check dark mode classes
 			expect(container).toHaveClass(
 				"dark:from-yellow-900/30",
 				"dark:to-orange-900/30",
-				"dark:text-yellow-200"
+				"dark:text-yellow-200",
 			);
 
 			// Check border and shadow
@@ -198,7 +202,7 @@ describe("NudgeMessage", () => {
 				"border",
 				"border-yellow-200",
 				"dark:border-yellow-800/50",
-				"shadow-sm"
+				"shadow-sm",
 			);
 		});
 
@@ -209,10 +213,12 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
-			const outerContainer = screen.getByText("Test sent you a nudge! 👋").closest("div")?.parentElement;
+			const outerContainer = screen
+				.getByText("Test sent you a nudge! 👋")
+				.closest("div")?.parentElement;
 			expect(outerContainer).toHaveClass("flex", "justify-center", "py-2");
 		});
 
@@ -223,7 +229,7 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			const messageText = screen.getByText("Test sent you a nudge! 👋");
@@ -242,7 +248,7 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText(/👋/)).toBeInTheDocument();
@@ -255,7 +261,7 @@ describe("NudgeMessage", () => {
 					nudgeType="buzz"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText(/📳/)).toBeInTheDocument();
@@ -265,32 +271,36 @@ describe("NudgeMessage", () => {
 	describe("sender name handling", () => {
 		it("should handle long sender names", () => {
 			const longName = "VeryLongUserNameThatMightCauseLayoutIssues";
-			
+
 			render(
 				<NudgeMessage
 					senderName={longName}
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
-			expect(screen.getByText(`${longName} sent you a nudge! 👋`)).toBeInTheDocument();
+			expect(
+				screen.getByText(`${longName} sent you a nudge! 👋`),
+			).toBeInTheDocument();
 		});
 
 		it("should handle special characters in sender name", () => {
 			const specialName = "User@123!";
-			
+
 			render(
 				<NudgeMessage
 					senderName={specialName}
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
-			expect(screen.getByText(`${specialName} sent you a nudge! 👋`)).toBeInTheDocument();
+			expect(
+				screen.getByText(`${specialName} sent you a nudge! 👋`),
+			).toBeInTheDocument();
 		});
 
 		it("should handle empty sender name", () => {
@@ -300,13 +310,18 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// Use a more flexible matcher for empty sender name
-		expect(screen.getByText((content, element) => {
-			return content.includes("sent you a nudge! 👋") && content.trim().startsWith("sent");
-		})).toBeInTheDocument();
+			expect(
+				screen.getByText((content, _element) => {
+					return (
+						content.includes("sent you a nudge! 👋") &&
+						content.trim().startsWith("sent")
+					);
+				}),
+			).toBeInTheDocument();
 		});
 	});
 
@@ -318,11 +333,13 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// The message should be readable as a single unit
-			const messageContainer = screen.getByText("Alice sent you a nudge! 👋").closest("div");
+			const messageContainer = screen
+				.getByText("Alice sent you a nudge! 👋")
+				.closest("div");
 			expect(messageContainer).toBeInTheDocument();
 
 			// Time should be separate but related
@@ -337,13 +354,13 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={mockTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// Should have proper text hierarchy
 			const messageText = screen.getByText("Alice sent you a nudge! 👋");
 			const timeText = screen.getByText("02:30 PM");
-			
+
 			expect(messageText).toHaveClass("font-medium");
 			expect(timeText).toHaveClass("text-xs");
 		});
@@ -358,7 +375,7 @@ describe("NudgeMessage", () => {
 					nudgeType="nudge"
 					timestamp={NaN}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			// Should still render the message part
@@ -367,14 +384,14 @@ describe("NudgeMessage", () => {
 
 		it("should handle future timestamps", () => {
 			const futureTimestamp = Date.now() + 86400000; // 1 day in future
-			
+
 			render(
 				<NudgeMessage
 					senderName="Test"
 					nudgeType="nudge"
 					timestamp={futureTimestamp}
 					isOwn={false}
-				/>
+				/>,
 			);
 
 			expect(screen.getByText("Test sent you a nudge! 👋")).toBeInTheDocument();

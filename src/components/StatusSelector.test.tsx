@@ -17,7 +17,6 @@ vi.mock("framer-motion", () => ({
 vi.mock("./ui/responsive-dialog", () => ({
 	ResponsiveDialog: ({ children, open, onOpenChange }: any) => (
 		<div data-testid="responsive-dialog" data-open={open}>
-			{/** biome-ignore lint/a11y/useKeyWithClickEvents: it's test */}
 			<div onClick={() => onOpenChange?.(!open)}>{children}</div>
 		</div>
 	),

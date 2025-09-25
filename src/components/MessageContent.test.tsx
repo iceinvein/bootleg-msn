@@ -1,6 +1,6 @@
 /**
  * Tests for MessageContent component
- * 
+ *
  * Tests cover:
  * - Text message rendering
  * - Emoji message rendering
@@ -10,7 +10,7 @@
  */
 
 import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { MessageContent } from "./MessageContent";
 
 // Mock YouTube utilities
@@ -31,12 +31,7 @@ vi.mock("./YouTubeEmbed", () => ({
 describe("MessageContent", () => {
 	describe("text messages", () => {
 		it("should render regular text message", () => {
-			render(
-				<MessageContent
-					content="Hello world"
-					messageType="text"
-				/>
-			);
+			render(<MessageContent content="Hello world" messageType="text" />);
 
 			expect(screen.getByText("Hello world")).toBeInTheDocument();
 			expect(screen.getByText("Hello world")).toHaveClass("break-words");
@@ -48,48 +43,54 @@ describe("MessageContent", () => {
 					content="Hello world"
 					messageType="text"
 					className="custom-class"
-				/>
+				/>,
 			);
 
-			expect(screen.getByText("Hello world")).toHaveClass("break-words", "custom-class");
+			expect(screen.getByText("Hello world")).toHaveClass(
+				"break-words",
+				"custom-class",
+			);
 		});
 
 		it("should handle text with YouTube URLs", async () => {
-			const { containsYouTubeUrl, replaceYouTubeUrls } = await import("../utils/youtubeUtils");
-			
+			const { containsYouTubeUrl, replaceYouTubeUrls } = await import(
+				"../utils/youtubeUtils"
+			);
+
 			vi.mocked(containsYouTubeUrl).mockReturnValue(true);
 			vi.mocked(replaceYouTubeUrls).mockReturnValue({
 				text: "Check this out: [YOUTUBE_VIDEO_0]",
-				videos: [{
-					videoId: "dQw4w9WgXcQ",
-					thumbnailUrl: "https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
-					embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
-					url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
-				}],
+				videos: [
+					{
+						videoId: "dQw4w9WgXcQ",
+						thumbnailUrl:
+							"https://img.youtube.com/vi/dQw4w9WgXcQ/maxresdefault.jpg",
+						embedUrl: "https://www.youtube-nocookie.com/embed/dQw4w9WgXcQ",
+						url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+					},
+				],
 			});
 
 			render(
 				<MessageContent
 					content="Check this out: https://www.youtube.com/watch?v=dQw4w9WgXcQ"
 					messageType="text"
-				/>
+				/>,
 			);
 
 			expect(screen.getByTestId("youtube-embed")).toBeInTheDocument();
-			expect(screen.getByTestId("youtube-embed")).toHaveAttribute("data-video-id", "dQw4w9WgXcQ");
+			expect(screen.getByTestId("youtube-embed")).toHaveAttribute(
+				"data-video-id",
+				"dQw4w9WgXcQ",
+			);
 		});
 
 		it("should handle text without YouTube URLs", async () => {
 			const { containsYouTubeUrl } = await import("../utils/youtubeUtils");
-			
+
 			vi.mocked(containsYouTubeUrl).mockReturnValue(false);
 
-			render(
-				<MessageContent
-					content="Just regular text"
-					messageType="text"
-				/>
-			);
+			render(<MessageContent content="Just regular text" messageType="text" />);
 
 			expect(screen.getByText("Just regular text")).toBeInTheDocument();
 			expect(screen.queryByTestId("youtube-embed")).not.toBeInTheDocument();
@@ -98,12 +99,7 @@ describe("MessageContent", () => {
 
 	describe("emoji messages", () => {
 		it("should render emoji message with large text", () => {
-			render(
-				<MessageContent
-					content="😀😃😄"
-					messageType="emoji"
-				/>
-			);
+			render(<MessageContent content="😀😃😄" messageType="emoji" />);
 
 			const emojiElement = screen.getByText("😀😃😄");
 			expect(emojiElement).toBeInTheDocument();
@@ -112,11 +108,7 @@ describe("MessageContent", () => {
 
 		it("should render emoji-only text message with large text", () => {
 			render(
-				<MessageContent
-					content="🎉"
-					messageType="text"
-					isEmojiOnly={true}
-				/>
+				<MessageContent content="🎉" messageType="text" isEmojiOnly={true} />,
 			);
 
 			const emojiElement = screen.getByText("🎉");
@@ -130,7 +122,7 @@ describe("MessageContent", () => {
 					content="🚀"
 					messageType="emoji"
 					className="custom-emoji-class"
-				/>
+				/>,
 			);
 
 			const emojiElement = screen.getByText("🚀");
@@ -141,10 +133,7 @@ describe("MessageContent", () => {
 	describe("system messages", () => {
 		it("should render system message with gray text", () => {
 			render(
-				<MessageContent
-					content="User joined the chat"
-					messageType="system"
-				/>
+				<MessageContent content="User joined the chat" messageType="system" />,
 			);
 
 			const systemElement = screen.getByText("User joined the chat");
@@ -158,7 +147,7 @@ describe("MessageContent", () => {
 					content="System notification"
 					messageType="system"
 					className="custom-system-class"
-				/>
+				/>,
 			);
 
 			const systemElement = screen.getByText("System notification");
@@ -172,37 +161,33 @@ describe("MessageContent", () => {
 				<MessageContent
 					content="File uploaded: document.pdf"
 					messageType="file"
-				/>
+				/>,
 			);
 
-			expect(screen.getByText("File uploaded: document.pdf")).toBeInTheDocument();
-			expect(screen.getByText("File uploaded: document.pdf")).toHaveClass("break-words");
+			expect(
+				screen.getByText("File uploaded: document.pdf"),
+			).toBeInTheDocument();
+			expect(screen.getByText("File uploaded: document.pdf")).toHaveClass(
+				"break-words",
+			);
 		});
 	});
 
 	describe("edge cases", () => {
 		it("should handle empty content", () => {
 			const { container } = render(
-				<MessageContent
-					content=""
-					messageType="text"
-				/>
+				<MessageContent content="" messageType="text" />,
 			);
 
 			// Should render empty div with break-words class
-			const messageDiv = container.querySelector('.break-words');
+			const messageDiv = container.querySelector(".break-words");
 			expect(messageDiv).toBeInTheDocument();
 		});
 
 		it("should handle very long text content", () => {
 			const longText = "A".repeat(1000);
-			
-			render(
-				<MessageContent
-					content={longText}
-					messageType="text"
-				/>
-			);
+
+			render(<MessageContent content={longText} messageType="text" />);
 
 			expect(screen.getByText(longText)).toBeInTheDocument();
 			expect(screen.getByText(longText)).toHaveClass("break-words");
@@ -210,20 +195,17 @@ describe("MessageContent", () => {
 
 		it("should handle special characters in content", () => {
 			const specialContent = "Special chars: <>&\"'";
-			
-			render(
-				<MessageContent
-					content={specialContent}
-					messageType="text"
-				/>
-			);
+
+			render(<MessageContent content={specialContent} messageType="text" />);
 
 			expect(screen.getByText(specialContent)).toBeInTheDocument();
 		});
 
 		it("should handle multiple YouTube videos in text", async () => {
-			const { containsYouTubeUrl, replaceYouTubeUrls } = await import("../utils/youtubeUtils");
-			
+			const { containsYouTubeUrl, replaceYouTubeUrls } = await import(
+				"../utils/youtubeUtils"
+			);
+
 			vi.mocked(containsYouTubeUrl).mockReturnValue(true);
 			vi.mocked(replaceYouTubeUrls).mockReturnValue({
 				text: "Video 1: [YOUTUBE_VIDEO_0] and Video 2: [YOUTUBE_VIDEO_1]",
@@ -235,7 +217,7 @@ describe("MessageContent", () => {
 						url: "https://www.youtube.com/watch?v=video1",
 					},
 					{
-						videoId: "video2", 
+						videoId: "video2",
 						thumbnailUrl: "https://img.youtube.com/vi/video2/maxresdefault.jpg",
 						embedUrl: "https://www.youtube-nocookie.com/embed/video2",
 						url: "https://www.youtube.com/watch?v=video2",
@@ -247,7 +229,7 @@ describe("MessageContent", () => {
 				<MessageContent
 					content="Video 1: https://www.youtube.com/watch?v=video1 and Video 2: https://www.youtube.com/watch?v=video2"
 					messageType="text"
-				/>
+				/>,
 			);
 
 			const embeds = screen.getAllByTestId("youtube-embed");

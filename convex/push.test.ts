@@ -3,9 +3,9 @@
  */
 
 import { convexTest } from "convex-test";
-import { describe, expect, it, beforeEach, vi } from "vitest";
-import schema from "./schema";
+import { beforeEach, describe, expect, it } from "vitest";
 import { api } from "./_generated/api";
+import schema from "./schema";
 
 // Import all Convex function modules for convex-test
 const modules = import.meta.glob("./**/!(*.*.*)*.*s");
@@ -32,11 +32,13 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create push subscription
-			const subscriptionId = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/test123",
-				p256dh: "test-p256dh-key",
-				auth: "test-auth-key",
-			});
+			const subscriptionId = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
+					p256dh: "test-p256dh-key",
+					auth: "test-auth-key",
+				});
 
 			expect(subscriptionId).toBeDefined();
 
@@ -67,18 +69,22 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create initial subscription
-			const initialId = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/test123",
-				p256dh: "initial-p256dh",
-				auth: "initial-auth",
-			});
+			const initialId = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
+					p256dh: "initial-p256dh",
+					auth: "initial-auth",
+				});
 
 			// Update with same endpoint but different keys
-			const updatedId = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/test123",
-				p256dh: "updated-p256dh",
-				auth: "updated-auth",
-			});
+			const updatedId = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
+					p256dh: "updated-p256dh",
+					auth: "updated-auth",
+				});
 
 			// Should return the same ID
 			expect(updatedId).toBe(initialId);
@@ -117,19 +123,23 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// User 1 creates subscription
-			await t.withIdentity({ subject: user1Id }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/test123",
-				p256dh: "user1-p256dh",
-				auth: "user1-auth",
-			});
+			await t
+				.withIdentity({ subject: user1Id })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
+					p256dh: "user1-p256dh",
+					auth: "user1-auth",
+				});
 
 			// User 2 tries to update the same endpoint
 			await expect(
-				t.withIdentity({ subject: user2Id }).mutation(api.push.upsertSubscription, {
-					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
-					p256dh: "user2-p256dh",
-					auth: "user2-auth",
-				})
+				t
+					.withIdentity({ subject: user2Id })
+					.mutation(api.push.upsertSubscription, {
+						endpoint: "https://fcm.googleapis.com/fcm/send/test123",
+						p256dh: "user2-p256dh",
+						auth: "user2-auth",
+					}),
 			).rejects.toThrow("Cannot update subscription belonging to another user");
 		});
 
@@ -141,7 +151,7 @@ describe("Push Notifications Backend", () => {
 					endpoint: "https://fcm.googleapis.com/fcm/send/test123",
 					p256dh: "test-p256dh",
 					auth: "test-auth",
-				})
+				}),
 			).rejects.toThrow("Not authenticated");
 		});
 	});
@@ -210,24 +220,30 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create push subscriptions for members
-			await t.withIdentity({ subject: member1Id }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/member1",
-				p256dh: "member1-p256dh",
-				auth: "member1-auth",
-			});
+			await t
+				.withIdentity({ subject: member1Id })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/member1",
+					p256dh: "member1-p256dh",
+					auth: "member1-auth",
+				});
 
-			await t.withIdentity({ subject: member2Id }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/member2",
-				p256dh: "member2-p256dh",
-				auth: "member2-auth",
-			});
+			await t
+				.withIdentity({ subject: member2Id })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/member2",
+					p256dh: "member2-p256dh",
+					auth: "member2-auth",
+				});
 
 			// Send group message notification
-			await t.withIdentity({ subject: senderId }).action(api.push.notifyNewGroupMessage, {
-				senderId,
-				groupId,
-				content: "Hello group!",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.action(api.push.notifyNewGroupMessage, {
+					senderId,
+					groupId,
+					content: "Hello group!",
+				});
 
 			// Note: We can't easily test the actual HTTP requests to the push service
 			// in this test environment, but we can verify the action doesn't throw
@@ -290,18 +306,22 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create push subscription for receiver
-			await t.withIdentity({ subject: receiverId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/receiver",
-				p256dh: "receiver-p256dh",
-				auth: "receiver-auth",
-			});
+			await t
+				.withIdentity({ subject: receiverId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/receiver",
+					p256dh: "receiver-p256dh",
+					auth: "receiver-auth",
+				});
 
 			// Send direct message notification
-			await t.withIdentity({ subject: senderId }).action(api.push.notifyNewDirectMessage, {
-				senderId,
-				receiverId,
-				content: "Hello there!",
-			});
+			await t
+				.withIdentity({ subject: senderId })
+				.action(api.push.notifyNewDirectMessage, {
+					senderId,
+					receiverId,
+					content: "Hello there!",
+				});
 
 			// Note: We can't easily test the actual HTTP requests to the push service
 			// in this test environment, but we can verify the action doesn't throw
@@ -354,17 +374,21 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create multiple subscriptions (different endpoints)
-			const subscription1Id = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/device1",
-				p256dh: "device1-p256dh",
-				auth: "device1-auth",
-			});
+			const subscription1Id = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/device1",
+					p256dh: "device1-p256dh",
+					auth: "device1-auth",
+				});
 
-			const subscription2Id = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/device2",
-				p256dh: "device2-p256dh",
-				auth: "device2-auth",
-			});
+			const subscription2Id = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/device2",
+					p256dh: "device2-p256dh",
+					auth: "device2-auth",
+				});
 
 			expect(subscription1Id).not.toBe(subscription2Id);
 
@@ -392,11 +416,13 @@ describe("Push Notifications Backend", () => {
 			});
 
 			// Create subscription
-			const subscriptionId = await t.withIdentity({ subject: userId }).mutation(api.push.upsertSubscription, {
-				endpoint: "https://fcm.googleapis.com/fcm/send/test",
-				p256dh: "test-p256dh",
-				auth: "test-auth",
-			});
+			const subscriptionId = await t
+				.withIdentity({ subject: userId })
+				.mutation(api.push.upsertSubscription, {
+					endpoint: "https://fcm.googleapis.com/fcm/send/test",
+					p256dh: "test-p256dh",
+					auth: "test-auth",
+				});
 
 			// Verify subscription exists
 			let subscription = await t.run(async (ctx) => {

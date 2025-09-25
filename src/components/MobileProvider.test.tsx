@@ -186,8 +186,14 @@ describe("MobileProvider", () => {
 			</MobileProvider>,
 		);
 
-		expect(Keyboard.addListener).toHaveBeenCalledWith("keyboardWillShow", expect.any(Function));
-		expect(Keyboard.addListener).toHaveBeenCalledWith("keyboardWillHide", expect.any(Function));
+		expect(Keyboard.addListener).toHaveBeenCalledWith(
+			"keyboardWillShow",
+			expect.any(Function),
+		);
+		expect(Keyboard.addListener).toHaveBeenCalledWith(
+			"keyboardWillHide",
+			expect.any(Function),
+		);
 	});
 
 	it("should not initialize native features on web platform", async () => {
@@ -220,7 +226,9 @@ describe("MobileProvider", () => {
 
 		vi.mocked(Capacitor.isNativePlatform).mockReturnValue(true);
 		vi.mocked(Capacitor.getPlatform).mockReturnValue("ios");
-		vi.mocked(StatusBar.setStyle).mockRejectedValue(new Error("Status bar error"));
+		vi.mocked(StatusBar.setStyle).mockRejectedValue(
+			new Error("Status bar error"),
+		);
 
 		render(
 			<MobileProvider>

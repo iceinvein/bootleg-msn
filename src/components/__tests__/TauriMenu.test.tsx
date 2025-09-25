@@ -2,7 +2,7 @@
  * Tests for TauriMenu component
  */
 
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { TauriMenu, TauriWindowControls } from "../TauriMenu";
 
@@ -47,7 +47,9 @@ vi.mock("@/components/ui/responsive-dropdown-menu", () => ({
 			{children}
 		</div>
 	),
-	ResponsiveDropdownMenuSeparator: () => <div data-testid="dropdown-separator" />,
+	ResponsiveDropdownMenuSeparator: () => (
+		<div data-testid="dropdown-separator" />
+	),
 }));
 
 // Mock Lucide icons
@@ -64,17 +66,17 @@ vi.mock("lucide-react", () => ({
 describe("TauriMenu", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Default mock implementations
 		mockUseTauri.mockReturnValue({
 			isTauri: true,
 			platform: "windows",
 		});
-		
+
 		mockUseSystemTray.mockReturnValue({
 			minimizeToTray: mockMinimizeToTray,
 		});
-		
+
 		mockUseChatWindows.mockReturnValue({
 			openChatWindow: mockOpenChatWindow,
 		});
@@ -136,7 +138,10 @@ describe("TauriMenu", () => {
 			fireEvent.click(menuItems[1]); // Second item is "New Chat Window"
 
 			await waitFor(() => {
-				expect(mockOpenChatWindow).toHaveBeenCalledWith("demo-chat", "Demo Contact");
+				expect(mockOpenChatWindow).toHaveBeenCalledWith(
+					"demo-chat",
+					"Demo Contact",
+				);
 			});
 		});
 
@@ -174,7 +179,9 @@ describe("TauriMenu", () => {
 
 	describe("Error Handling", () => {
 		it("should handle minimizeToTray errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockMinimizeToTray.mockRejectedValue(new Error("Minimize failed"));
 
 			render(<TauriMenu />);
@@ -183,14 +190,19 @@ describe("TauriMenu", () => {
 			fireEvent.click(menuItems[4]); // Minimize to Tray
 
 			await waitFor(() => {
-				expect(consoleSpy).toHaveBeenCalledWith("Failed to minimize to tray:", expect.any(Error));
+				expect(consoleSpy).toHaveBeenCalledWith(
+					"Failed to minimize to tray:",
+					expect.any(Error),
+				);
 			});
 
 			consoleSpy.mockRestore();
 		});
 
 		it("should handle openChatWindow errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockOpenChatWindow.mockRejectedValue(new Error("Open window failed"));
 
 			render(<TauriMenu />);
@@ -199,7 +211,10 @@ describe("TauriMenu", () => {
 			fireEvent.click(menuItems[1]); // New Chat Window
 
 			await waitFor(() => {
-				expect(consoleSpy).toHaveBeenCalledWith("Failed to open chat window:", expect.any(Error));
+				expect(consoleSpy).toHaveBeenCalledWith(
+					"Failed to open chat window:",
+					expect.any(Error),
+				);
 			});
 
 			consoleSpy.mockRestore();
@@ -226,18 +241,18 @@ describe("TauriMenu", () => {
 describe("TauriWindowControls", () => {
 	beforeEach(() => {
 		vi.clearAllMocks();
-		
+
 		// Mock window.close
 		Object.defineProperty(window, "close", {
 			value: vi.fn(),
 			writable: true,
 		});
-		
+
 		mockUseTauri.mockReturnValue({
 			isTauri: true,
 			platform: "windows",
 		});
-		
+
 		mockUseSystemTray.mockReturnValue({
 			minimizeToTray: mockMinimizeToTray,
 		});
@@ -310,7 +325,9 @@ describe("TauriWindowControls", () => {
 
 	describe("Error Handling", () => {
 		it("should handle minimize errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			mockMinimizeToTray.mockRejectedValue(new Error("Minimize failed"));
 
 			render(<TauriWindowControls />);
@@ -319,14 +336,19 @@ describe("TauriWindowControls", () => {
 			fireEvent.click(minimizeButton);
 
 			await waitFor(() => {
-				expect(consoleSpy).toHaveBeenCalledWith("Failed to minimize window:", expect.any(Error));
+				expect(consoleSpy).toHaveBeenCalledWith(
+					"Failed to minimize window:",
+					expect.any(Error),
+				);
 			});
 
 			consoleSpy.mockRestore();
 		});
 
 		it("should handle close errors gracefully", async () => {
-			const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+			const consoleSpy = vi
+				.spyOn(console, "error")
+				.mockImplementation(() => {});
 			const mockClose = vi.fn().mockImplementation(() => {
 				throw new Error("Close failed");
 			});
@@ -341,7 +363,10 @@ describe("TauriWindowControls", () => {
 			fireEvent.click(closeButton);
 
 			await waitFor(() => {
-				expect(consoleSpy).toHaveBeenCalledWith("Failed to close window:", expect.any(Error));
+				expect(consoleSpy).toHaveBeenCalledWith(
+					"Failed to close window:",
+					expect.any(Error),
+				);
 			});
 
 			consoleSpy.mockRestore();

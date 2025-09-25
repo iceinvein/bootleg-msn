@@ -1,5 +1,5 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, expect, it, vi, beforeEach } from "vitest";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StatusBar } from "./StatusBar";
 
 // Mock Convex hooks
@@ -20,7 +20,13 @@ vi.mock("@/hooks/useOverlays", () => ({
 }));
 
 vi.mock("./StatusMessage", () => ({
-	StatusMessage: ({ initialStatus, onSave }: { initialStatus: string; onSave: (message: string) => void }) => (
+	StatusMessage: ({
+		initialStatus,
+		onSave,
+	}: {
+		initialStatus: string;
+		onSave: (message: string) => void;
+	}) => (
 		<div data-testid="status-message">
 			<span>{initialStatus || "No status"}</span>
 			<button onClick={() => onSave("New status")}>Update Status</button>
@@ -29,20 +35,40 @@ vi.mock("./StatusMessage", () => ({
 }));
 
 vi.mock("./StatusSelector", () => ({
-	StatusSelector: ({ currentStatus, onStatusChange }: { currentStatus: string; onStatusChange: (status: string) => void }) => (
+	StatusSelector: ({
+		currentStatus,
+		onStatusChange,
+	}: {
+		currentStatus: string;
+		onStatusChange: (status: string) => void;
+	}) => (
 		<div data-testid="status-selector">
 			<span>Current: {currentStatus}</span>
 			<button onClick={() => onStatusChange("away")}>Change to Away</button>
 			<button onClick={() => onStatusChange("busy")}>Change to Busy</button>
-			<button onClick={() => onStatusChange("invisible")}>Change to Invisible</button>
+			<button onClick={() => onStatusChange("invisible")}>
+				Change to Invisible
+			</button>
 		</div>
 	),
 }));
 
 // Mock Radix UI Avatar components
 vi.mock("@radix-ui/react-avatar", () => ({
-	Avatar: ({ children, className, title, ...props }: { children: React.ReactNode; className?: string; title?: string; [key: string]: any }) => (
-		<div data-testid="avatar" className={className} title={title} {...props}>{children}</div>
+	Avatar: ({
+		children,
+		className,
+		title,
+		...props
+	}: {
+		children: React.ReactNode;
+		className?: string;
+		title?: string;
+		[key: string]: any;
+	}) => (
+		<div data-testid="avatar" className={className} title={title} {...props}>
+			{children}
+		</div>
 	),
 	AvatarImage: ({ src }: { src: string }) => (
 		<img data-testid="avatar-image" src={src} alt="Avatar" />
@@ -53,8 +79,16 @@ vi.mock("@radix-ui/react-avatar", () => ({
 }));
 
 vi.mock("./ui/badge", () => ({
-	Badge: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-		<span data-testid="badge" className={className}>{children}</span>
+	Badge: ({
+		children,
+		className,
+	}: {
+		children: React.ReactNode;
+		className?: string;
+	}) => (
+		<span data-testid="badge" className={className}>
+			{children}
+		</span>
 	),
 }));
 
@@ -255,12 +289,17 @@ describe("StatusBar", () => {
 	describe("Avatar Display", () => {
 		it("should show avatar image when available", async () => {
 			const { useUserAvatarUrls } = await import("@/hooks/useAvatarUrls");
-			vi.mocked(useUserAvatarUrls).mockReturnValue(new Map([["user1" as any, "https://example.com/avatar.jpg"]]));
+			vi.mocked(useUserAvatarUrls).mockReturnValue(
+				new Map([["user1" as any, "https://example.com/avatar.jpg"]]),
+			);
 
 			render(<StatusBar user={mockUser} />);
 
 			expect(screen.getByTestId("avatar-image")).toBeInTheDocument();
-			expect(screen.getByTestId("avatar-image")).toHaveAttribute("src", "https://example.com/avatar.jpg");
+			expect(screen.getByTestId("avatar-image")).toHaveAttribute(
+				"src",
+				"https://example.com/avatar.jpg",
+			);
 		});
 
 		it("should show fallback when no avatar available", async () => {

@@ -1,9 +1,9 @@
-import { renderHook, act, waitFor } from "@testing-library/react";
-import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { toast } from "sonner";
-import { useMessageNotifications } from "./useMessageNotifications";
-import { $selectedChat } from "@/stores/contact";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { chatWindowHelpers } from "@/stores/chatWindows";
+import { $selectedChat } from "@/stores/contact";
+import { useMessageNotifications } from "./useMessageNotifications";
 
 // Mock dependencies
 vi.mock("sonner", () => ({
@@ -137,7 +137,7 @@ describe("useMessageNotifications", () => {
 
 		// Wait for any async effects to complete
 		await act(async () => {
-			await new Promise(resolve => setTimeout(resolve, 0));
+			await new Promise((resolve) => setTimeout(resolve, 0));
 		});
 
 		expect(result.current).toBeDefined();
@@ -266,7 +266,7 @@ describe("useMessageNotifications", () => {
 
 		// Mock document.hasFocus to return true so window is considered focused
 		const mockHasFocus = vi.fn().mockReturnValue(true);
-		Object.defineProperty(document, 'hasFocus', {
+		Object.defineProperty(document, "hasFocus", {
 			value: mockHasFocus,
 			writable: true,
 		});
@@ -299,7 +299,8 @@ describe("useMessageNotifications", () => {
 	it("should truncate long messages in notifications", async () => {
 		const longMessage = {
 			...mockDirectMessage,
-			content: "This is a very long message that should be truncated because it exceeds the 50 character limit for toast notifications",
+			content:
+				"This is a very long message that should be truncated because it exceeds the 50 character limit for toast notifications",
 		};
 
 		vi.mocked(chatWindowHelpers.isChatActiveAnywhere).mockReturnValue(false);
@@ -427,9 +428,13 @@ describe("useMessageNotifications", () => {
 		const toastOptions = toastCall[1];
 
 		act(() => {
-			if (toastOptions && typeof toastOptions === 'object' && 'action' in toastOptions) {
+			if (
+				toastOptions &&
+				typeof toastOptions === "object" &&
+				"action" in toastOptions
+			) {
 				const action = toastOptions.action as any;
-				if (action && typeof action.onClick === 'function') {
+				if (action && typeof action.onClick === "function") {
 					action.onClick();
 				}
 			}

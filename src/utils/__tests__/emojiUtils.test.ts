@@ -2,7 +2,7 @@
  * Tests for emoji utility functions
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import { convertTextToEmoji, isOnlyEmoji } from "../emojiUtils";
 
 describe("emojiUtils", () => {
@@ -17,8 +17,12 @@ describe("emojiUtils", () => {
 		});
 
 		it("should convert text with multiple emojis", () => {
-			expect(convertTextToEmoji("Hello :) How are you? :(")).toBe("Hello 🙂 How are you? 🙁");
-			expect(convertTextToEmoji("Great job! :D :thumbsup:")).toBe("Great job! 😃 👍");
+			expect(convertTextToEmoji("Hello :) How are you? :(")).toBe(
+				"Hello 🙂 How are you? 🙁",
+			);
+			expect(convertTextToEmoji("Great job! :D :thumbsup:")).toBe(
+				"Great job! 😃 👍",
+			);
 		});
 
 		it("should convert colon-wrapped emoji codes", () => {
@@ -68,8 +72,12 @@ describe("emojiUtils", () => {
 		});
 
 		it("should handle special regex characters in text", () => {
-			expect(convertTextToEmoji("Test (parentheses) :)")).toBe("Test (parentheses) 🙂");
-			expect(convertTextToEmoji("Test [brackets] :(")).toBe("Test [brackets] 🙁");
+			expect(convertTextToEmoji("Test (parentheses) :)")).toBe(
+				"Test (parentheses) 🙂",
+			);
+			expect(convertTextToEmoji("Test [brackets] :(")).toBe(
+				"Test [brackets] 🙁",
+			);
 			expect(convertTextToEmoji("Test {braces} :D")).toBe("Test {braces} 😃");
 		});
 
