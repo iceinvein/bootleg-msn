@@ -179,14 +179,16 @@ function ResponsiveDropdownMenuItem({
 
 	if (isMobile) {
 		return (
-			<Button
-				variant="ghost"
-				className={`w-full justify-start h-auto p-3 text-left font-normal ${className || ""}`}
-				onClick={onClick}
-				disabled={disabled}
-			>
-				{children}
-			</Button>
+			<DrawerClose asChild>
+				<Button
+					variant="ghost"
+					className={`w-full justify-start h-auto p-3 text-left font-normal ${className || ""}`}
+					onClick={onClick}
+					disabled={disabled}
+				>
+					{children}
+				</Button>
+			</DrawerClose>
 		);
 	}
 

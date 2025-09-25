@@ -45,6 +45,20 @@ export const sendNudgeValidator = v.object({
 	conversationType: v.union(v.literal("direct"), v.literal("group")),
 });
 
+// Emote validation schemas
+export const emoteTypeValidator = v.union(v.literal("screen_crack"));
+
+export const sendEmoteValidator = v.object({
+	toUserId: v.id("users"),
+	emoteType: emoteTypeValidator,
+	conversationId: v.optional(v.string()),
+	conversationType: v.union(v.literal("direct"), v.literal("group")),
+});
+
+export const consumeEmoteValidator = v.object({
+	emoteId: v.id("emotes"),
+});
+
 // Voice message validation schemas
 export const voiceMessageValidator = v.object({
 	messageId: v.id("messages"),

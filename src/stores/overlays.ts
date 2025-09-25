@@ -70,6 +70,7 @@ const DEFAULT_PERSIST: Record<OverlayType, boolean> = {
 	ADD_MEMBERS: false,
 	CONTACT_REQUESTS: true,
 	AVATAR_EDITOR: false,
+	SCREEN_CRACK: false,
 };
 
 /**

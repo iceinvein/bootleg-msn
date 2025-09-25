@@ -1,4 +1,8 @@
 import { api } from "@convex/_generated/api";
+
+// Guard to avoid StrictMode double-invocation opening overlays twice for the same emote
+const __emoteOnceGuard = new Set<string>();
+
 import type { Id } from "@convex/_generated/dataModel";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
@@ -9,6 +13,7 @@ import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
 import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
+import { useOverlays } from "@/hooks/useOverlays";
 import { setGroupAvatars, setUserAvatars } from "@/stores/avatars";
 import {
 	$contactIsTyping,
@@ -46,6 +51,48 @@ export function Chat() {
 		cooldownRemaining,
 		isShaking,
 	} = useNudge();
+
+	// Emotes sending
+	const sendEmote = useMutation(api.emotes.sendEmote);
+
+	const handleSendEmote = useCallback(
+		(type: "screen_crack") => {
+			if (!selectedUserId) return;
+			sendEmote({
+				toUserId: selectedUserId as Id<"users">,
+				emoteType: type,
+				conversationType: "direct",
+			}).catch((e) => console.warn("Failed to send emote:", e));
+		},
+		[selectedUserId, sendEmote],
+	);
+	// Full-screen emotes
+	const { open } = useOverlays();
+
+	const pendingEmote = useQuery(
+		api.emotes.getPendingEmoteForDirectChat,
+		selectedChat?.contact?.contactUserId
+			? { otherUserId: selectedChat.contact.contactUserId }
+			: "skip",
+	);
+	const consumeEmote = useMutation(api.emotes.consumeEmote);
+	const lastEmoteIdRef = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (!pendingEmote) return;
+		if (pendingEmote.emoteType !== "screen_crack") return;
+		const emoteId = String(pendingEmote._id);
+		// Guard against StrictMode double-invocation or transient double renders
+		if (__emoteOnceGuard.has(emoteId)) return;
+		__emoteOnceGuard.add(emoteId);
+		lastEmoteIdRef.current = emoteId;
+
+		open({ type: "SCREEN_CRACK", props: { durationMs: 3000 } });
+		consumeEmote({ emoteId: pendingEmote._id }).catch((e) => {
+			console.warn("Failed to consume emote:", e);
+		});
+	}, [pendingEmote, open, consumeEmote]);
+
 	const isMobile = useMediaQuery("(max-width: 768px)");
 
 	// Update typing indicator stores
@@ -200,6 +247,20 @@ export function Chat() {
 
 		const messageContent = messageInput.trim();
 
+		// Slash command: /crack to send a full-screen screen crack emote (no visible message)
+		if (messageContent === "/crack" && selectedChat?.contact?.contactUserId) {
+			try {
+				await sendEmote({
+					toUserId: selectedChat.contact.contactUserId,
+					emoteType: "screen_crack",
+					conversationType: "direct",
+				});
+				return;
+			} catch (err) {
+				console.error("Failed to send emote:", err);
+			}
+		}
+
 		// Clear input immediately for better UX
 		setMessageInput("");
 
@@ -316,6 +377,7 @@ export function Chat() {
 						onSubmit={handleSendMessage}
 						onEmojiSelect={handleEmojiSelect}
 						onSendNudge={handleSendNudge}
+						onSendEmote={handleSendEmote}
 						isNudgeSending={isNudgeSending}
 						cooldownRemaining={cooldownRemaining}
 					/>

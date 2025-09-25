@@ -351,6 +351,6 @@ describe("OverlayRenderer utilities", () => {
 		expect(supportedTypes).toContain("CONTACT_REQUESTS");
 		expect(supportedTypes).toContain("AVATAR_EDITOR");
 
-		expect(supportedTypes).toHaveLength(15);
+		expect(supportedTypes).toHaveLength(16);
 	});
 });

@@ -58,7 +58,6 @@ export function overlayDebugLog(
 			norm[k] = v;
 		}
 	}
-	// eslint-disable-next-line no-console
 	console.log(`[OverlayDebug] ${now()} ${event}`, norm);
 }
 

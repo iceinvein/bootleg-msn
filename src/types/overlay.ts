@@ -23,7 +23,8 @@ export type OverlayType =
 	| "GROUP_INFO" // Group info dialog
 	| "ADD_MEMBERS" // Add members to group
 	| "CONTACT_REQUESTS" // Contact requests management
-	| "AVATAR_EDITOR"; // Avatar editor
+	| "AVATAR_EDITOR" // Avatar editor
+	| "SCREEN_CRACK"; // Full-screen crack emote overlay
 
 /**
  * Unique identifier for overlay instances
@@ -199,6 +200,18 @@ export type InviteUsersOverlayProps = BaseOverlayProps & {
 };
 
 /**
+ * Props specific to full-screen screen crack emote overlay
+ */
+export type ScreenCrackOverlayProps = BaseOverlayProps & {
+	/** Duration in milliseconds before auto close */
+	durationMs?: number;
+	/** Optional impact point in normalized viewport coords (0..1) */
+	impact?: { x: number; y: number };
+	/** Callback when overlay closes */
+	onClose?: () => void;
+};
+
+/**
  * Props specific to file preview dialogs
  */
 export type FilePreviewOverlayProps = BaseOverlayProps & {
@@ -251,6 +264,7 @@ export type OverlayProps =
 	| FilePreviewOverlayProps
 	| EmojiPickerOverlayProps
 	| ThemeSelectorOverlayProps
+	| ScreenCrackOverlayProps
 	| BaseOverlayProps;
 
 /**

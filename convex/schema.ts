@@ -204,6 +204,23 @@ const applicationTables = {
 		.index("by_recipient_and_time", ["toUserId", "createdAt"])
 		.index("by_sender_and_time", ["fromUserId", "createdAt"]),
 
+	// Full-screen emotes (e.g., screen crack)
+	emotes: defineTable({
+		fromUserId: v.id("users"),
+		toUserId: v.id("users"),
+		emoteType: v.union(v.literal("screen_crack")),
+		conversationId: v.optional(v.string()), // "user_id" or "group_id"
+		conversationType: v.union(v.literal("direct"), v.literal("group")),
+		consumed: v.boolean(),
+		consumedAt: v.optional(v.number()),
+		createdAt: v.number(),
+	})
+		.index("by_recipient", ["toUserId"])
+		.index("by_sender", ["fromUserId"])
+		.index("by_recipient_and_time", ["toUserId", "createdAt"])
+		.index("by_sender_and_time", ["fromUserId", "createdAt"])
+		.index("by_conversation", ["conversationId"]),
+
 	// Voice messages
 	voiceMessages: defineTable({
 		messageId: v.id("messages"),

@@ -1,6 +1,7 @@
 import { useStore } from "@nanostores/react";
 import { motion } from "framer-motion";
-import { Send, Smile, Zap } from "lucide-react";
+import { Send, Smile, Stars, Zap } from "lucide-react";
+
 import {
 	$canNudge,
 	$chatDisplayName,
@@ -11,6 +12,14 @@ import { FileUpload } from "../FileUpload";
 import { fadeInUp, hoverScale, tapScale } from "../ui/animated";
 import { Button } from "../ui/button";
 import { Input } from "../ui/input";
+import {
+	ResponsiveDropdownMenu,
+	ResponsiveDropdownMenuContent,
+	ResponsiveDropdownMenuItem,
+	ResponsiveDropdownMenuLabel,
+	ResponsiveDropdownMenuSeparator,
+	ResponsiveDropdownMenuTrigger,
+} from "../ui/responsive-dropdown-menu";
 
 export type ChatComposerProps = {
 	value: string;
@@ -18,6 +27,7 @@ export type ChatComposerProps = {
 	onSubmit: (e: React.FormEvent) => void;
 	onEmojiSelect: (emoji: string) => void;
 	onSendNudge: () => void;
+	onSendEmote?: (type: "screen_crack") => void;
 	isNudgeSending: boolean;
 	cooldownRemaining: number;
 	onFileUploaded?: () => void;
@@ -29,6 +39,7 @@ export function ChatComposer({
 	onSubmit,
 	onEmojiSelect,
 	onSendNudge,
+	onSendEmote,
 	isNudgeSending,
 	cooldownRemaining,
 	onFileUploaded,
@@ -38,6 +49,7 @@ export function ChatComposer({
 	const fileUploadContext = useStore($fileUploadContext);
 
 	const placeholder = `Message ${chatDisplayName}...`;
+
 	return (
 		<div className="chat-input">
 			<motion.div
@@ -67,25 +79,59 @@ export function ChatComposer({
 						</motion.div>
 					</EmojiPicker>
 					{canNudge && (
-						<motion.div whileHover={hoverScale} whileTap={tapScale}>
-							<Button
-								type="button"
-								variant="ghost"
-								size="sm"
-								className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
-								onClick={onSendNudge}
-								disabled={isNudgeSending || cooldownRemaining > 0}
-								title={
-									cooldownRemaining > 0
-										? `Wait ${cooldownRemaining}s before sending another nudge`
-										: "Send a nudge"
-								}
-							>
-								<Zap
-									className={`h-3 w-3 md:h-4 md:w-4 ${cooldownRemaining > 0 ? "opacity-50" : ""}`}
-								/>
-							</Button>
-						</motion.div>
+						<>
+							<motion.div whileHover={hoverScale} whileTap={tapScale}>
+								<Button
+									type="button"
+									variant="ghost"
+									size="sm"
+									className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+									onClick={onSendNudge}
+									disabled={isNudgeSending || cooldownRemaining > 0}
+									title={
+										cooldownRemaining > 0
+											? `Wait ${cooldownRemaining}s before sending another nudge`
+											: "Send a nudge"
+									}
+								>
+									<Zap
+										className={`h-3 w-3 md:h-4 md:w-4 ${cooldownRemaining > 0 ? "opacity-50" : ""}`}
+									/>
+								</Button>
+							</motion.div>
+							{/* Emotes dropdown (desktop: Radix dropdown, mobile: Drawer) */}
+							<ResponsiveDropdownMenu>
+								<ResponsiveDropdownMenuTrigger asChild>
+									<motion.div whileHover={hoverScale} whileTap={tapScale}>
+										<Button
+											type="button"
+											variant="ghost"
+											size="sm"
+											className="h-8 w-8 flex-shrink-0 md:h-10 md:w-10"
+											title="Send an emote"
+										>
+											<Stars className="h-3 w-3 md:h-4 md:w-4" />
+										</Button>
+									</motion.div>
+								</ResponsiveDropdownMenuTrigger>
+								<ResponsiveDropdownMenuContent title="Emotes">
+									<ResponsiveDropdownMenuLabel>
+										Full-screen
+									</ResponsiveDropdownMenuLabel>
+									<ResponsiveDropdownMenuItem
+										onClick={() => {
+											onSendEmote?.("screen_crack");
+										}}
+									>
+										Crack the screen
+									</ResponsiveDropdownMenuItem>
+									<ResponsiveDropdownMenuSeparator />
+									<ResponsiveDropdownMenuLabel className="text-muted-foreground text-xs">
+										More emotes coming soon
+									</ResponsiveDropdownMenuLabel>
+								</ResponsiveDropdownMenuContent>
+							</ResponsiveDropdownMenu>
+						</>
 					)}
 					<Input
 						value={value}

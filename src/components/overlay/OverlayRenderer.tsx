@@ -26,6 +26,7 @@ import { FilePreviewOverlay } from "./overlays/FilePreviewOverlay";
 import { GroupInfoOverlay } from "./overlays/GroupInfoOverlay";
 import { InfoOverlay } from "./overlays/InfoOverlay";
 import { InviteUsersOverlay } from "./overlays/InviteUsersOverlay";
+import { ScreenCrackOverlay } from "./overlays/ScreenCrackOverlay";
 import { SettingsOverlay } from "./overlays/SettingsOverlay";
 import { SheetOverlay } from "./overlays/SheetOverlay";
 import { ThemeSelectorOverlay } from "./overlays/ThemeSelectorOverlay";
@@ -70,6 +71,7 @@ const OVERLAY_COMPONENTS: Record<OverlayType, OverlayComponent> = {
 	ADD_MEMBERS: AddMembersOverlay as OverlayComponent,
 	CONTACT_REQUESTS: ContactRequestsOverlay as OverlayComponent,
 	AVATAR_EDITOR: AvatarEditorOverlay as OverlayComponent,
+	SCREEN_CRACK: ScreenCrackOverlay as OverlayComponent,
 };
 
 /**
