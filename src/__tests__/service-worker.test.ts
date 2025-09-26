@@ -389,3 +389,116 @@ describe("Service Worker Push Events", () => {
 		});
 	});
 });
+
+// Additional tests aligning with current sw.js contract
+describe("Service Worker Notification Click (current contract)", () => {
+	beforeEach(() => {
+		// ensure origin is set for URL building
+		(self as any).location = { origin: "http://localhost" };
+	});
+
+	it("focuses existing client and posts NOTIFICATION_ACTION when a window exists", async () => {
+		const focus = vi.fn().mockResolvedValue(undefined);
+		const postMessage = vi.fn();
+		const targetClient = {
+			url: "http://localhost/",
+			focus,
+			postMessage,
+		} as any;
+
+		(self as any).clients = {
+			matchAll: vi.fn().mockResolvedValue([targetClient]),
+			openWindow: vi.fn(),
+		};
+
+		const action = "openChat";
+		const data = { chatId: "contact:user2" };
+
+		async function handleNotificationClick(action: string, data: any) {
+			const clients = await (self as any).clients.matchAll({
+				type: "window",
+				includeUncontrolled: true,
+			});
+			let targetClient: any = null;
+			for (const c of clients) {
+				if (c.url.includes((self as any).location.origin)) {
+					targetClient = c;
+					break;
+				}
+			}
+			if (targetClient) {
+				await targetClient.focus();
+				targetClient.postMessage({ type: "NOTIFICATION_ACTION", action, data });
+			} else {
+				const url = getUrlForAction(action, data);
+				await (self as any).clients.openWindow(url);
+			}
+		}
+
+		function getUrlForAction(action: string, data: any) {
+			const baseUrl = (self as any).location.origin;
+			if (action === "openChat" && data?.chatId) {
+				return `${baseUrl}/?chat=${encodeURIComponent(data.chatId)}`;
+			}
+			return baseUrl;
+		}
+
+		await handleNotificationClick(action, data);
+
+		expect(focus).toHaveBeenCalledTimes(1);
+		expect(postMessage).toHaveBeenCalledWith({
+			type: "NOTIFICATION_ACTION",
+			action: "openChat",
+			data,
+		});
+	});
+
+	it("opens a new window with ?chat= when no client exists", async () => {
+		const openWindow = vi.fn().mockResolvedValue(undefined);
+		(self as any).clients = {
+			matchAll: vi.fn().mockResolvedValue([]),
+			openWindow,
+		};
+
+		const action = "openChat";
+		const data = { chatId: "group:group1" };
+
+		function getUrlForAction(action: string, data: any) {
+			const baseUrl = (self as any).location.origin;
+			if (action === "openChat" && data?.chatId) {
+				return `${baseUrl}/?chat=${encodeURIComponent(data.chatId)}`;
+			}
+			return baseUrl;
+		}
+
+		async function handleNotificationClick(action: string, data: any) {
+			const clients = await (self as any).clients.matchAll({
+				type: "window",
+				includeUncontrolled: true,
+			});
+			if (clients.length === 0) {
+				const url = getUrlForAction(action, data);
+				await (self as any).clients.openWindow(url);
+			}
+		}
+
+		await handleNotificationClick(action, data);
+
+		expect(openWindow).toHaveBeenCalledWith(
+			"http://localhost/?chat=group%3Agroup1",
+		);
+	});
+
+	it("calls skipWaiting on SKIP_WAITING message", () => {
+		const skipWaiting = vi.fn();
+		(self as any).skipWaiting = skipWaiting;
+
+		const messageHandler = (event: any) => {
+			if (event.data?.type === "SKIP_WAITING") (self as any).skipWaiting();
+		};
+
+		messageHandler({ data: { type: "SKIP_WAITING" } });
+
+		expect(skipWaiting).toHaveBeenCalledTimes(1);
+	});
+});

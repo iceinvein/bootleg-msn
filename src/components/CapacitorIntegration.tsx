@@ -25,16 +25,43 @@ export function CapacitorIntegration() {
 			// Save current state or pause real-time connections
 		};
 
-		// Handle deep links
+		// Handle deep links (Capacitor AppUrlOpen -> our URL/chat navigation)
 		const handleDeepLink = (event: CustomEvent) => {
-			// Handle navigation based on deep link
-			const url = event.detail as string;
+			const raw = (event.detail as string) || "";
+			if (!raw) return;
 
-			// Example: msn://chat/user123 or msn://group/group456
-			if (url.startsWith("msn://")) {
-				const _path = url.replace("msn://", "");
-				// TODO: Navigate to appropriate screen based on path
+			// Try to normalize to a chat string acceptable by useChatUrlSync
+			// Prefer ?chat=... if present; otherwise support custom scheme msn://chat/<id> or msn://group/<id>
+			let chatParam: string | null = null;
+			try {
+				const u = new URL(raw);
+				const qp = u.searchParams.get("chat");
+				if (qp) {
+					chatParam = qp; // could be "contact:ID", "group:ID" or legacy ID
+				} else if (u.protocol === "msn:") {
+					const host = u.host; // e.g. "chat" | "group"
+					const id = u.pathname.replace(/^\/+/, "");
+					if (host === "group" && id) chatParam = `group:${id}`;
+					else if (host === "chat" && id) {
+						chatParam = id.includes(":") ? id : `contact:${id}`;
+					}
+				} else if (/\/chat\//.test(u.pathname)) {
+					// Support https://.../chat/<id>
+					const id = u.pathname.split("/chat/")[1]?.split("/")[0];
+					if (id) chatParam = id.includes(":") ? id : `contact:${id}`;
+				}
+			} catch {
+				// As a last resort, look for chat= in the raw string
+				const m = raw.match(/[?&]chat=([^&#]+)/);
+				if (m?.[1]) chatParam = decodeURIComponent(m[1]);
 			}
+
+			if (!chatParam) return;
+
+			// Unify on navigate-to-chat; useChatUrlSync will set ?chat and open
+			window.dispatchEvent(
+				new CustomEvent("navigate-to-chat", { detail: { chatId: chatParam } }),
+			);
 		};
 
 		// Add event listeners

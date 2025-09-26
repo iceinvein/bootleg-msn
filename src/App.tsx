@@ -3,6 +3,7 @@ import { Authenticated, AuthLoading, Unauthenticated } from "convex/react";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { CapacitorIntegration } from "./components/CapacitorIntegration";
+import { ChatOnlyView } from "./components/ChatOnlyView";
 import { MessengerApp } from "./components/MessengerApp";
 import { MobileProvider } from "./components/MobileProvider";
 import { OAuthCallback } from "./components/OAuthCallback";
@@ -13,6 +14,7 @@ import { TauriIntegration, TauriStyles } from "./components/TauriIntegration";
 import { ThemeProvider } from "./components/theme-provider";
 import { UpdateNotification } from "./components/UpdateNotification";
 import { Toaster } from "./components/ui/sonner";
+import { useChatUrlSync } from "./hooks/useChatUrlSync";
 import { useBidirectionalSync } from "./hooks/useOverlaySync";
 import { Platform } from "./utils/platform";
 
@@ -25,6 +27,7 @@ function App() {
 	} | null>(null);
 	const { signIn } = useAuthActions();
 	const [searchParams] = useSearchParams();
+	const isChatOnlyWindow = (searchParams.get("window") ?? "") === "chat";
 
 	// Initialize overlay URL synchronization for deep linking and shareability
 	useBidirectionalSync({
@@ -34,6 +37,9 @@ function App() {
 		debounceMs: 100,
 		preventLoops: true,
 	});
+
+	// Initialize chat URL synchronization (deep links, notifications)
+	useChatUrlSync();
 
 	useEffect(() => {
 		/**
@@ -179,7 +185,7 @@ function App() {
 								</Unauthenticated>
 
 								<Authenticated>
-									<MessengerApp />
+									{isChatOnlyWindow ? <ChatOnlyView /> : <MessengerApp />}
 									<UpdateNotification />
 									{/* Initialize Web Push subscription & persistence when logged in */}
 									<PushSubscriptionInitializer />

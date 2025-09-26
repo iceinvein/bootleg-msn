@@ -120,7 +120,49 @@ describe("useChatWindows", () => {
 			await result.current.openChatWindow("test-chat", "Test Contact");
 		});
 
-		expect(mockOpen).toHaveBeenCalledWith("/#/chat/test-chat", "_blank");
+		expect(mockOpen).toHaveBeenCalledWith(
+			"/?chat=contact%3Atest-chat&window=chat",
+			"_blank",
+		);
+	});
+
+	it("normalizes chatId and calls Tauri createChatWindow in Tauri env", async () => {
+		// Switch mock environment to Tauri for this test only
+		const tauriModule = await import("@/lib/tauri");
+		const isTauriMock = (tauriModule as any).isTauri;
+		isTauriMock.mockReturnValue(true);
+
+		const { result } = renderHook(() => useChatWindows());
+
+		await act(async () => {
+			await result.current.openChatWindow("userABC", "Alice");
+		});
+
+		expect((tauriModule as any).tauriApi.createChatWindow).toHaveBeenCalledWith(
+			"contact:userABC",
+			"Alice",
+		);
+
+		// Restore default non-Tauri behavior for subsequent tests
+		isTauriMock.mockReturnValue(false);
+	});
+
+	it("normalizes chatId for closeChatWindow in Tauri env", async () => {
+		const tauriModule = await import("@/lib/tauri");
+		const isTauriMock = (tauriModule as any).isTauri;
+		isTauriMock.mockReturnValue(true);
+
+		const { result } = renderHook(() => useChatWindows());
+
+		await act(async () => {
+			await result.current.closeChatWindow("userXYZ");
+		});
+
+		expect((tauriModule as any).tauriApi.closeChatWindow).toHaveBeenCalledWith(
+			"contact:userXYZ",
+		);
+
+		isTauriMock.mockReturnValue(false);
 	});
 });
 

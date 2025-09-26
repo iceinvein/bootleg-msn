@@ -47,7 +47,7 @@ export const Platform = {
 		}
 
 		// Check for Tauri v2 globals first
-		if ("__TAURI__" in window || "__TAURI_INTERNALS__" in window) {
+		if ("__TAURI_INTERNALS__" in window) {
 			tauriDetectionCache = true;
 			return true;
 		}

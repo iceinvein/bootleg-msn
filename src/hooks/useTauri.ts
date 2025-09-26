@@ -7,6 +7,8 @@ import {
 	windowManager,
 } from "@/lib/tauri";
 
+import { normalizeChatId } from "@/utils/chatId";
+
 export type Platform = "windows" | "macos" | "linux" | "web";
 
 export const useTauri = () => {
@@ -82,11 +84,13 @@ export const useChatWindows = () => {
 
 	const openChatWindow = useCallback(
 		async (chatId: string, contactName: string) => {
+			const normalized = normalizeChatId(chatId);
 			if (isTauriApp) {
-				await api.createChatWindow(chatId, contactName);
+				await api.createChatWindow(normalized, contactName);
 			} else {
-				// Fallback for web - could open in new tab or modal
-				window.open(`/#/chat/${chatId}`, "_blank");
+				// Fallback for web - open a new tab in chat-only mode using our URL contract
+				const url = `/?chat=${encodeURIComponent(normalized)}&window=chat`;
+				window.open(url, "_blank");
 			}
 		},
 		[api, isTauriApp],
@@ -95,7 +99,8 @@ export const useChatWindows = () => {
 	const closeChatWindow = useCallback(
 		async (chatId: string) => {
 			if (isTauriApp) {
-				await api.closeChatWindow(chatId);
+				const normalized = normalizeChatId(chatId);
+				await api.closeChatWindow(normalized);
 			}
 		},
 		[api, isTauriApp],

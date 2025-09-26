@@ -12,6 +12,7 @@ import { useMediaQuery } from "@/hooks/useMediaQuery";
 import type { CombinedMessage } from "@/hooks/useOptimisticMessages";
 import { cn } from "@/lib/utils";
 import { $userAvatarMap } from "@/stores/avatars";
+import { Platform } from "@/utils/platform";
 import { MessageReactions } from "./MessageReactions";
 import { QuickMessageActions } from "./QuickMessageActions";
 import type { ReactionType } from "./ReactionPicker";
@@ -34,7 +35,8 @@ const MessageComponent = function Message({
 	isConsecutive = false,
 }: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
-	const isMobile = useMediaQuery("(max-width: 768px)");
+	const isNarrow = useMediaQuery("(max-width: 768px)");
+	const isMobile = Platform.isDesktop() ? false : isNarrow;
 	const userAvatarMap = useStore($userAvatarMap);
 
 	// Check if this is an optimistic message

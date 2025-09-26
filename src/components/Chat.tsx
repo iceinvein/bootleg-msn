@@ -26,7 +26,13 @@ import { ChatHeader } from "./chat/ChatHeader";
 import { ChatMessages } from "./chat/ChatMessages";
 import { nudgeShake, nudgeShakeMobile } from "./ui/animated";
 
-export function Chat() {
+export function Chat({
+	onCloseOverride,
+	hideBack,
+}: {
+	onCloseOverride?: () => void;
+	hideBack?: boolean;
+}) {
 	const selectedChat = useStore($selectedChat);
 
 	const [showChat, setShowChat] = useState(false);
@@ -362,7 +368,10 @@ export function Chat() {
 			{selectedChat?.contact || selectedChat?.group ? (
 				<>
 					{/* Chat Header - Fixed at top */}
-					<ChatHeader onClose={handleCloseChat} />
+					<ChatHeader
+						onClose={onCloseOverride ?? handleCloseChat}
+						hideBack={hideBack}
+					/>
 
 					{/* Messages - Scrollable middle section */}
 					<ChatMessages

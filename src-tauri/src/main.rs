@@ -90,7 +90,12 @@ async fn create_chat_window(
     chat_id: String,
     contact_name: String,
 ) -> Result<(), String> {
-    let window_label = format!("chat-{}", chat_id);
+    // Normalize label to safe chars for Tauri window labels
+    let normalized_id: String = chat_id
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '-' })
+        .collect();
+    let window_label = format!("chat-{}", normalized_id);
 
     // Check if window already exists
     if app_handle.get_webview_window(&window_label).is_some() {
@@ -103,7 +108,8 @@ async fn create_chat_window(
 
     // Create new chat window
     let window_title = format!("Chat with {}", contact_name);
-    let window_url = format!("/#/chat/{}", chat_id);
+    // Open chat-only window mode; renderer reads ?chat=... and window=chat
+    let window_url = format!("/?chat={}&window=chat", chat_id);
 
     WebviewWindowBuilder::new(
         &app_handle,
@@ -123,7 +129,12 @@ async fn create_chat_window(
 
 #[tauri::command]
 async fn close_chat_window(app_handle: AppHandle, chat_id: String) -> Result<(), String> {
-    let window_label = format!("chat-{}", chat_id);
+    // Use same normalization as create_chat_window to find the label
+    let normalized_id: String = chat_id
+        .chars()
+        .map(|c| if c.is_ascii_alphanumeric() || c == '_' || c == '-' { c } else { '-' })
+        .collect();
+    let window_label = format!("chat-{}", normalized_id);
 
     if let Some(window) = app_handle.get_webview_window(&window_label) {
         window.close().map_err(|e| e.to_string())?;

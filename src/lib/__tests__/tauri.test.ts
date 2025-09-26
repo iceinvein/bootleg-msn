@@ -404,8 +404,8 @@ describe("tauriEvents", () => {
 });
 
 describe("isTauri", () => {
-	it("should return true when __TAURI__ is present in window", () => {
-		Object.defineProperty(window, "__TAURI__", {
+	it("should return true when __TAURI_INTERNALS__ is present in window", () => {
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
 			value: {},
 			writable: true,
 		});
@@ -451,7 +451,10 @@ describe("getPlatform", () => {
 	});
 
 	it("should detect Windows platform", () => {
-		Object.defineProperty(window, "__TAURI__", { value: {}, writable: true });
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
+			value: {},
+			writable: true,
+		});
 		Object.defineProperty(navigator, "userAgent", {
 			value: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
 			writable: true,
@@ -461,7 +464,10 @@ describe("getPlatform", () => {
 	});
 
 	it("should detect macOS platform", () => {
-		Object.defineProperty(window, "__TAURI__", { value: {}, writable: true });
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
+			value: {},
+			writable: true,
+		});
 		Object.defineProperty(navigator, "userAgent", {
 			value: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)",
 			writable: true,
@@ -471,7 +477,10 @@ describe("getPlatform", () => {
 	});
 
 	it("should detect Linux platform", () => {
-		Object.defineProperty(window, "__TAURI__", { value: {}, writable: true });
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
+			value: {},
+			writable: true,
+		});
 		Object.defineProperty(navigator, "userAgent", {
 			value: "Mozilla/5.0 (X11; Linux x86_64)",
 			writable: true,
@@ -481,7 +490,10 @@ describe("getPlatform", () => {
 	});
 
 	it("should fallback to 'web' for unknown platforms", () => {
-		Object.defineProperty(window, "__TAURI__", { value: {}, writable: true });
+		Object.defineProperty(window, "__TAURI_INTERNALS__", {
+			value: {},
+			writable: true,
+		});
 		Object.defineProperty(navigator, "userAgent", {
 			value: "Mozilla/5.0 (Unknown Platform)",
 			writable: true,

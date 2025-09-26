@@ -131,15 +131,21 @@ export const tauriEvents = {
 	},
 };
 
-// Utility to check if running in Tauri
+// Utility to check if running in Tauri (v2-focused)
 export const isTauri = (): boolean => {
-	return typeof window !== "undefined" && "__TAURI__" in window;
+	if (typeof window === "undefined") return false;
+	const w = window as unknown as Record<string, unknown>;
+	// Tauri v2 internals or invoke bridge
+	if ("__TAURI_INTERNALS__" in w) return true;
+	const wAny = w as Record<string, unknown> & { __TAURI_INVOKE__?: unknown };
+	if (typeof wAny.__TAURI_INVOKE__ === "function") return true;
+	// Fallback: user agent (Tauri sets UA to contain "Tauri")
+	return navigator?.userAgent?.includes?.("Tauri") || false;
 };
 
 // Platform detection
 export const getPlatform = (): "windows" | "macos" | "linux" | "web" => {
 	if (!isTauri()) return "web";
-
 	const userAgent = navigator.userAgent.toLowerCase();
 	if (userAgent.includes("win")) return "windows";
 	if (userAgent.includes("mac")) return "macos";
