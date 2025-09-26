@@ -4,10 +4,10 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 
 ![MSN Messenger Screenshot](https://img.shields.io/badge/Status-Active%20Development-green)
 ![React](https://img.shields.io/badge/React-19-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.7-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.9-blue)
 ![Convex](https://img.shields.io/badge/Convex-Backend-purple)
 ![Tailwind](https://img.shields.io/badge/Tailwind-4.1-cyan)
-![Tauri](https://img.shields.io/badge/Tauri-2.7-orange)
+![Tauri](https://img.shields.io/badge/Tauri-2.8-orange)
 ![Capacitor](https://img.shields.io/badge/Capacitor-7.4-blue)
 
 ## ✨ Features
@@ -71,8 +71,8 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 
 ### Frontend
 
-- **React 19** with TypeScript for type-safe development
-- **Vite 6.2** for fast development and optimized builds
+- **React 19** with **TypeScript 5.9** for type-safe development
+- **Vite 7** for fast development and optimized builds
 - **Tailwind CSS 4** with utility-first styling and CSS variables
 - **shadcn/ui** as component library foundation
 - **Radix UI** components for accessible UI primitives
@@ -83,7 +83,7 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 
 ### Cross-Platform Framework
 
-#### 🖥️ Desktop (Tauri v2.7)
+#### 🖥️ Desktop (Tauri v2.8)
 
 - **Rust backend** for high-performance native operations
 - **WebView frontend** with React app in native container
@@ -106,8 +106,8 @@ A nostalgic real-time chat application that recreates the classic MSN Messenger 
 
 ### Development Tools
 
-- **TypeScript 5.7** with strict configuration
-- **Biome 2.1.3** for linting and code formatting
+- **TypeScript 5.9** with strict configuration
+- **Biome 2.2.4** for linting and code formatting
 - **Vitest 3.2.4** for unit and integration testing
 - **@testing-library/react** for component testing
 - **convex-test** for backend function testing
@@ -163,19 +163,13 @@ npm install
 ### 3. Set Up Convex
 
 1. **Create a Convex account** at [convex.dev](https://convex.dev)
-2. **Install Convex CLI** globally:
-
-   ```bash
-   npm install -g convex
-   ```
-
-3. **Initialize Convex** in your project:
+2. **Initialize Convex** in your project (no global install required):
 
    ```bash
    npx convex dev
    ```
 
-4. **Follow the prompts** to create a new Convex project
+3. **Follow the prompts** to create a new Convex project
 
 ### 4. Configure Environment Variables
 
@@ -221,63 +215,34 @@ This will start both the frontend (Vite) and backend (Convex) servers:
 ```text
 bootleg-msn/
 ├── src/                    # Frontend React application
-│   ├── components/         # React components
-│   │   ├── MessengerApp.tsx    # Main app interface
-│   │   ├── ChatWindow.tsx     # Individual chat interface
-│   │   ├── GroupChatWindow.tsx # Group chat interface
-│   │   ├── ContactList.tsx    # Contact management
-│   │   ├── StatusBar.tsx      # User status bar
-│   │   ├── SignInForm.tsx     # Authentication form
-│   │   ├── EmailVerificationPage.tsx # Email verification
-│   │   ├── SignUpForm.tsx     # User registration
-│   │   ├── TauriIntegration.tsx # Tauri desktop integration
-│   │   ├── TauriMenu.tsx      # Native menu components
-│   │   └── ui/               # shadcn/ui components
-│   ├── hooks/             # Custom React hooks
-│   │   └── useTauri.ts        # Tauri-specific React hooks
-│   ├── lib/               # Utility libraries
-│   │   ├── tauri.ts           # Tauri API wrappers
-│   │   └── tauri-notifications.ts # Native notification service
-│   ├── stores/            # Nanostore global state
-│   ├── test/              # Test setup and utilities
-│   ├── utils/             # Helper functions
-│   └── main.tsx           # App entry point
-├── convex/                # Backend Convex functions
-│   ├── migrations/        # Database migration files
-│   ├── schema.ts          # Database schema definition
-│   ├── auth.ts            # Authentication functions
-│   ├── auth.config.ts     # Auth provider configuration
-│   ├── emailVerification.ts # Email verification logic
-│   ├── messages.ts        # Message operations
-│   ├── contacts.ts        # Contact management
-│   ├── groups.ts          # Group chat functionality
-│   ├── userStatus.ts      # User status management
-│   ├── files.ts           # File upload/download
-│   └── _generated/        # Auto-generated Convex files
-├── src-tauri/             # Tauri desktop application
-│   ├── src/               # Rust source code
-│   │   └── main.rs            # Main Rust backend with native integrations
-│   ├── icons/             # Application icons
-│   ├── capabilities/      # Tauri security capabilities
-│   │   └── main-capability.json # Security permissions
-│   ├── Cargo.toml         # Rust dependencies
-│   ├── tauri.conf.json    # Tauri configuration
-│   └── entitlements.plist # macOS permissions
-├── android/               # Android Capacitor project
-├── ios/                   # iOS Capacitor project
-├── docs/                  # Documentation
-│   ├── TAURI_SETUP.md         # Tauri development setup
-│   ├── TAURI_ARCHITECTURE.md  # System architecture
-│   ├── TAURI_API_REFERENCE.md # API documentation
-│   ├── TAURI_DEPLOYMENT.md    # Build and deployment
-│   ├── TAURI_TROUBLESHOOTING.md # Debugging guide
-│   ├── DESIGN_SYSTEM.md       # UI design system
-│   ├── MOBILE_SETUP.md        # Mobile development
-│   └── VERSION_MANAGEMENT.md  # Version control
-├── scripts/               # Build and deployment scripts
-├── .kiro/                 # AI development steering rules
-│   └── steering/          # Development guidelines
-└── dist/                  # Build output directory
+│   ├── components/         # UI components (dialogs, overlays, etc.)
+│   ├── adapters/           # Platform adapters (Web/Tauri/Capacitor)
+│   ├── hooks/              # Custom React hooks
+│   ├── lib/                # Client utilities (overlay manager, notifications)
+│   ├── router/             # App routing
+│   ├── stores/             # Global state (nanostores)
+│   ├── utils/              # Helper functions
+│   ├── App.tsx             # Main app interface
+│   └── main.tsx            # App entry point
+├── convex/                 # Backend (Convex)
+│   ├── schema.ts           # Database schema definition
+│   ├── router.ts           # Function router
+│   ├── auth.ts             # Authentication
+│   ├── messages.ts         # Messaging operations
+│   ├── groups.ts           # Group chat
+│   ├── contacts.ts         # Contact management
+│   ├── files.ts            # File upload/download
+│   ├── ...                 # More functions/tests
+│   └── _generated/         # Auto-generated Convex files
+├── src-tauri/              # Tauri desktop application (Rust)
+├── android/                # Android (Capacitor) project
+├── ios/                    # iOS (Capacitor) project
+├── public/                 # Static assets (includes build.json)
+├── scripts/                # Build/deploy scripts (write-build-json, post-deploy)
+├── docs/                   # Tauri/Mobile/Deployment docs
+├── netlify/ and netlify.toml
+├── vite.config.ts, biome.json, package.json, tsconfig*.json
+└── dist/                   # Production build output
 ```
 
 ## 🎮 Usage
@@ -332,75 +297,58 @@ bootleg-msn/
 #### Web Development
 
 ```bash
-# Start development servers (frontend + backend)
-pnpm dev
+pnpm dev             # Start frontend (Vite) + backend (Convex) in parallel
+pnpm dev:frontend    # Start only Vite dev server
+pnpm dev:backend     # Start only Convex dev server
 
-# Start only frontend
-pnpm dev:frontend
-
-# Start only backend
-pnpm dev:backend
-
-# Build for production
-pnpm build
-
-# Build for Netlify deployment
-pnpm build:netlify
+pnpm build           # Production build
+pnpm build:netlify   # One-off Convex build + write build.json + Vite build
 ```
 
 #### Desktop Development (Tauri)
 
 ```bash
-# Start desktop app in development
-pnpm dev:tauri
-
-# Build desktop application
-pnpm build:tauri
+pnpm dev:tauri       # Start desktop app in development
+pnpm build:tauri     # Build desktop application
 ```
 
 #### Mobile Development (Capacitor)
 
 ```bash
-# Setup mobile platforms
-pnpm setup:mobile      # Set up Android and iOS platforms
-pnpm setup:android     # Set up Android platform only
+pnpm setup:mobile    # Set up Android and iOS platforms
+pnpm setup:android   # Set up Android platform only
 
-# Development
-pnpm dev:android       # Build and run on Android
-pnpm dev:ios           # Build and run on iOS
+pnpm dev:android     # Build and run on Android
+pnpm dev:ios         # Build and run on iOS
 
-# Production builds
-pnpm build:mobile      # Build web assets for mobile
-pnpm build:android     # Build Android app
-pnpm build:ios         # Build iOS app
+pnpm build:mobile    # Build web assets for mobile + sync
+pnpm build:android   # Build Android app
+pnpm build:ios       # Build iOS app
 ```
 
 #### Testing
 
 ```bash
-# Unit testing
-pnpm test              # Run tests once and exit
-pnpm test:watch        # Run tests in watch mode
-pnpm test:ui           # Run tests with UI interface
-
-# Migration testing
-pnpm test:migration    # Test database migration integration
+pnpm test            # Run tests once and exit
+pnpm test:watch      # Run tests in watch mode
+pnpm test:ui         # Run tests with UI interface
+pnpm test:migration  # Test database migration integration
 ```
 
 #### Code Quality
 
 ```bash
-# Comprehensive linting and type checking
-pnpm lint              # Full lint: TypeScript + Convex + Vite build + Biome
+pnpm lint            # Biome lint (src and convex)
+pnpm lint:fix        # Auto-fix with Biome (--write --unsafe)
+pnpm typecheck       # TypeScript project references build (no emit)
+```
 
-# Biome-specific linting
-pnpm lint:b            # Biome linting only
-pnpm lint:b:fix        # Auto-fix with Biome
+#### Version management
 
-# Version management
-pnpm version:patch     # Increment patch version
-pnpm version:minor     # Increment minor version
-pnpm version:major     # Increment major version
+```bash
+pnpm version:patch
+pnpm version:minor
+pnpm version:major
 ```
 
 ### Database Schema
@@ -429,58 +377,55 @@ This project includes Kiro steering rules for consistent AI-assisted development
 - **Tailwind CSS** guidelines with cn() function usage
 - **Project structure** and file organization rules
 
-### Automatic Version Management
+### Versioning & Deployment Metadata
 
-The project includes automatic version bumping on push to main:
-
-- **Patch version** (0.0.X): Default for most commits
-- **Minor version** (0.X.0): Commits with "feat" or "[minor]" in message
-- **Major version** (X.0.0): Commits with "BREAKING CHANGE" or "[major]" in message
-
-Manual version bumping:
+- Source of truth: version in `package.json`
+- Bump locally with scripts:
 
 ```bash
-pnpm version:patch  # Bump patch version
-pnpm version:minor  # Bump minor version  
-pnpm version:major  # Bump major version
+pnpm version:patch
+pnpm version:minor
+pnpm version:major
 ```
 
-The version is automatically:
+- On Netlify deploys:
+  - `public/build.json` is generated from `package.json` version and env (scripts/write-build-json.js)
+  - Convex deployment tracking is triggered post-deploy (scripts/post-deploy.js)
+  - Commits containing `[force]` mark the release as a force deployment
 
-- Updated in `package.json`
-- Stored in Convex database
-- Tagged in Git
-- Released on GitHub
+Note: GitHub Actions–based auto-bumping is optional and not required for the Netlify flow.
 
 ## 🚀 Deployment
 
 ### Web Application
 
-#### Convex Backend
+#### Netlify (recommended)
 
-1. **Deploy to production:**
-
-   ```bash
-   npx convex deploy --prod
-   ```
-
-2. **Update environment variables** for production
-3. **Configure custom domain** (optional)
-
-#### Frontend Deployment
-
-The frontend can be deployed to any static hosting service:
-
-- **Netlify** (configured with `netlify.toml`)
-- **Vercel** (recommended for React apps)
-- **GitHub Pages**
-- **AWS S3 + CloudFront**
-
-For Netlify deployment:
+Netlify is configured to deploy Convex and the frontend together via `netlify.toml`:
 
 ```bash
-pnpm build:netlify
+npx convex deploy --cmd 'pnpm build:netlify' && node scripts/post-deploy.js
 ```
+
+- `pnpm build:netlify` runs a one-off Convex build, writes `public/build.json`, and Vite builds to `dist/`
+- `post-deploy.js` records the release in Convex and marks it live; commits containing `[force]` are treated as force deployments
+- Preview deploys use `VITE_CHANNEL=staging`
+
+#### Manual (local or alternative hosts)
+
+- Deploy Convex to production:
+
+```bash
+npx convex deploy --prod
+```
+
+- Build frontend assets:
+
+```bash
+pnpm build
+```
+
+You can then host the `dist/` folder on any static host (Netlify, Vercel, GitHub Pages, AWS S3 + CloudFront, etc.).
 
 ### Desktop Application (Tauri)
 
