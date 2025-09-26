@@ -1,5 +1,6 @@
 import { api } from "@convex/_generated/api";
 import { useAuthActions } from "@convex-dev/auth/react";
+import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
 import { AnimatePresence, motion } from "framer-motion";
 import { LogOut, Moon, Palette, Pencil, Sun, User } from "lucide-react";
@@ -7,6 +8,8 @@ import { useEffect, useState } from "react";
 import { useTheme } from "@/components/theme-provider";
 import { useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useThemeCustomization } from "@/hooks/useThemeCustomization";
+import { $contactListDensity, setContactListDensity } from "@/stores/ui";
+
 import { AvatarEditor } from "./AvatarEditor";
 import { BrowserNotificationSettings } from "./BrowserNotificationSettings";
 import { ThemePreview } from "./ThemePreview";
@@ -61,6 +64,9 @@ export function SettingsDialog({
 	const [avatarEditorOpen, setAvatarEditorOpen] = useState(false);
 	const [activeTab, setActiveTab] = useState(initialTab);
 	const [internalOpen, setInternalOpen] = useState(false);
+
+	const density = useStore($contactListDensity);
+
 	const isOpen = open ?? internalOpen;
 	const setIsOpen = onOpenChange ?? setInternalOpen;
 
@@ -272,6 +278,48 @@ export function SettingsDialog({
 												value="appearance"
 												className="mt-0 space-y-6 pb-4"
 											>
+												{/* Contact List Density */}
+												<motion.div
+													className="space-y-3"
+													initial={{ opacity: 0 }}
+													animate={{ opacity: 1 }}
+													transition={{ ...itemTransition, delay: 0.18 }}
+												>
+													<motion.div
+														initial={{ opacity: 0 }}
+														animate={{ opacity: 1 }}
+														transition={{ ...itemTransition, delay: 0.22 }}
+													>
+														<Label className="font-semibold text-base">
+															Contact list density
+														</Label>
+													</motion.div>
+													<motion.div
+														className="flex gap-2"
+														initial={{ opacity: 0 }}
+														animate={{ opacity: 1 }}
+														transition={{ ...itemTransition, delay: 0.26 }}
+													>
+														<Button
+															variant={
+																density === "relaxed" ? "default" : "outline"
+															}
+															size="sm"
+															onClick={() => setContactListDensity("relaxed")}
+														>
+															Relaxed
+														</Button>
+														<Button
+															variant={
+																density === "compact" ? "default" : "outline"
+															}
+															size="sm"
+															onClick={() => setContactListDensity("compact")}
+														>
+															Compact
+														</Button>
+													</motion.div>
+												</motion.div>
 												{/* Theme Mode */}
 												<motion.div
 													className="space-y-3"

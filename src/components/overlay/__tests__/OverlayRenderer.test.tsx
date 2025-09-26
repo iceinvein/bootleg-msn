@@ -199,10 +199,6 @@ describe("OverlayRenderer", () => {
 		expect(container).toHaveStyle({ zIndex: "1500" });
 	});
 
-	it.skip("handles backdrop click for closable overlay (delegated to child overlay now)", async () => {
-		/* OverlayRenderer no longer handles backdrop clicks. Child overlays (Dialog/Drawer) handle this. */
-	});
-
 	it("ignores backdrop click for non-closable overlay", async () => {
 		const entry: OverlayEntry = {
 			id: "non-closable-overlay",
@@ -224,10 +220,6 @@ describe("OverlayRenderer", () => {
 		fireEvent.click(container!);
 
 		expect(mockClose).not.toHaveBeenCalled();
-	});
-
-	it.skip("handles escape key for topmost closable overlay (delegated to child overlay now)", async () => {
-		/* OverlayRenderer no longer listens for Escape; child overlays (Dialog/Drawer) handle it via onOpenChange. */
 	});
 
 	it("ignores escape key for non-topmost overlay", async () => {
@@ -312,14 +304,6 @@ describe("OverlayRenderer", () => {
 
 			// Should call close (URL clearing is handled by bidirectional sync)
 			expect(mockClose).toHaveBeenCalledWith("test-overlay");
-		});
-
-		it.skip("calls close when closing via backdrop click (delegated to child overlay now)", async () => {
-			/* OverlayRenderer no longer handles backdrop clicks. */
-		});
-
-		it.skip("calls close when closing via escape key (delegated to child overlay now)", async () => {
-			/* OverlayRenderer no longer handles escape key. */
 		});
 	});
 });

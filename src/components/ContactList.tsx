@@ -7,6 +7,7 @@ import { User, Users } from "lucide-react";
 import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { cn } from "@/lib/utils";
 import { $selectedChat } from "@/stores/contact";
+import { $contactListDensity } from "@/stores/ui";
 import { getStatusColorWithGlow } from "@/utils/style";
 import {
 	hoverScale,
@@ -98,11 +99,20 @@ function previewText(messageType?: string, content?: string): string {
 	return content;
 }
 
-export function ContactList() {
+type ContactListProps = {
+	density?: "relaxed" | "compact";
+};
+
+export function ContactList({ density: densityProp }: ContactListProps = {}) {
 	const selectedChat = useStore($selectedChat);
 
 	const contacts = useQuery(api.contacts.getContacts);
 	const groupChats = useQuery(api.groups.getUserGroups);
+	const densityStore = useStore($contactListDensity) as unknown as
+		| "relaxed"
+		| "compact";
+	const density = densityProp ?? densityStore ?? "relaxed";
+	const compact = density === "compact";
 
 	const contactUserIds = contacts?.map((c) => c.contactUserId) as
 		| Id<"users">[]
@@ -140,7 +150,10 @@ export function ContactList() {
 										type="button"
 										key={group._id}
 										className={cn(
-											"contact-item group glass relative flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition-all duration-200 hover:shadow-md md:gap-4 md:p-4",
+											"contact-item group glass relative flex w-full cursor-pointer items-center rounded-lg transition-all duration-200 hover:shadow-md",
+											compact
+												? "gap-2 p-2 md:gap-3 md:p-2.5"
+												: "gap-3 p-3 md:gap-4 md:p-4",
 											selectedChat?.group?._id === group._id && "selected",
 										)}
 										onClick={() =>
@@ -165,7 +178,10 @@ export function ContactList() {
 										<div className="relative shrink-0">
 											<Avatar
 												className={cn(
-													"msn-gradient h-12 w-12 md:h-14 md:w-14",
+													"msn-gradient",
+													compact
+														? "h-10 w-10 md:h-12 md:w-12"
+														: "h-12 w-12 md:h-14 md:w-14",
 													selectedChat?.group?._id === group._id &&
 														"ring-2 ring-primary/40",
 												)}
@@ -190,25 +206,30 @@ export function ContactList() {
 													)}
 												</div>
 											</div>
-											<div className="mt-1 flex items-center justify-between">
-												<p className="truncate text-muted-foreground text-xs md:text-sm">
-													{group.lastMessageContent
-														? group.lastMessageType === "nudge"
-															? previewText(
-																	group.lastMessageType,
-																	group.lastMessageContent,
-																)
-															: `${group.lastMessageFromMe ? "You" : (group.lastMessageSenderName ?? "Someone")}: ${previewText(group.lastMessageType, group.lastMessageContent)}`
-														: typeof group.memberCount === "number"
-															? `${group.memberCount} members`
-															: "Group chat"}
-												</p>
-												<span className="text-muted-foreground text-xs">
-													{group.lastMessageTime
-														? formatMessageTime(group.lastMessageTime)
-														: ""}
-												</span>
-											</div>
+
+											{(!compact || !group.lastMessageContent) && (
+												<div className="mt-1 flex items-center justify-between">
+													<p className="truncate text-muted-foreground text-xs md:text-sm">
+														{group.lastMessageContent
+															? group.lastMessageType === "nudge"
+																? previewText(
+																		group.lastMessageType,
+																		group.lastMessageContent,
+																	)
+																: `${group.lastMessageFromMe ? "You" : (group.lastMessageSenderName ?? "Someone")}: ${previewText(group.lastMessageType, group.lastMessageContent)}`
+															: typeof group.memberCount === "number"
+																? `${group.memberCount} members`
+																: "Group chat"}
+													</p>
+													{!compact && (
+														<span className="text-muted-foreground text-xs">
+															{group.lastMessageTime
+																? formatMessageTime(group.lastMessageTime)
+																: ""}
+														</span>
+													)}
+												</div>
+											)}
 										</div>
 									</motion.button>
 								);
@@ -234,7 +255,10 @@ export function ContactList() {
 								type="button"
 								key={contact._id}
 								className={cn(
-									"contact-item group glass relative mb-2 flex w-full cursor-pointer items-center gap-3 rounded-lg p-3 transition-all duration-200 hover:shadow-md md:gap-4 md:p-4",
+									"contact-item group glass relative mb-2 flex w-full cursor-pointer items-center rounded-lg transition-all duration-200 hover:shadow-md",
+									compact
+										? "gap-2 p-2 md:gap-3 md:p-2.5"
+										: "gap-3 p-3 md:gap-4 md:p-4",
 									selectedChat?.contact?._id === contact?._id && "selected",
 								)}
 								onClick={() =>
@@ -260,7 +284,10 @@ export function ContactList() {
 								<div className="relative shrink-0">
 									<Avatar
 										className={cn(
-											"msn-gradient h-12 w-12 md:h-14 md:w-14",
+											"msn-gradient",
+											compact
+												? "h-10 w-10 md:h-12 md:w-12"
+												: "h-12 w-12 md:h-14 md:w-14",
 											selectedChat?.contact?._id === contact?._id &&
 												"ring-2 ring-primary/40",
 										)}
@@ -292,7 +319,7 @@ export function ContactList() {
 												"Unknown User"}
 										</p>
 										<div className="flex items-center gap-2">
-											{contact.status !== "offline" && (
+											{!compact && contact.status !== "offline" && (
 												<span
 													className={cn(
 														"font-medium text-xs",
@@ -313,21 +340,23 @@ export function ContactList() {
 											)}
 										</div>
 									</div>
-									<div className="mt-1 flex items-center justify-between">
-										<p className="truncate text-muted-foreground text-xs md:text-sm">
-											{contact.lastMessageContent
-												? `${contact.lastMessageFromMe && contact.lastMessageType !== "nudge" ? "You: " : ""}${previewText(contact.lastMessageType, contact.lastMessageContent)}`
-												: getStatusDisplayText(
-														contact.status,
-														contact.statusMessage,
-													)}
-										</p>
-										<span className="text-muted-foreground text-xs">
-											{contact.lastMessageTime
-												? formatMessageTime(contact.lastMessageTime)
-												: formatLastSeen(contact.lastSeen, contact.status)}
-										</span>
-									</div>
+									{!compact && (
+										<div className="mt-1 flex items-center justify-between">
+											<p className="truncate text-muted-foreground text-xs md:text-sm">
+												{contact.lastMessageContent
+													? `${contact.lastMessageFromMe && contact.lastMessageType !== "nudge" ? "You: " : ""}${previewText(contact.lastMessageType, contact.lastMessageContent)}`
+													: getStatusDisplayText(
+															contact.status,
+															contact.statusMessage,
+														)}
+											</p>
+											<span className="text-muted-foreground text-xs">
+												{contact.lastMessageTime
+													? formatMessageTime(contact.lastMessageTime)
+													: formatLastSeen(contact.lastSeen, contact.status)}
+											</span>
+										</div>
+									)}
 								</div>
 							</motion.button>
 						);
