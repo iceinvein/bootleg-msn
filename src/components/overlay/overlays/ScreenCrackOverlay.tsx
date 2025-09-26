@@ -1,5 +1,5 @@
-import { motion } from "framer-motion";
-import { useEffect, useMemo } from "react";
+import { motion, useAnimation } from "framer-motion";
+import { useEffect, useMemo, useState } from "react";
 import { ScreenCrack } from "@/components/effects/ScreenCrack";
 import { cn } from "@/lib/utils";
 import { overlayActions } from "@/stores/overlays";
@@ -9,34 +9,63 @@ import type { ScreenCrackOverlayProps } from "@/types/overlay";
  * Full-screen, non-blocking, 3s cracking glass emote.
  * - No pointer capture (decorative only)
  * - Auto-closes after durationMs (default 3000ms)
- * - Plays /sounds/glass_shatter.mp3 if present (fails gracefully if missing)
+ * - Plays /sounds/gun-shot.mp3 if present (fails gracefully if missing)
  */
 export function ScreenCrackOverlay({
 	className,
 	durationMs = 3000,
 	impact = { x: 0.5, y: 0.45 },
+	shotCount = 3,
+	shotIntervalMs = 200,
+	shotScheduleMs,
 	id,
 }: ScreenCrackOverlayProps & { onClose?: () => void; id?: string }) {
 	// (Canvas version) no precomputed SVG lines/shards needed
+	const schedule = useMemo(() => {
+		if (shotScheduleMs && shotScheduleMs.length > 0) return [...shotScheduleMs];
+		// Default special burst: immediate, +200ms, +50ms
+		if (shotCount === 3) return [0, 300, 450];
+		return Array.from({ length: shotCount }, (_, i) => i * shotIntervalMs);
+	}, [shotScheduleMs, shotCount, shotIntervalMs]);
+	const shotKeys = useMemo(
+		() =>
+			Array.from({ length: schedule.length }, () =>
+				Math.random().toString(36).slice(2),
+			),
+		[schedule],
+	);
 
-	// Play shatter sound once
+	// Schedule N gunshot cracks and play sound + shake each time
+	const [visibleCount, setVisibleCount] = useState(0);
+	const controls = useAnimation();
 	useEffect(() => {
-		try {
-			const audio = new Audio("/sounds/glass_shatter.mp3");
-			audio.volume = 0.6;
-			// Handle missing asset gracefully
-			audio.addEventListener("error", () => {
-				console.warn(
-					"[ScreenCrackOverlay] glass_shatter.mp3 missing or invalid",
-				);
-			});
-			void audio.play().catch(() => {
-				// ignore autoplay restrictions or missing device output
-			});
-		} catch {
-			// ignore
-		}
-	}, []);
+		const playShot = () => {
+			try {
+				const audio = new Audio("/sounds/gun-shot.mp3");
+				audio.volume = 0.6;
+				audio.addEventListener("error", () => {
+					console.warn("[ScreenCrackOverlay] gun-shot.mp3 missing or invalid");
+				});
+				void audio.play().catch(() => {});
+			} catch {}
+		};
+		const timers: number[] = [];
+		schedule.forEach((ms, i) => {
+			const handle = window.setTimeout(() => {
+				setVisibleCount((v) => Math.max(v, i + 1));
+				playShot();
+				void controls.start({
+					x: [0, -6, 4, -2, 0],
+					y: [0, 2, -1, 1, 0],
+					transition: { duration: 0.18, ease: "easeOut" },
+				});
+			}, ms);
+			timers.push(handle);
+		});
+		return () => {
+			for (const t of timers) window.clearTimeout(t);
+		};
+	}, [schedule, controls]);
 
 	// Compute total duration once (canvas version doesn't have per-shard timings)
 	const totalMs = useMemo(() => durationMs, [durationMs]);
@@ -62,13 +91,14 @@ export function ScreenCrackOverlay({
 	}, [totalMs, id]);
 
 	return (
-		<div
+		<motion.div
 			className={cn(
 				"pointer-events-none fixed inset-0 select-none",
 				`[--impact-x:_${impact.x}] [--impact-y:_${impact.y}]`,
 				className,
 			)}
 			aria-hidden
+			animate={controls}
 		>
 			{/* Impact flash */}
 			<motion.div
@@ -87,16 +117,19 @@ export function ScreenCrackOverlay({
 			/>
 
 			{/* We size it to viewport once; overlay lifetime is ~3s so no resize handling needed */}
-			{typeof window !== "undefined" ? (
-				<ScreenCrack
-					width={window.innerWidth}
-					height={window.innerHeight}
-					interactive={false}
-					randomizeOnMount={true}
-					randomizeOnIntervalMs={null}
-					style={{ pointerEvents: "none" }}
-				/>
-			) : null}
+			{typeof window !== "undefined"
+				? Array.from({ length: visibleCount }).map((_, i) => (
+						<ScreenCrack
+							key={shotKeys[i]}
+							width={window.innerWidth}
+							height={window.innerHeight}
+							interactive={false}
+							randomizeOnMount={true}
+							randomizeOnIntervalMs={null}
+							style={{ pointerEvents: "none" }}
+						/>
+					))
+				: null}
 
 			{/* Subtle top vignette to sell the glass layer */}
 			<motion.div
@@ -122,6 +155,6 @@ export function ScreenCrackOverlay({
 					else overlayActions.closeTop();
 				}}
 			/>
-		</div>
+		</motion.div>
 	);
 }

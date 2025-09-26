@@ -6,6 +6,7 @@ import {
 	$canNudge,
 	$chatDisplayName,
 	$fileUploadContext,
+	$selectedChat,
 } from "@/stores/contact";
 import { EmojiPicker } from "../EmojiPicker";
 import { FileUpload } from "../FileUpload";
@@ -46,6 +47,7 @@ export function ChatComposer({
 }: ChatComposerProps) {
 	const canNudge = useStore($canNudge);
 	const chatDisplayName = useStore($chatDisplayName);
+	const contactName = useStore($selectedChat)?.contact?.user?.name;
 	const fileUploadContext = useStore($fileUploadContext);
 
 	const placeholder = `Message ${chatDisplayName}...`;
@@ -115,15 +117,12 @@ export function ChatComposer({
 									</motion.div>
 								</ResponsiveDropdownMenuTrigger>
 								<ResponsiveDropdownMenuContent title="Emotes">
-									<ResponsiveDropdownMenuLabel>
-										Full-screen
-									</ResponsiveDropdownMenuLabel>
 									<ResponsiveDropdownMenuItem
 										onClick={() => {
 											onSendEmote?.("screen_crack");
 										}}
 									>
-										Crack the screen
+										Shoot {contactName ? `${contactName}'s` : "their"} screen
 									</ResponsiveDropdownMenuItem>
 									<ResponsiveDropdownMenuSeparator />
 									<ResponsiveDropdownMenuLabel className="text-muted-foreground text-xs">

@@ -207,6 +207,12 @@ export type ScreenCrackOverlayProps = BaseOverlayProps & {
 	durationMs?: number;
 	/** Optional impact point in normalized viewport coords (0..1) */
 	impact?: { x: number; y: number };
+	/** Number of shots (cracks) to render sequentially (ignored if shotScheduleMs provided) */
+	shotCount?: number;
+	/** Fixed interval between shots in milliseconds (ignored if shotScheduleMs provided) */
+	shotIntervalMs?: number;
+	/** Absolute schedule (ms from start) for each shot; e.g., [0, 200, 250] */
+	shotScheduleMs?: number[];
 	/** Callback when overlay closes */
 	onClose?: () => void;
 };
