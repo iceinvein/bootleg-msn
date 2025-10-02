@@ -5,8 +5,8 @@ import { motion } from "framer-motion";
 import {
 	AlertCircle,
 	Check,
-	CornerUpLeft,
 	Edit3,
+	ReplyIcon,
 	Trash2,
 	User,
 	X,
@@ -560,7 +560,7 @@ const MessageComponent = function Message({
 													onClick={() => onReply?.(message)}
 													className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
 												>
-													<CornerUpLeft className="h-4 w-4" />
+													<ReplyIcon className="h-4 w-4" />
 												</Button>
 											)}
 
