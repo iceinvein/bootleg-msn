@@ -1,6 +1,7 @@
 import { useStore } from "@nanostores/react";
 import { motion } from "framer-motion";
 import { Send, Smile, Stars, Zap } from "lucide-react";
+import { useEffect, useRef } from "react";
 
 import {
 	$canNudge,
@@ -32,6 +33,14 @@ export type ChatComposerProps = {
 	isNudgeSending: boolean;
 	cooldownRemaining: number;
 	onFileUploaded?: () => void;
+	replyDraft?: {
+		authorDisplayName?: string;
+		authorEmail?: string;
+		createdAt: number;
+		kind: "text" | "emoji" | "file" | "system" | "image" | "video" | "audio";
+		textSnippet?: string;
+	} | null;
+	onCancelReply?: () => void;
 };
 
 export function ChatComposer({
@@ -44,6 +53,8 @@ export function ChatComposer({
 	isNudgeSending,
 	cooldownRemaining,
 	onFileUploaded,
+	replyDraft,
+	onCancelReply,
 }: ChatComposerProps) {
 	const canNudge = useStore($canNudge);
 	const chatDisplayName = useStore($chatDisplayName);
@@ -51,6 +62,16 @@ export function ChatComposer({
 	const fileUploadContext = useStore($fileUploadContext);
 
 	const placeholder = `Message ${chatDisplayName}...`;
+
+	// Ref for the input field to enable focusing
+	const inputRef = useRef<HTMLInputElement>(null);
+
+	// Focus input when reply draft is set
+	useEffect(() => {
+		if (replyDraft && inputRef.current) {
+			inputRef.current.focus();
+		}
+	}, [replyDraft]);
 
 	return (
 		<div className="chat-input">
@@ -60,6 +81,38 @@ export function ChatComposer({
 				initial="initial"
 				animate="animate"
 			>
+				{/* Reply preview pill */}
+				{replyDraft && (
+					<div className="mb-2 flex items-start gap-2 rounded-md border border-border/60 bg-muted/40 p-2">
+						<div className="mt-0.5 h-8 w-0.5 flex-shrink-0 rounded bg-primary/60" />
+						<div className="min-w-0 flex-1">
+							<div className="font-medium text-muted-foreground text-xs">
+								{replyDraft.authorDisplayName ||
+									replyDraft.authorEmail ||
+									"Unknown"}
+							</div>
+							<div className="line-clamp-2 truncate text-xs">
+								{replyDraft.textSnippet ||
+									(replyDraft.kind === "image"
+										? "Image"
+										: replyDraft.kind === "video"
+											? "Video"
+											: replyDraft.kind === "audio"
+												? "Audio"
+												: replyDraft.kind === "file"
+													? "File"
+													: "Message")}
+							</div>
+						</div>
+						<button
+							type="button"
+							onClick={onCancelReply}
+							className="text-muted-foreground hover:text-foreground"
+						>
+							×
+						</button>
+					</div>
+				)}
 				<form onSubmit={onSubmit} className="flex items-center space-x-2">
 					<motion.div whileHover={hoverScale} whileTap={tapScale}>
 						<FileUpload
@@ -133,6 +186,7 @@ export function ChatComposer({
 						</>
 					)}
 					<Input
+						ref={inputRef}
 						value={value}
 						onChange={onChange}
 						placeholder={placeholder}

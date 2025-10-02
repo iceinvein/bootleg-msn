@@ -16,3 +16,23 @@ const formatTime = (date: Date | number) => {
 };
 
 export { formatTime };
+
+// Absolute, short timestamp: "2:45 PM" if today, else "Jan 3, 2:45 PM"
+export const formatShortTime = (ts: number) => {
+	const d = new Date(ts);
+	const now = new Date();
+	const isSameDay =
+		d.getFullYear() === now.getFullYear() &&
+		d.getMonth() === now.getMonth() &&
+		d.getDate() === now.getDate();
+	const time = d.toLocaleTimeString(undefined, {
+		hour: "numeric",
+		minute: "2-digit",
+	});
+	if (isSameDay) return time;
+	const date = d.toLocaleDateString(undefined, {
+		month: "short",
+		day: "numeric",
+	});
+	return `${date}, ${time}`;
+};

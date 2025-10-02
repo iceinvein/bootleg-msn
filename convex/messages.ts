@@ -102,6 +102,27 @@ export const sendMessage = mutation({
 		fileName: v.optional(v.string()),
 		fileType: v.optional(v.string()),
 		fileSize: v.optional(v.number()),
+		// Reply/quote args (optional)
+		replyToId: v.optional(v.id("messages")),
+		replyToMeta: v.optional(
+			v.object({
+				id: v.id("messages"),
+				authorId: v.id("users"),
+				authorDisplayName: v.optional(v.string()),
+				authorEmail: v.optional(v.string()),
+				createdAt: v.number(),
+				kind: v.union(
+					v.literal("text"),
+					v.literal("emoji"),
+					v.literal("file"),
+					v.literal("system"),
+					v.literal("image"),
+					v.literal("video"),
+					v.literal("audio"),
+				),
+				textSnippet: v.optional(v.string()),
+			}),
+		),
 	},
 	handler: async (ctx, args) => {
 		const userId = await getAuthUserId(ctx);
@@ -145,6 +166,9 @@ export const sendMessage = mutation({
 			fileName: args.fileName,
 			fileType: args.fileType,
 			fileSize: args.fileSize,
+			// Reply/quote fields
+			replyToId: args.replyToId,
+			replyToMeta: args.replyToMeta,
 			isRead: false,
 		});
 

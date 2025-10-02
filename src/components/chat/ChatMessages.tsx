@@ -30,11 +30,13 @@ export type ConversationNudge = {
 export type ChatMessagesProps = {
 	messages: ChatMessage[] | undefined;
 	conversationNudges?: ConversationNudge[] | undefined;
+	onReply?: (message: ChatMessage) => void;
 };
 
 export function ChatMessages({
 	messages,
 	conversationNudges,
+	onReply,
 }: ChatMessagesProps) {
 	const selectedChat = useStore($selectedChat);
 	const isLoading = useStore($isMessagesLoading);
@@ -130,7 +132,11 @@ export function ChatMessages({
 								}
 								className={cn(isConsecutive ? "mt-1" : "mt-6 md:mt-8")}
 							>
-								<Message message={m} isConsecutive={isConsecutive} />
+								<Message
+									message={m}
+									isConsecutive={isConsecutive}
+									onReply={onReply}
+								/>
 							</div>
 						);
 					})}

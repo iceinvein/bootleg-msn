@@ -693,3 +693,96 @@ describe("useOptimisticMessages", () => {
 		});
 	});
 });
+
+// New tests for reply/quote fields
+describe("reply fields", () => {
+	// Define local user ids and user for this block
+	const mockCurrentUserId = "user-local" as Id<"users">;
+	const mockOtherUserId = "other-local" as Id<"users">;
+	const mockCurrentUser = {
+		_id: mockCurrentUserId,
+		name: "Current User",
+		email: "current@test.com",
+		image: "avatar.jpg",
+	};
+
+	it("should include reply fields in optimistic message when provided", () => {
+		mockUseQuery.mockImplementation((query) => {
+			if (query === "loggedInUser") return mockCurrentUser;
+			return [];
+		});
+
+		const { result } = renderHook(() =>
+			useOptimisticMessages({
+				otherUserId: mockOtherUserId,
+				currentUserId: mockCurrentUserId,
+			}),
+		);
+
+		const replyToId = "msg999" as Id<"messages">;
+		const replyToMeta = {
+			id: replyToId,
+			authorId: mockOtherUserId,
+			authorDisplayName: "Alice",
+			authorEmail: "alice@test.com",
+			createdAt: Date.now() - 1000,
+			kind: "text" as const,
+			textSnippet: "Hello world",
+		};
+
+		act(() => {
+			result.current.addOptimisticMessage("Replying", "text", undefined, {
+				replyToId,
+				replyToMeta,
+			});
+		});
+
+		const msg = result.current.messages[0] as any;
+		expect(msg.replyToId).toBe(replyToId);
+		expect(msg.replyToMeta).toMatchObject({
+			id: replyToId,
+			authorId: mockOtherUserId,
+			kind: "text",
+			textSnippet: "Hello world",
+		});
+	});
+
+	it("should allow reply to optimistic message without server id", () => {
+		mockUseQuery.mockImplementation((query) => {
+			if (query === "loggedInUser") return mockCurrentUser;
+			return [];
+		});
+
+		const { result } = renderHook(() =>
+			useOptimisticMessages({
+				otherUserId: mockOtherUserId,
+				currentUserId: mockCurrentUserId,
+			}),
+		);
+
+		const replyToMeta = {
+			id: "opt-temp" as unknown as Id<"messages">,
+			authorId: mockOtherUserId,
+			createdAt: Date.now() - 1000,
+			kind: "text" as const,
+			textSnippet: "Draft msg",
+		};
+
+		act(() => {
+			result.current.addOptimisticMessage(
+				"Replying to optimistic",
+				"text",
+				undefined,
+				{ replyToMeta },
+			);
+		});
+
+		const msg = result.current.messages[0] as any;
+		expect(msg.replyToId).toBeUndefined();
+		expect(msg.replyToMeta).toBeDefined();
+		expect(msg.replyToMeta).toMatchObject({
+			kind: "text",
+			textSnippet: "Draft msg",
+		});
+	});
+});

@@ -12,6 +12,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useGroupAvatarUrls, useUserAvatarUrls } from "@/hooks/useAvatarUrls";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { useNudge } from "@/hooks/useNudge";
+import type { CombinedMessage } from "@/hooks/useOptimisticMessages";
 import { useOptimisticMessages } from "@/hooks/useOptimisticMessages";
 import { useOverlays } from "@/hooks/useOverlays";
 import { setGroupAvatars, setUserAvatars } from "@/stores/avatars";
@@ -36,6 +37,19 @@ export function Chat({
 	const selectedChat = useStore($selectedChat);
 
 	const [showChat, setShowChat] = useState(false);
+
+	// Reply draft state
+	type ReplyDraft = {
+		id: Id<"messages"> | undefined; // only set for server messages
+		authorId: Id<"users"> | undefined;
+		authorDisplayName?: string;
+		authorEmail?: string;
+		createdAt: number;
+		kind: "text" | "emoji" | "file" | "system" | "image" | "video" | "audio";
+		textSnippet?: string;
+	};
+	const [replyDraft, setReplyDraft] = useState<ReplyDraft | null>(null);
+
 	const [messageInput, setMessageInput] = useState("");
 
 	// Resolve avatar URLs for selected chat and update stores
@@ -156,6 +170,34 @@ export function Chat({
 		return Array.from(senderIds);
 	}, [messages]);
 
+	// Create a reply snapshot for a message
+	const createReplyFromMessage = useCallback(
+		(m: CombinedMessage): ReplyDraft => {
+			const isOptimistic = "isOptimistic" in (m as Record<string, unknown>);
+			const kind: ReplyDraft["kind"] =
+				m.messageType === "emoji"
+					? "emoji"
+					: m.messageType === "file"
+						? "file"
+						: m.messageType === "system"
+							? "system"
+							: "text";
+			const authorName = m.sender?.name;
+			const authorEmail = m.sender?.email;
+			const snippet = (m.content || "").replace(/\s+/g, " ").slice(0, 140);
+			return {
+				id: isOptimistic ? undefined : (m._id as unknown as Id<"messages">),
+				authorId: m.senderId as Id<"users">,
+				authorDisplayName: authorName,
+				authorEmail: authorEmail,
+				createdAt: m._creationTime,
+				kind,
+				textSnippet: snippet,
+			};
+		},
+		[],
+	);
+
 	// Fetch avatars for all message senders
 	const messageSenderAvatarMap = useUserAvatarUrls(messageSenderIds);
 
@@ -269,9 +311,33 @@ export function Chat({
 
 		// Clear input immediately for better UX
 		setMessageInput("");
+		// Clear reply draft after queuing send
+		if (replyDraft) setReplyDraft(null);
 
 		// Add optimistic message immediately
-		const optimisticId = addOptimisticMessage(messageContent, "text");
+		const optimisticId = addOptimisticMessage(
+			messageContent,
+			"text",
+			undefined,
+			replyDraft
+				? {
+						replyToId: replyDraft.id,
+						replyToMeta: {
+							id:
+								(replyDraft.id as Id<"messages">) ??
+								("opt" as unknown as Id<"messages">),
+							authorId:
+								(replyDraft.authorId as Id<"users">) ??
+								("opt-user" as unknown as Id<"users">),
+							authorDisplayName: replyDraft.authorDisplayName,
+							authorEmail: replyDraft.authorEmail,
+							createdAt: replyDraft.createdAt,
+							kind: replyDraft.kind,
+							textSnippet: replyDraft.textSnippet,
+						},
+					}
+				: undefined,
+		);
 		if (!optimisticId) {
 			console.error("Failed to create optimistic message");
 			setMessageInput(messageContent); // Restore input on error
@@ -292,6 +358,22 @@ export function Chat({
 				messageType: "text",
 				receiverId: selectedChat?.contact?.contactUserId,
 				groupId: selectedChat?.group?._id,
+				replyToId: replyDraft?.id,
+				replyToMeta: replyDraft
+					? {
+							id:
+								(replyDraft.id as Id<"messages">) ??
+								("opt" as unknown as Id<"messages">),
+							authorId:
+								(replyDraft.authorId as Id<"users">) ??
+								("opt-user" as unknown as Id<"users">),
+							authorDisplayName: replyDraft.authorDisplayName,
+							authorEmail: replyDraft.authorEmail,
+							createdAt: replyDraft.createdAt,
+							kind: replyDraft.kind,
+							textSnippet: replyDraft.textSnippet,
+						}
+					: undefined,
 			});
 
 			// No need to mark as sent - optimistic message already looks final
@@ -377,6 +459,7 @@ export function Chat({
 					<ChatMessages
 						messages={messages}
 						conversationNudges={conversationNudges}
+						onReply={(m) => setReplyDraft(createReplyFromMessage(m))}
 					/>
 
 					{/* Message Input - Fixed at bottom */}
@@ -389,6 +472,8 @@ export function Chat({
 						onSendEmote={handleSendEmote}
 						isNudgeSending={isNudgeSending}
 						cooldownRemaining={cooldownRemaining}
+						replyDraft={replyDraft}
+						onCancelReply={() => setReplyDraft(null)}
 					/>
 				</>
 			) : (

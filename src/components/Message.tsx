@@ -2,7 +2,15 @@ import { api } from "@convex/_generated/api";
 import { useStore } from "@nanostores/react";
 import { useMutation, useQuery } from "convex/react";
 import { motion } from "framer-motion";
-import { AlertCircle, Check, Edit3, Trash2, User, X } from "lucide-react";
+import {
+	AlertCircle,
+	Check,
+	CornerUpLeft,
+	Edit3,
+	Trash2,
+	User,
+	X,
+} from "lucide-react";
 import type React from "react";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -22,6 +30,7 @@ import { hoverScale, messageBubble, tapScale } from "./ui/animated";
 type MessageProps = {
 	message: CombinedMessage;
 	isConsecutive?: boolean;
+	onReply?: (message: CombinedMessage) => void;
 };
 
 // Helper function to check if a message is a server message (not optimistic)
@@ -30,9 +39,33 @@ const isServerMessage = (
 ): m is Exclude<CombinedMessage, { isOptimistic: true }> =>
 	!("isOptimistic" in m);
 
+// Reply meta display type and helpers
+type ReplyMetaDisplay = {
+	authorDisplayName?: string;
+	authorEmail?: string;
+	createdAt: number;
+	kind: "text" | "emoji" | "file" | "system" | "image" | "video" | "audio";
+	textSnippet?: string;
+};
+const hasReplyMeta = (
+	m: CombinedMessage,
+): m is CombinedMessage & { replyToMeta: ReplyMetaDisplay } =>
+	"replyToMeta" in m && Boolean((m as Record<string, unknown>).replyToMeta);
+const mediaLabel = (kind: ReplyMetaDisplay["kind"]) =>
+	kind === "image"
+		? "Image"
+		: kind === "video"
+			? "Video"
+			: kind === "audio"
+				? "Audio"
+				: kind === "file"
+					? "File"
+					: "Message";
+
 const MessageComponent = function Message({
 	message,
 	isConsecutive = false,
+	onReply,
 }: MessageProps) {
 	const loggedInUser = useQuery(api.auth.loggedInUser);
 	const isNarrow = useMediaQuery("(max-width: 768px)");
@@ -382,7 +415,28 @@ const MessageComponent = function Message({
 								whileHover={hoverScale}
 								whileTap={tapScale}
 							>
-								<div className="flex items-center gap-2">
+								<div className="flex w-full flex-col gap-1">
+									{/* Quoted reply block */}
+									{hasReplyMeta(message) ? (
+										<button
+											type="button"
+											className="group flex w-full items-start gap-2 rounded-md border border-border/60 bg-muted/40 p-2 text-left"
+										>
+											<div className="mt-0.5 h-10 w-0.5 flex-shrink-0 rounded bg-primary/60" />
+											<div className="min-w-0">
+												<div className="font-medium text-muted-foreground text-xs">
+													{message.replyToMeta.authorDisplayName ||
+														message.replyToMeta.authorEmail ||
+														"Unknown"}
+													• {formatTimestamp(message.replyToMeta.createdAt)}
+												</div>
+												<div className="line-clamp-2 truncate text-xs">
+													{message.replyToMeta.textSnippet ||
+														mediaLabel(message.replyToMeta.kind)}
+												</div>
+											</div>
+										</button>
+									) : null}
 									<p className="flex-1 break-words text-sm md:text-base">
 										{message.isDeleted ? (
 											<span className="text-muted-foreground italic">
@@ -496,10 +550,18 @@ const MessageComponent = function Message({
 												😢
 											</Button>
 
-											{/* Separator only if there are edit/delete actions for user messages */}
-											{(canEditMessage ||
-												(ownsMessage && !message.isDeleted)) && (
-												<div className="mx-1 h-6 w-px bg-border" />
+											<div className="mx-1 h-6 w-px bg-border" />
+
+											{/* Reply button */}
+											{onReply && isServerMessage(message) && (
+												<Button
+													size="sm"
+													variant="ghost"
+													onClick={() => onReply?.(message)}
+													className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted"
+												>
+													<CornerUpLeft className="h-4 w-4" />
+												</Button>
 											)}
 
 											{/* Edit Button (only for editable user messages) */}
@@ -532,6 +594,7 @@ const MessageComponent = function Message({
 								{/* Mobile: Long press triggered drawer */}
 								{isMobile && (
 									<QuickMessageActions
+										onReply={onReply ? () => onReply(message) : undefined}
 										ownsMessage={ownsMessage && !message.isDeleted}
 										canEdit={canEditMessage}
 										isReactionLoading={isReactionLoading}

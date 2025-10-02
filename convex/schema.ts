@@ -42,6 +42,27 @@ const applicationTables = {
 		fileName: v.optional(v.string()),
 		fileType: v.optional(v.string()),
 		fileSize: v.optional(v.number()),
+		// Reply/quote fields
+		replyToId: v.optional(v.id("messages")),
+		replyToMeta: v.optional(
+			v.object({
+				id: v.id("messages"),
+				authorId: v.id("users"),
+				authorDisplayName: v.optional(v.string()),
+				authorEmail: v.optional(v.string()),
+				createdAt: v.number(),
+				kind: v.union(
+					v.literal("text"),
+					v.literal("emoji"),
+					v.literal("file"),
+					v.literal("system"),
+					v.literal("image"),
+					v.literal("video"),
+					v.literal("audio"),
+				),
+				textSnippet: v.optional(v.string()),
+			}),
+		),
 		isRead: v.boolean(),
 		isEdited: v.optional(v.boolean()),
 		editedAt: v.optional(v.number()),

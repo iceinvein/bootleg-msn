@@ -4,6 +4,17 @@ import { useQuery } from "convex/react";
 import type { FunctionReturnType } from "convex/server";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+// Reply metadata type for replies/quotes
+type ReplyToMeta = {
+	id: Id<"messages">;
+	authorId: Id<"users">;
+	authorDisplayName?: string;
+	authorEmail?: string;
+	createdAt: number;
+	kind: "text" | "emoji" | "file" | "system" | "image" | "video" | "audio";
+	textSnippet?: string;
+};
+
 // Type for optimistic messages
 type OptimisticMessage = {
 	_id: string; // Temporary ID for optimistic messages
@@ -28,6 +39,9 @@ type OptimisticMessage = {
 		email?: string;
 		image?: string;
 	};
+	// Reply fields (optional)
+	replyToId?: Id<"messages">;
+	replyToMeta?: ReplyToMeta;
 	isFromMe: boolean;
 	// Optimistic-specific fields
 	isOptimistic: true;
@@ -210,6 +224,7 @@ export function useOptimisticMessages({
 				fileType: string;
 				fileSize: number;
 			},
+			options?: { replyToId?: Id<"messages">; replyToMeta?: ReplyToMeta },
 		) => {
 			if (!currentUserId || !currentUser) return null;
 
@@ -230,6 +245,9 @@ export function useOptimisticMessages({
 				messageType,
 				isRead: false,
 				...fileData,
+				// include reply fields if provided
+				replyToId: options?.replyToId,
+				replyToMeta: options?.replyToMeta,
 				sender: {
 					_id: currentUserId,
 					name: currentUser.name,

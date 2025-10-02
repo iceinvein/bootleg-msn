@@ -1,4 +1,4 @@
-import { Edit3, Trash2 } from "lucide-react";
+import { CornerUpLeft, Edit3, Trash2 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -17,6 +17,7 @@ type QuickMessageActionsProps = {
 	onQuickReaction: (reactionType: ReactionType) => void;
 	onEdit: () => void;
 	onDelete: () => void;
+	onReply?: () => void;
 	className?: string;
 	// Controlled state props for long press
 	open?: boolean;
@@ -31,6 +32,7 @@ export function QuickMessageActions({
 	onQuickReaction,
 	onEdit,
 	onDelete,
+	onReply,
 	className,
 	open,
 	onOpenChange,
@@ -119,9 +121,21 @@ export function QuickMessageActions({
 						😢
 					</Button>
 
-					{/* Separator only if there are edit/delete actions for user messages */}
-					{((canEdit !== undefined ? canEdit : ownsMessage) || ownsMessage) && (
-						<div className="mx-1 h-6 w-px bg-border" />
+					<div className="mx-1 h-6 w-px bg-border" />
+
+					{/* Reply button */}
+					{onReply && (
+						<Button
+							size="sm"
+							variant="ghost"
+							onClick={() => {
+								onReply();
+								setIsOpen(false);
+							}}
+							className="h-8 w-8 rounded-full p-0 text-muted-foreground hover:bg-muted md:h-8 md:w-8"
+						>
+							<CornerUpLeft className="h-4 w-4" />
+						</Button>
 					)}
 
 					{/* Edit Button (only for editable user messages) */}
